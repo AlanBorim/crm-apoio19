@@ -8,7 +8,7 @@ import {
   FileText,
   Send
 } from 'lucide-react';
-import { Proposal, ProposalItem, ProposalTemplate } from './types/proposal';
+import { Proposal, ProposalItem, ProposalStatus, ProposalTemplate } from './types/proposal';
 
 interface ProposalFormProps {
   proposal?: Proposal;
@@ -27,7 +27,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
       telefone: ''
     },
     valor: proposal?.valor || 0,
-    status: proposal?.status || 'rascunho',
+    status: proposal?.status || ProposalStatus.RASCUNHO,
     dataVencimento: proposal?.dataVencimento || '',
     templateId: proposal?.templateId || '',
     itens: proposal?.itens || [],
@@ -43,6 +43,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
       nome: 'Template Desenvolvimento',
       descricao: 'Template para propostas de desenvolvimento de software',
       conteudo: 'Template padrão para desenvolvimento...',
+      dataCriacao: new Date().toISOString(),
       ativo: true
     },
     {
@@ -50,6 +51,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
       nome: 'Template Consultoria',
       descricao: 'Template para propostas de consultoria',
       conteudo: 'Template padrão para consultoria...',
+      dataCriacao: new Date().toISOString(),
       ativo: true
     }
   ];
@@ -103,7 +105,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
   };
 
   const handleSend = () => {
-    const proposalToSend = { ...formData, status: 'enviada' as const };
+    const proposalToSend = { ...formData, status: ProposalStatus.PENDENTE as const };
     onSave(proposalToSend);
   };
 

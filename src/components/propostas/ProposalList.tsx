@@ -39,8 +39,9 @@ export function ProposalList({ onCreateProposal, onEditProposal, onViewProposal 
         email: 'joao@empresaabc.com',
         telefone: '(11) 99999-9999'
       },
+      responsavel: 'João Vendedor',
       valor: 25000,
-      status: 'enviada',
+      status: ProposalStatus.ENVIADA,
       dataVencimento: '2025-06-15',
       dataCriacao: '2025-06-01',
       dataAtualizacao: '2025-06-07',
@@ -75,12 +76,14 @@ export function ProposalList({ onCreateProposal, onEditProposal, onViewProposal 
         email: 'maria@techsolutions.com',
         telefone: '(11) 88888-8888'
       },
+      empresa: 'Tech Solutions',
       valor: 8000,
-      status: 'aceita',
+      status: ProposalStatus.APROVADA,
       dataVencimento: '2025-06-20',
       dataCriacao: '2025-06-03',
       dataAtualizacao: '2025-06-06',
       criadoPor: 'Ana Marketing',
+      responsavel: 'João Vendedor',
       templateId: 'template_2',
       itens: [
         {
@@ -103,8 +106,10 @@ export function ProposalList({ onCreateProposal, onEditProposal, onViewProposal 
         email: 'pedro@industriasunidas.com',
         telefone: '(11) 77777-7777'
       },
+      empresa: 'Indústrias Unidas',
+      responsavel: 'João Vendedor',
       valor: 45000,
-      status: 'rascunho',
+      status: ProposalStatus.RASCUNHO,
       dataVencimento: '2025-06-25',
       dataCriacao: '2025-06-05',
       dataAtualizacao: '2025-06-07',
@@ -131,15 +136,15 @@ export function ProposalList({ onCreateProposal, onEditProposal, onViewProposal 
 
   const getStatusColor = (status: ProposalStatus) => {
     switch (status) {
-      case 'rascunho':
+      case ProposalStatus.RASCUNHO:
         return 'bg-gray-100 text-gray-800';
-      case 'enviada':
+      case ProposalStatus.ENVIADA:
         return 'bg-blue-100 text-blue-800';
-      case 'aceita':
+      case ProposalStatus.APROVADA:
         return 'bg-green-100 text-green-800';
-      case 'rejeitada':
+      case ProposalStatus.RECUSADA:
         return 'bg-red-100 text-red-800';
-      case 'expirada':
+      case ProposalStatus.EXPIRADA:
         return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -148,15 +153,15 @@ export function ProposalList({ onCreateProposal, onEditProposal, onViewProposal 
 
   const getStatusText = (status: ProposalStatus) => {
     switch (status) {
-      case 'rascunho':
+      case ProposalStatus.RASCUNHO:
         return 'Rascunho';
-      case 'enviada':
+      case ProposalStatus.ENVIADA:
         return 'Enviada';
-      case 'aceita':
+      case ProposalStatus.APROVADA:
         return 'Aceita';
-      case 'rejeitada':
+      case ProposalStatus.RECUSADA:
         return 'Rejeitada';
-      case 'expirada':
+      case ProposalStatus.EXPIRADA:
         return 'Expirada';
       default:
         return status;
