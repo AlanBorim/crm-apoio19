@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { 
-  MessageSquare, 
-  Users, 
+import {
+  MessageSquare,
+  Users,
   Search,
   Filter,
   Plus,
@@ -26,19 +26,25 @@ export function ContactList({ onSelectContact, selectedContactId }: ContactListP
       id: '1',
       nome: 'João Silva',
       numero: '+5511999999999',
-      ultimaMensagem: 'Obrigado pelas informações!',
-      ultimaInteracao: '2025-06-07T10:30:00',
+      telefone: '+5511999999999',
+      ultimaMensagem: 'Olá!',
+      ultimaInteracao: '2025-06-23T15:00:00Z',
+      ultimoContato: '2025-06-23T15:00:00Z',
+      mensagensNaoLidas: 2,
       status: 'online',
-      leadId: '1',
-      tags: ['interessado', 'novo-cliente'],
+      leadId: 'lead_001',
+      tags: ['vip', 'urgente'],
       bloqueado: false
     },
     {
       id: '2',
       nome: 'Maria Oliveira',
       numero: '+5511888888888',
+      telefone: '+5511999999999',
       ultimaMensagem: 'Quando podemos agendar uma reunião?',
       ultimaInteracao: '2025-06-07T09:15:00',
+      ultimoContato: '2025-06-23T15:00:00Z',
+      mensagensNaoLidas: 2,
       status: 'offline',
       leadId: '2',
       tags: ['qualificado', 'urgente'],
@@ -48,8 +54,11 @@ export function ContactList({ onSelectContact, selectedContactId }: ContactListP
       id: '3',
       nome: 'Pedro Santos',
       numero: '+5511777777777',
+      telefone: '+5511999999999',
       ultimaMensagem: 'Vou analisar a proposta e retorno.',
       ultimaInteracao: '2025-06-06T16:45:00',
+      ultimoContato: '2025-06-23T15:00:00Z',
+      mensagensNaoLidas: 2,
       status: 'offline',
       leadId: '3',
       tags: ['proposta-enviada'],
@@ -59,8 +68,11 @@ export function ContactList({ onSelectContact, selectedContactId }: ContactListP
       id: '4',
       nome: 'Ana Costa',
       numero: '+5511666666666',
+      telefone: '+5511999999999',
       ultimaMensagem: 'Perfeito! Vamos fechar o negócio.',
       ultimaInteracao: '2025-06-06T14:20:00',
+      ultimoContato: '2025-06-23T15:00:00Z',
+      mensagensNaoLidas: 2,
       status: 'digitando',
       leadId: '4',
       tags: ['fechamento', 'vip'],
@@ -70,8 +82,11 @@ export function ContactList({ onSelectContact, selectedContactId }: ContactListP
       id: '5',
       nome: 'Carlos Mendes',
       numero: '+5511555555555',
+      telefone: '+5511999999999',
       ultimaMensagem: 'Não tenho interesse no momento.',
       ultimaInteracao: '2025-06-05T11:30:00',
+      ultimoContato: '2025-06-23T15:00:00Z',
+      mensagensNaoLidas: 2,
       status: 'offline',
       tags: ['sem-interesse'],
       bloqueado: false
@@ -98,23 +113,23 @@ export function ContactList({ onSelectContact, selectedContactId }: ContactListP
     if (diffInHours < 1) {
       return 'agora';
     } else if (diffInHours < 24) {
-      return messageTime.toLocaleTimeString('pt-BR', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      return messageTime.toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit'
       });
     } else if (diffInHours < 48) {
       return 'ontem';
     } else {
-      return messageTime.toLocaleDateString('pt-BR', { 
-        day: '2-digit', 
-        month: '2-digit' 
+      return messageTime.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit'
       });
     }
   };
 
   const filteredContacts = mockContacts.filter(contact => {
     if (searchTerm && !contact.nome.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !contact.numero.includes(searchTerm)) {
+      !contact.numero.includes(searchTerm)) {
       return false;
     }
     if (statusFilter !== 'all') {
@@ -173,7 +188,7 @@ export function ContactList({ onSelectContact, selectedContactId }: ContactListP
             <option value="leads">Com Lead</option>
             <option value="blocked">Bloqueadas</option>
           </select>
-          
+
           <button className="p-1 rounded border border-gray-300 hover:bg-gray-50">
             <Filter size={16} className="text-gray-500" />
           </button>
@@ -186,16 +201,15 @@ export function ContactList({ onSelectContact, selectedContactId }: ContactListP
           <div
             key={contact.id}
             onClick={() => onSelectContact(contact)}
-            className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
-              selectedContactId === contact.id ? 'bg-orange-50 border-orange-200' : ''
-            }`}
+            className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${selectedContactId === contact.id ? 'bg-orange-50 border-orange-200' : ''
+              }`}
           >
             <div className="flex items-center">
               <div className="relative">
                 <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
                   {contact.avatar ? (
-                    <img 
-                      src={contact.avatar} 
+                    <img
+                      src={contact.avatar}
                       alt={contact.nome}
                       className="h-12 w-12 rounded-full object-cover"
                     />
@@ -241,7 +255,7 @@ export function ContactList({ onSelectContact, selectedContactId }: ContactListP
                     <Phone size={10} className="text-gray-400" />
                     <span className="text-xs text-gray-500">{contact.numero}</span>
                   </div>
-                  
+
                   {contact.tags.length > 0 && (
                     <div className="flex items-center gap-1">
                       <Tag size={10} className="text-gray-400" />
@@ -288,7 +302,7 @@ export function ContactList({ onSelectContact, selectedContactId }: ContactListP
               Nenhuma conversa encontrada
             </h3>
             <p className="text-xs text-gray-500">
-              {searchTerm 
+              {searchTerm
                 ? 'Tente ajustar os termos de busca'
                 : 'Suas conversas aparecerão aqui'
               }

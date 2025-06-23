@@ -59,10 +59,9 @@ export type WhatsAppStatus =
 export interface WhatsAppMessage {
   id: string;
   contactId: string;
-  content: string;
   conteudo: string;
   timestamp: string;
-  type: 'sent' | 'received';
+  tipo: 'text' | 'image' | 'video' | 'audio' | 'document' | 'location' | 'sticker';
   direcao: 'enviada' | 'recebida';
   status: WhatsAppStatus;
 }
@@ -72,6 +71,7 @@ export interface WhatsAppContact {
   nome: string;
   numero: string;
   telefone: string;
+  avatar?: string;
   status: 'online' | 'offline' | 'digitando';
   ultimaMensagem: string;
   ultimaInteracao: string;
@@ -80,4 +80,23 @@ export interface WhatsAppContact {
   leadId?: string;
   tags?: string[];
   bloqueado: boolean;
+}
+
+export type CampaignStatus = 'rascunho' | 'enviando' | 'agendada' | 'concluida' | 'pausada' | 'ativa';
+
+export interface WhatsAppCampaign {
+  id: string;
+  nome: string;
+  descricao: string;
+  mensagem: string;
+  status: CampaignStatus;
+  dataCriacao: string;
+  dataInicio?: string;
+  dataFim?: string;
+  totalContatos: number;
+  enviadas: number;
+  entregues: number;
+  lidas: number;
+  respondidas: number;
+  criadoPor: string;
 }
