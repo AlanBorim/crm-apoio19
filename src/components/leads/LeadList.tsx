@@ -1,21 +1,36 @@
 // src/components/leads/LeadList.jsx
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Search, 
-  Plus, 
-  Filter, 
-  MoreVertical, 
-  Edit, 
-  Trash2, 
+import {
+  Search,
+  Plus,
+  Filter,
+  MoreVertical,
+  Edit,
+  Trash2,
   Eye,
   Users,
   CheckSquare,
   Download
 } from 'lucide-react';
 import leadService, { useLeads } from '../../services/leadService';
+import { Lead } from './types/lead';
 
-const LeadList = () => {
+
+type LeadListProps = {
+  onSelectLeads: (leadIds: string[]) => void;
+  onNewLead: () => void;
+  onEditLead: (lead: Lead) => void;
+  onViewDetail: (leadId: string) => void;
+  onDelete?: (leadId: string) => void;
+};
+
+const LeadList: React.FC<LeadListProps> = ({
+  onSelectLeads,
+  onNewLead,
+  onEditLead,
+  onViewDetail
+}) => {
   const { leads, loading, error, fetchLeads, deleteLead } = useLeads();
   const [filters, setFilters] = useState({
     status: '',
@@ -53,8 +68,8 @@ const LeadList = () => {
 
   // Selecionar/deselecionar lead
   const toggleLeadSelection = (leadId) => {
-    setSelectedLeads(prev => 
-      prev.includes(leadId) 
+    setSelectedLeads(prev =>
+      prev.includes(leadId)
         ? prev.filter(id => id !== leadId)
         : [...prev, leadId]
     );
@@ -63,8 +78,8 @@ const LeadList = () => {
   // Selecionar todos os leads
   const toggleSelectAll = () => {
     setSelectedLeads(
-      selectedLeads.length === leads.length 
-        ? [] 
+      selectedLeads.length === leads.length
+        ? []
         : leads.map(lead => lead.id)
     );
   };
@@ -87,7 +102,7 @@ const LeadList = () => {
           }
           break;
       }
-      
+
       setSelectedLeads([]);
       fetchLeads(filters);
     } catch (err) {
@@ -118,7 +133,7 @@ const LeadList = () => {
     };
 
     const config = statusConfig[status] || { color: 'bg-gray-100 text-gray-800', label: status };
-    
+
     return (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
         {config.label}
@@ -172,7 +187,7 @@ const LeadList = () => {
               <Filter size={20} />
               Filtros
             </button>
-            
+
             {selectedLeads.length > 0 && (
               <button
                 onClick={() => setShowBatchActions(!showBatchActions)}
@@ -316,25 +331,25 @@ const LeadList = () => {
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{lead.nome}</div>
-                      {lead.empresa && (
-                        <div className="text-sm text-gray-500">{lead.empresa}</div>
+                      <div className="text-sm font-medium text-gray-900">{lead.name}</div>
+                      {lead.company && (
+                        <div className="text-sm text-gray-500">{lead.company}</div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {lead.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {lead.telefone}
+                      {lead.phone}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(lead.status)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {lead.origem}
+                      {lead.source}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(lead.data_criacao).toLocaleDateString('pt-BR')}
+                      {new Date(lead.created_at).toLocaleDateString('pt-BR')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
@@ -344,7 +359,7 @@ const LeadList = () => {
                         <button className="text-gray-600 hover:text-gray-900">
                           <Edit size={16} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDeleteLead(lead.id)}
                           className="text-red-600 hover:text-red-900"
                         >

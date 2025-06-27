@@ -1,8 +1,25 @@
-// src/components/leads/LeadForm.jsx
+// src/components/leads/LeadForm.tsx
 
 import React, { useState, useEffect } from 'react';
 import { Save, X, User, Mail, Phone, Building, MapPin, Calendar } from 'lucide-react';
 import leadService from '../../services/leadService';
+import { Lead } from './types/lead';
+
+type LeadFormErrors = {
+  nome?: string;
+  email?: string;
+  telefone?: string;
+  valor_estimado?: string;
+  general?: string;
+};
+
+type Props = {
+  leadId?: string;
+  lead?: Lead;
+  onSave: (lead: Partial<Lead>) => void;
+  onCancel: () => void;
+  isModal?: boolean;
+};
 
 const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
   const [formData, setFormData] = useState({
@@ -24,10 +41,9 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<LeadFormErrors>({});
   const [isEditing, setIsEditing] = useState(!!leadId);
 
-  // Carregar dados do lead se estiver editando
   useEffect(() => {
     if (leadId) {
       loadLead();
@@ -49,25 +65,22 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
     }
   };
 
-  // Atualizar campo do formulário
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
 
-    // Limpar erro do campo quando usuário começar a digitar
-    if (errors[field]) {
+    if (errors[field as keyof LeadFormErrors]) {
       setErrors(prev => ({
         ...prev,
-        [field]: null
+        [field]: undefined
       }));
     }
   };
 
-  // Validar formulário
-  const validateForm = () => {
-    const newErrors = {};
+  const validateForm = (): boolean => {
+    const newErrors: LeadFormErrors = {};
 
     if (!formData.nome.trim()) {
       newErrors.nome = 'Nome é obrigatório';
@@ -89,27 +102,31 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submeter formulário
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setLoading(true);
     try {
+      const dataToSend = {
+        ...formData,
+        valor_estimado: parseFloat(formData.valor_estimado || '0'),
+      };
+
       let response;
       if (isEditing) {
-        response = await leadService.updateLead(leadId, formData);
+        response = await leadService.updateLead(leadId, dataToSend);
       } else {
-        response = await leadService.createLead(formData);
+        response = await leadService.createLead(dataToSend);
       }
 
       if (onSave) {
         onSave(response.data);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar lead:', error);
       setErrors({ general: error.message || 'Erro ao salvar lead' });
     } finally {
@@ -117,7 +134,6 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
     }
   };
 
-  // Cancelar edição
   const handleCancel = () => {
     if (onCancel) {
       onCancel();
@@ -437,4 +453,5 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
 };
 
 export default LeadForm;
+
 

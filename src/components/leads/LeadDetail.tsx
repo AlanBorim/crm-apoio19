@@ -16,6 +16,7 @@ import {
   Plus,
   Clock
 } from 'lucide-react';
+// Importando o hook useLead para buscar os dados do lead
 import { useLead } from '../../services/leadService';
 import leadService from '../../services/leadService';
 
@@ -49,22 +50,22 @@ const LeadDetails = ({ leadId, onEdit, onBack, onDelete }) => {
   };
 
   // Adicionar interação
-  const handleAddInteraction = async (e) => {
-    e.preventDefault();
+  // const handleAddInteraction = async (e) => {
+  //   e.preventDefault();
     
-    try {
-      await leadService.addInteraction(leadId, newInteraction);
-      setNewInteraction({
-        tipo: '',
-        descricao: '',
-        data_interacao: new Date().toISOString().split('T')[0]
-      });
-      setShowAddInteraction(false);
-      refetch(); // Recarregar dados do lead
-    } catch (error) {
-      alert('Erro ao adicionar interação: ' + error.message);
-    }
-  };
+  //   try {
+  //     await leadService.addInteraction(leadId, newInteraction);
+  //     setNewInteraction({
+  //       tipo: '',
+  //       descricao: '',
+  //       data_interacao: new Date().toISOString().split('T')[0]
+  //     });
+  //     setShowAddInteraction(false);
+  //     refetch(); // Recarregar dados do lead
+  //   } catch (error) {
+  //     alert('Erro ao adicionar interação: ' + error.message);
+  //   }
+  // };
 
   // Formatar data
   const formatDate = (dateString) => {
@@ -239,7 +240,8 @@ const LeadDetails = ({ leadId, onEdit, onBack, onDelete }) => {
 
             {/* Formulário para nova interação */}
             {showAddInteraction && (
-              <form onSubmit={handleAddInteraction} className="mb-4 p-4 bg-gray-50 rounded-lg">
+              // <form onSubmit={handleAddInteraction} className="mb-4 p-4 bg-gray-50 rounded-lg">
+              <form className="mb-4 p-4 bg-gray-50 rounded-lg">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                   <select
                     value={newInteraction.tipo}
@@ -405,10 +407,10 @@ const LeadDetails = ({ leadId, onEdit, onBack, onDelete }) => {
               <div className="flex justify-between">
                 <span className="text-gray-600">Dias desde criação</span>
                 <span className="font-medium">
-                  {lead.lead.data_criacao ? 
+                  {/* {lead.lead.data_criacao ? 
                     Math.floor((new Date() - new Date(lead.lead.data_criacao)) / (1000 * 60 * 60 * 24)) :
                     '-'
-                  }
+                  } */}
                 </span>
               </div>
             </div>

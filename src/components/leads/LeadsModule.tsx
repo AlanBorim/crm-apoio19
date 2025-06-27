@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { LeadList } from './LeadList';
-import { LeadForm } from './LeadForm';
-import { LeadDetail } from './LeadDetail';
 import { BatchActions } from './BatchActions';
 import { Lead } from './types/lead';
+import LeadList from './LeadList';
+import LeadForm from './LeadForm';
+import LeadDetail from './LeadDetail';
+import leadService from '../../services/leadService';
+
 
 export function LeadsModule() {
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
@@ -26,7 +28,7 @@ export function LeadsModule() {
   const handleBatchAction = (action: string, value?: string) => {
     console.log(`Ação em lote: ${action}`, value, selectedLeads);
     // Implementação futura: conectar com API
-    
+
     // Limpar seleção após a ação
     setSelectedLeads([]);
   };
@@ -47,7 +49,7 @@ export function LeadsModule() {
   const handleSaveLead = (leadData: Partial<Lead>) => {
     console.log('Salvando lead:', leadData);
     // Implementação futura: conectar com API
-    
+
     setIsFormOpen(false);
   };
 
@@ -61,6 +63,16 @@ export function LeadsModule() {
   const handleBackToList = () => {
     setCurrentView('list');
     setCurrentLeadId(null);
+  };
+
+  const handleDelete = async (leadId: string) => {
+    try {
+      await leadService.deleteLead(leadId);
+      // Recarrega a lista de leads se necessário
+      setSelectedLeads([])
+    } catch (error) {
+      console.error('Erro ao deletar lead:', error);
+    }
   };
 
   return (
@@ -87,18 +99,19 @@ export function LeadsModule() {
       {currentView === 'detail' && currentLeadId && (
         <LeadDetail
           leadId={currentLeadId}
-          onBack={handleBackToList}
           onEdit={(lead) => handleEditLead(lead)}
+          onBack={handleBackToList}
+          onDelete={(leadId) => handleDelete(leadId)}
         />
       )}
 
       {/* Formulário modal */}
       {isFormOpen && (
         <LeadForm
-          lead={editingLead}
-          isOpen={isFormOpen}
-          onClose={() => setIsFormOpen(false)}
+          leadId={editingLead.id}
           onSave={handleSaveLead}
+          onCancel={() => setIsFormOpen(false)}
+          isModal={true}
         />
       )}
     </div>
