@@ -1,370 +1,423 @@
-import { useState } from 'react';
-import { Lead } from './types/lead';
-import { ArrowLeft, Calendar, Phone, Mail, Building, Tag, Clock, FileText, Edit, Trash2 } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+// src/components/leads/LeadDetails.jsx
 
-interface LeadDetailProps {
-  leadId: string;
-  onBack: () => void;
-  onEdit: (lead: Lead) => void;
-}
+import React, { useState, useEffect } from 'react';
+import { 
+  ArrowLeft, 
+  Edit, 
+  Trash2, 
+  Phone, 
+  Mail, 
+  Building, 
+  MapPin, 
+  Calendar,
+  DollarSign,
+  User,
+  MessageSquare,
+  Plus,
+  Clock
+} from 'lucide-react';
+import { useLead } from '../../services/leadService';
+import leadService from '../../services/leadService';
 
-export function LeadDetail({ leadId, onBack, onEdit }: LeadDetailProps) {
-  // Usando a prop leadId para carregar dados (simulado)
-  console.log(`Carregando detalhes do lead ${leadId}`);
-  
-  const [lead] = useState<Lead>({
-    id: '1',
-    nome: 'João Silva',
-    empresa: 'Empresa ABC',
-    email: 'joao@empresaabc.com',
-    telefone: '(11) 98765-4321',
-    status: 'novo',
-    valor: 15000,
-    dataCriacao: '2025-06-01',
-    dataAtualizacao: '2025-06-01',
-    responsavelId: '1',
-    responsavelNome: 'Carlos Vendas',
-    origem: 'Site',
-    descricao: 'Interessado em nossos serviços de consultoria. Entrou em contato através do formulário do site solicitando mais informações sobre pacotes empresariais.',
-    prioridade: 'alta',
-    tags: ['software', 'novo-cliente'],
-    proximoContato: '2025-06-15',
-    observacoes: 'Cliente demonstrou interesse especial no módulo de gestão de projetos. Mencionou que está comparando com outras 2 soluções do mercado.',
-    responsavel: {
-      id: '1',
-      nome: 'Carlos Vendas'
-    }
+const LeadDetails = ({ leadId, onEdit, onBack, onDelete }) => {
+  const { lead, loading, error, refetch } = useLead(leadId);
+  const [showAddInteraction, setShowAddInteraction] = useState(false);
+  const [newInteraction, setNewInteraction] = useState({
+    tipo: '',
+    descricao: '',
+    data_interacao: new Date().toISOString().split('T')[0]
   });
-  
-  // Função para formatar data
-  const formatDate = (dateString: string) => {
+
+  // Status badge
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      'novo': { color: 'bg-blue-100 text-blue-800', label: 'Novo' },
+      'contato': { color: 'bg-yellow-100 text-yellow-800', label: 'Em Contato' },
+      'qualificado': { color: 'bg-green-100 text-green-800', label: 'Qualificado' },
+      'proposta': { color: 'bg-purple-100 text-purple-800', label: 'Proposta' },
+      'fechado': { color: 'bg-green-100 text-green-800', label: 'Fechado' },
+      'perdido': { color: 'bg-red-100 text-red-800', label: 'Perdido' }
+    };
+
+    const config = statusConfig[status] || { color: 'bg-gray-100 text-gray-800', label: status };
+    
+    return (
+      <span className={`px-3 py-1 rounded-full text-sm font-medium ${config.color}`}>
+        {config.label}
+      </span>
+    );
+  };
+
+  // Adicionar interação
+  const handleAddInteraction = async (e) => {
+    e.preventDefault();
+    
     try {
-      return format(parseISO(dateString), 'dd/MM/yyyy', { locale: ptBR });
+      await leadService.addInteraction(leadId, newInteraction);
+      setNewInteraction({
+        tipo: '',
+        descricao: '',
+        data_interacao: new Date().toISOString().split('T')[0]
+      });
+      setShowAddInteraction(false);
+      refetch(); // Recarregar dados do lead
     } catch (error) {
-      return dateString;
+      alert('Erro ao adicionar interação: ' + error.message);
     }
   };
-  
-  // Função para formatar valor em reais
-  const formatCurrency = (value: number) => {
+
+  // Formatar data
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Formatar valor monetário
+  const formatCurrency = (value) => {
+    if (!value) return '-';
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
     }).format(value);
   };
-  
-  // Mapeamento de status para cores e labels
-  const statusMap: Record<string, { color: string; label: string }> = {
-    novo: { color: 'bg-blue-500', label: 'Novo' },
-    contato: { color: 'bg-yellow-500', label: 'Em Contato' },
-    qualificado: { color: 'bg-indigo-500', label: 'Qualificado' },
-    proposta: { color: 'bg-orange-500', label: 'Proposta Enviada' },
-    negociacao: { color: 'bg-purple-500', label: 'Em Negociação' },
-    fechado: { color: 'bg-green-500', label: 'Fechado (Ganho)' },
-    perdido: { color: 'bg-red-500', label: 'Perdido' }
-  };
-  
-  // Mapeamento de prioridade para cores e labels
-  const prioridadeMap: Record<string, { color: string; label: string }> = {
-    baixa: { color: 'bg-blue-100 text-blue-800', label: 'Baixa' },
-    media: { color: 'bg-yellow-100 text-yellow-800', label: 'Média' },
-    alta: { color: 'bg-red-100 text-red-800', label: 'Alta' }
-  };
-  
-  // Histórico de atividades (mockado)
-  const atividades = [
-    {
-      id: '1',
-      tipo: 'email',
-      descricao: 'Email enviado com detalhes dos serviços',
-      data: '2025-06-02',
-      usuario: 'Carlos Vendas'
-    },
-    {
-      id: '2',
-      tipo: 'ligacao',
-      descricao: 'Ligação para apresentação inicial',
-      data: '2025-06-03',
-      usuario: 'Carlos Vendas'
-    },
-    {
-      id: '3',
-      tipo: 'reuniao',
-      descricao: 'Reunião online para demonstração do produto',
-      data: '2025-06-05',
-      usuario: 'Carlos Vendas'
-    }
-  ];
-  
-  return (
-    <div className="bg-white">
-      {/* Cabeçalho */}
-      <div className="border-b border-gray-200 pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <button
-              onClick={onBack}
-              className="mr-4 rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{lead.nome}</h1>
-              <p className="text-sm text-gray-500">{lead.empresa}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <span className={`inline-flex items-center rounded-full px-3 py-0.5 text-sm font-medium ${statusMap[lead.status]?.color} text-white`}>
-              {statusMap[lead.status]?.label}
-            </span>
-            <button
-              onClick={() => onEdit(lead)}
-              className="rounded-md bg-orange-500 px-3 py-2 text-sm font-medium text-white hover:bg-orange-600"
-            >
-              <Edit size={16} className="mr-2 inline" />
-              Editar Lead
-            </button>
-          </div>
-        </div>
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
-      
-      {/* Conteúdo principal */}
-      <div className="grid grid-cols-3 gap-6 py-6">
-        {/* Coluna da esquerda - Informações principais */}
-        <div className="col-span-2 space-y-6">
-          {/* Informações de contato */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-medium text-gray-900">Informações de Contato</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-start">
-                <Mail className="mr-2 h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Email</p>
-                  <p className="text-sm text-gray-900">{lead.email}</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <Phone className="mr-2 h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Telefone</p>
-                  <p className="text-sm text-gray-900">{lead.telefone}</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <Building className="mr-2 h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Empresa</p>
-                  <p className="text-sm text-gray-900">{lead.empresa}</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <Tag className="mr-2 h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Origem</p>
-                  <p className="text-sm text-gray-900">{lead.origem}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Descrição */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-medium text-gray-900">Descrição</h2>
-            <p className="text-sm text-gray-700">{lead.descricao}</p>
-          </div>
-          
-          {/* Observações */}
-          {lead.observacoes && (
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-lg font-medium text-gray-900">Observações</h2>
-              <p className="mt-1 text-sm text-gray-700">{lead.observacoes}</p>
-            </div>
-          )}
-          
-          {/* Histórico de atividades */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-medium text-gray-900">Histórico de Atividades</h2>
-            <div className="flow-root">
-              <ul className="-mb-8">
-                {atividades.map((atividade, atividadeIdx) => (
-                  <li key={atividade.id}>
-                    <div className="relative pb-8">
-                      {atividadeIdx !== atividades.length - 1 ? (
-                        <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true" />
-                      ) : null}
-                      <div className="relative flex space-x-3">
-                        <div>
-                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 ring-8 ring-white">
-                            {atividade.tipo === 'email' ? (
-                              <Mail className="h-5 w-5 text-orange-500" />
-                            ) : atividade.tipo === 'ligacao' ? (
-                              <Phone className="h-5 w-5 text-orange-500" />
-                            ) : (
-                              <Calendar className="h-5 w-5 text-orange-500" />
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
-                          <div>
-                            <p className="text-sm text-gray-900">{atividade.descricao}</p>
-                          </div>
-                          <div className="whitespace-nowrap text-right text-sm text-gray-500">
-                            <time dateTime={atividade.data}>{formatDate(atividade.data)}</time>
-                            <p>{atividade.usuario}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="mt-6 flex">
-              <button
-                type="button"
-                className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-              >
-                <Phone className="mr-2 h-4 w-4" />
-                Registrar Ligação
-              </button>
-              <button
-                type="button"
-                className="ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-              >
-                <Mail className="mr-2 h-4 w-4" />
-                Registrar Email
-              </button>
-              <button
-                type="button"
-                className="ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-              >
-                <Calendar className="mr-2 h-4 w-4" />
-                Agendar Reunião
-              </button>
-            </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        {error}
+      </div>
+    );
+  }
+
+  if (!lead) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">Lead não encontrado</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onBack}
+            className="p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{lead.lead.nome}</h1>
+            <p className="text-gray-600">{lead.lead.empresa}</p>
           </div>
         </div>
         
-        {/* Coluna da direita - Informações adicionais */}
-        <div className="space-y-6">
-          {/* Detalhes do negócio */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-medium text-gray-900">Detalhes do Negócio</h2>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Valor</p>
-                <p className="text-lg font-bold text-gray-900">{formatCurrency(lead.valor)}</p>
+        <div className="flex items-center gap-2">
+          {getStatusBadge(lead.lead.status)}
+          <button
+            onClick={() => onEdit && onEdit(lead.lead.id)}
+            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+          >
+            <Edit size={20} />
+          </button>
+          <button
+            onClick={() => onDelete && onDelete(lead.lead.id)}
+            className="p-2 text-red-600 hover:text-red-900 hover:bg-red-100 rounded-lg"
+          >
+            <Trash2 size={20} />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Informações Principais */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Dados Básicos */}
+          <div className="bg-white p-6 rounded-lg border">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <User size={20} />
+              Informações Básicas
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center gap-3">
+                <Mail className="text-gray-400" size={20} />
+                <div>
+                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="font-medium">{lead.lead.email || '-'}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Prioridade</p>
-                <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${prioridadeMap[lead.prioridade]?.color}`}>
-                  {prioridadeMap[lead.prioridade]?.label}
-                </span>
+              
+              <div className="flex items-center gap-3">
+                <Phone className="text-gray-400" size={20} />
+                <div>
+                  <p className="text-sm text-gray-500">Telefone</p>
+                  <p className="font-medium">{lead.lead.telefone || '-'}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Tags</p>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {lead.tags?.map((tag) => (
-                    <span key={tag} className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800">
-                      {tag}
-                    </span>
-                  ))}
+              
+              <div className="flex items-center gap-3">
+                <Building className="text-gray-400" size={20} />
+                <div>
+                  <p className="text-sm text-gray-500">Cargo</p>
+                  <p className="font-medium">{lead.lead.cargo || '-'}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Calendar className="text-gray-400" size={20} />
+                <div>
+                  <p className="text-sm text-gray-500">Data de Criação</p>
+                  <p className="font-medium">{formatDate(lead.lead.data_criacao)}</p>
                 </div>
               </div>
             </div>
           </div>
-          
-          {/* Responsável */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-medium text-gray-900">Responsável</h2>
-            <div className="flex items-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-orange-700">
-                {lead.responsavel?.nome.charAt(0) || '?'}
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">{lead.responsavel?.nome || 'Não atribuído'}</p>
-                <p className="text-xs text-gray-500">Vendedor</p>
-              </div>
-            </div>
-          </div>
-          
-          {/* Próximo contato */}
-          {lead.proximoContato ? (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-medium text-blue-900">Próximo Contato</h2>
-                <Clock className="h-5 w-5 text-blue-500" />
-              </div>
-              <div className="mt-2">
-                <p className="text-sm text-blue-700">{formatDate(lead.proximoContato)}</p>
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-medium text-gray-900">Próximo Contato</h2>
-                <Clock className="h-5 w-5 text-gray-400" />
-              </div>
-              <div className="mt-2">
-                <p className="text-sm text-gray-500">Nenhum contato agendado</p>
-                <button
-                  type="button"
-                  className="mt-2 inline-flex items-center text-sm font-medium text-orange-600 hover:text-orange-500"
-                >
-                  <Calendar className="mr-1 h-4 w-4" />
-                  Agendar contato
-                </button>
+
+          {/* Endereço */}
+          {(lead.lead.endereco || lead.lead.cidade || lead.lead.estado) && (
+            <div className="bg-white p-6 rounded-lg border">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <MapPin size={20} />
+                Endereço
+              </h2>
+              
+              <div className="space-y-2">
+                {lead.lead.endereco && (
+                  <p className="text-gray-700">{lead.lead.endereco}</p>
+                )}
+                <p className="text-gray-700">
+                  {[lead.lead.cidade, lead.lead.estado, lead.lead.cep]
+                    .filter(Boolean)
+                    .join(', ')}
+                </p>
               </div>
             </div>
           )}
-          
-          {/* Datas */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-medium text-gray-900">Datas</h2>
+
+          {/* Observações */}
+          {lead.lead.observacoes && (
+            <div className="bg-white p-6 rounded-lg border">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                Observações
+              </h2>
+              <p className="text-gray-700 whitespace-pre-wrap">{lead.lead.observacoes}</p>
+            </div>
+          )}
+
+          {/* Histórico de Interações */}
+          <div className="bg-white p-6 rounded-lg border">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <MessageSquare size={20} />
+                Histórico de Interações
+              </h2>
+              <button
+                onClick={() => setShowAddInteraction(true)}
+                className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center gap-1"
+              >
+                <Plus size={16} />
+                Adicionar
+              </button>
+            </div>
+
+            {/* Formulário para nova interação */}
+            {showAddInteraction && (
+              <form onSubmit={handleAddInteraction} className="mb-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                  <select
+                    value={newInteraction.tipo}
+                    onChange={(e) => setNewInteraction(prev => ({ ...prev, tipo: e.target.value }))}
+                    className="border border-gray-300 rounded px-3 py-2"
+                    required
+                  >
+                    <option value="">Tipo de Interação</option>
+                    <option value="ligacao">Ligação</option>
+                    <option value="email">Email</option>
+                    <option value="reuniao">Reunião</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="visita">Visita</option>
+                    <option value="outros">Outros</option>
+                  </select>
+                  
+                  <input
+                    type="date"
+                    value={newInteraction.data_interacao}
+                    onChange={(e) => setNewInteraction(prev => ({ ...prev, data_interacao: e.target.value }))}
+                    className="border border-gray-300 rounded px-3 py-2"
+                    required
+                  />
+                </div>
+                
+                <textarea
+                  value={newInteraction.descricao}
+                  onChange={(e) => setNewInteraction(prev => ({ ...prev, descricao: e.target.value }))}
+                  placeholder="Descrição da interação..."
+                  className="w-full border border-gray-300 rounded px-3 py-2 mb-3"
+                  rows={3}
+                  required
+                />
+                
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                  >
+                    Salvar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddInteraction(false)}
+                    className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Lista de interações */}
             <div className="space-y-3">
-              <div className="flex justify-between">
-                <p className="text-sm font-medium text-gray-500">Criado em</p>
-                <p className="text-sm text-gray-900">{formatDate(lead.dataCriacao)}</p>
+              {lead.historico && lead.historico.length > 0 ? (
+                lead.historico.map((interacao, index) => (
+                  <div key={index} className="border-l-4 border-blue-200 pl-4 py-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="font-medium text-gray-900">{interacao.acao}</h4>
+                      <span className="text-sm text-gray-500 flex items-center gap-1">
+                        <Clock size={14} />
+                        {formatDate(interacao.data_acao)}
+                      </span>
+                    </div>
+                    <p className="text-gray-700 text-sm">{interacao.detalhes}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 text-center py-4">
+                  Nenhuma interação registrada
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Informações Comerciais */}
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Informações Comerciais
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-500">Origem</p>
+                <p className="font-medium capitalize">{lead.lead.origem || '-'}</p>
               </div>
-              <div className="flex justify-between">
-                <p className="text-sm font-medium text-gray-500">Atualizado em</p>
-                <p className="text-sm text-gray-900">{formatDate(lead.dataAtualizacao)}</p>
+              
+              <div>
+                <p className="text-sm text-gray-500">Valor Estimado</p>
+                <p className="font-medium text-green-600">
+                  {formatCurrency(lead.lead.valor_estimado)}
+                </p>
+              </div>
+              
+              <div>
+                <p className="text-sm text-gray-500">Data de Contato</p>
+                <p className="font-medium">
+                  {lead.lead.data_contato ? 
+                    new Date(lead.lead.data_contato).toLocaleDateString('pt-BR') : 
+                    '-'
+                  }
+                </p>
               </div>
             </div>
           </div>
-          
-          {/* Ações */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-medium text-gray-900">Ações</h2>
+
+          {/* Ações Rápidas */}
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Ações Rápidas
+            </h3>
+            
             <div className="space-y-2">
-              <button
-                type="button"
-                className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Gerar Proposta
-              </button>
-              <button
-                type="button"
-                className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-              >
-                <Mail className="mr-2 h-4 w-4" />
-                Enviar Email
-              </button>
-              <button
-                type="button"
-                className="w-full inline-flex items-center justify-center rounded-md border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Excluir Lead
-              </button>
+              {lead.lead.telefone && (
+                <a
+                  href={`tel:${lead.lead.telefone}`}
+                  className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2"
+                >
+                  <Phone size={16} />
+                  Ligar
+                </a>
+              )}
+              
+              {lead.lead.email && (
+                <a
+                  href={`mailto:${lead.lead.email}`}
+                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+                >
+                  <Mail size={16} />
+                  Enviar Email
+                </a>
+              )}
+              
+              {lead.lead.telefone && (
+                <a
+                  href={`https://wa.me/55${lead.lead.telefone.replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center justify-center gap-2"
+                >
+                  <MessageSquare size={16} />
+                  WhatsApp
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Estatísticas */}
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Estatísticas
+            </h3>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Total de Interações</span>
+                <span className="font-medium">{lead.historico ? lead.historico.length : 0}</span>
+              </div>
+              
+              <div className="flex justify-between">
+                <span className="text-gray-600">Dias desde criação</span>
+                <span className="font-medium">
+                  {lead.lead.data_criacao ? 
+                    Math.floor((new Date() - new Date(lead.lead.data_criacao)) / (1000 * 60 * 60 * 24)) :
+                    '-'
+                  }
+                </span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default LeadDetails;
+

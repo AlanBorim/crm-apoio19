@@ -1,389 +1,440 @@
-import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import { Lead, LeadStatus } from './types/lead';
+// src/components/leads/LeadForm.jsx
 
-interface LeadFormProps {
-  lead?: Lead;
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (lead: Partial<Lead>) => void;
-}
+import React, { useState, useEffect } from 'react';
+import { Save, X, User, Mail, Phone, Building, MapPin, Calendar } from 'lucide-react';
+import leadService from '../../services/leadService';
 
-// Status options with colors matching the list
-const statusOptions: { value: LeadStatus; label: string; color: string }[] = [
-  { value: 'novo', label: 'Novo', color: 'bg-blue-500' },
-  { value: 'contato', label: 'Contato', color: 'bg-yellow-500' },
-  { value: 'qualificado', label: 'Qualificado', color: 'bg-purple-500' },
-  { value: 'proposta', label: 'Proposta', color: 'bg-orange-500' },
-  { value: 'fechado', label: 'Fechado', color: 'bg-green-500' },
-  { value: 'perdido', label: 'Perdido', color: 'bg-gray-500' }
-];
-
-// Mock data for responsible users
-const responsibleUsers = [
-  { id: '1', nome: 'Carlos Vendas' },
-  { id: '2', nome: 'Ana Marketing' },
-  { id: '3', nome: 'Paulo Vendas' }
-];
-
-// Lead origin options
-const originOptions = [
-  'Site',
-  'Indicação',
-  'LinkedIn',
-  'Google Ads',
-  'Facebook',
-  'Instagram',
-  'Feira de Negócios',
-  'Ligação Direta',
-  'Email Marketing',
-  'Outro'
-];
-
-export function LeadForm({ lead, isOpen, onClose, onSave }: LeadFormProps) {
-  const [formData, setFormData] = useState<Partial<Lead>>({
+const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
+  const [formData, setFormData] = useState({
     nome: '',
-    empresa: '',
-    telefone: '',
     email: '',
-    status: 'novo',
-    valor: 0,
+    telefone: '',
+    empresa: '',
+    cargo: '',
     origem: '',
+    status: 'novo',
+    endereco: '',
+    cidade: '',
+    estado: '',
+    cep: '',
     observacoes: '',
-    proximoContato: '',
-    responsavel: undefined
+    responsavel_id: '',
+    valor_estimado: '',
+    data_contato: ''
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [isEditing, setIsEditing] = useState(!!leadId);
 
-  // Initialize form with lead data if editing
+  // Carregar dados do lead se estiver editando
   useEffect(() => {
-    if (lead) {
-      setFormData({
-        ...lead
-      });
-    } else {
-      // Reset form for new lead
-      setFormData({
-        nome: '',
-        empresa: '',
-        telefone: '',
-        email: '',
-        status: 'novo',
-        valor: 0,
-        origem: '',
-        observacoes: '',
-        proximoContato: '',
-        responsavel: undefined
-      });
+    if (leadId) {
+      loadLead();
     }
-  }, [lead, isOpen]);
+  }, [leadId]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    
-    // Special handling for numeric values
-    if (name === 'valor') {
-      setFormData({
-        ...formData,
-        [name]: value === '' ? 0 : parseFloat(value)
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value
-      });
-    }
-    
-    // Clear error when field is edited
-    if (errors[name]) {
-      setErrors({
-        ...errors,
-        [name]: ''
-      });
+  const loadLead = async () => {
+    setLoading(true);
+    try {
+      const response = await leadService.getLead(leadId);
+      if (response.data && response.data.lead) {
+        setFormData(response.data.lead);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar lead:', error);
+      setErrors({ general: 'Erro ao carregar dados do lead' });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleResponsibleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const userId = e.target.value;
-    if (userId) {
-      const user = responsibleUsers.find(u => u.id === userId);
-      setFormData({
-        ...formData,
-        responsavel: user ? { id: user.id, nome: user.nome } : undefined
-      });
-    } else {
-      setFormData({
-        ...formData,
-        responsavel: undefined
-      });
+  // Atualizar campo do formulário
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+
+    // Limpar erro do campo quando usuário começar a digitar
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: null
+      }));
     }
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-    
-    // Required fields
-    if (!formData.nome?.trim()) {
+  // Validar formulário
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.nome.trim()) {
       newErrors.nome = 'Nome é obrigatório';
     }
-    
-    if (!formData.empresa?.trim()) {
-      newErrors.empresa = 'Empresa é obrigatória';
-    }
-    
-    // Email validation
+
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Email inválido';
     }
-    
-    // Phone validation (simple)
-    if (formData.telefone && !/^[\d\s()-]+$/.test(formData.telefone)) {
+
+    if (formData.telefone && !/^[\d\s\-\(\)\+]+$/.test(formData.telefone)) {
       newErrors.telefone = 'Telefone inválido';
     }
-    
+
+    if (formData.valor_estimado && isNaN(parseFloat(formData.valor_estimado))) {
+      newErrors.valor_estimado = 'Valor deve ser numérico';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Submeter formulário
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (validateForm()) {
-      onSave(formData);
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      let response;
+      if (isEditing) {
+        response = await leadService.updateLead(leadId, formData);
+      } else {
+        response = await leadService.createLead(formData);
+      }
+
+      if (onSave) {
+        onSave(response.data);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar lead:', error);
+      setErrors({ general: error.message || 'Erro ao salvar lead' });
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!isOpen) return null;
+  // Cancelar edição
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    }
+  };
+
+  const formContent = (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Erro geral */}
+      {errors.general && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {errors.general}
+        </div>
+      )}
+
+      {/* Informações Básicas */}
+      <div className="bg-white p-6 rounded-lg border">
+        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+          <User size={20} />
+          Informações Básicas
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nome *
+            </label>
+            <input
+              type="text"
+              value={formData.nome}
+              onChange={(e) => handleInputChange('nome', e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.nome ? 'border-red-300' : 'border-gray-300'
+              }`}
+              placeholder="Nome completo do lead"
+            />
+            {errors.nome && (
+              <p className="mt-1 text-sm text-red-600">{errors.nome}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.email ? 'border-red-300' : 'border-gray-300'
+              }`}
+              placeholder="email@exemplo.com"
+            />
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Telefone
+            </label>
+            <input
+              type="tel"
+              value={formData.telefone}
+              onChange={(e) => handleInputChange('telefone', e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.telefone ? 'border-red-300' : 'border-gray-300'
+              }`}
+              placeholder="(11) 99999-9999"
+            />
+            {errors.telefone && (
+              <p className="mt-1 text-sm text-red-600">{errors.telefone}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Empresa
+            </label>
+            <input
+              type="text"
+              value={formData.empresa}
+              onChange={(e) => handleInputChange('empresa', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Nome da empresa"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cargo
+            </label>
+            <input
+              type="text"
+              value={formData.cargo}
+              onChange={(e) => handleInputChange('cargo', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Cargo na empresa"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Origem
+            </label>
+            <select
+              value={formData.origem}
+              onChange={(e) => handleInputChange('origem', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Selecione a origem</option>
+              <option value="website">Website</option>
+              <option value="indicacao">Indicação</option>
+              <option value="telefone">Telefone</option>
+              <option value="email">Email</option>
+              <option value="redes_sociais">Redes Sociais</option>
+              <option value="evento">Evento</option>
+              <option value="outros">Outros</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Status e Responsável */}
+      <div className="bg-white p-6 rounded-lg border">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
+          Status e Responsabilidade
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Status
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => handleInputChange('status', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="novo">Novo</option>
+              <option value="contato">Em Contato</option>
+              <option value="qualificado">Qualificado</option>
+              <option value="proposta">Proposta</option>
+              <option value="fechado">Fechado</option>
+              <option value="perdido">Perdido</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Valor Estimado
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              value={formData.valor_estimado}
+              onChange={(e) => handleInputChange('valor_estimado', e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.valor_estimado ? 'border-red-300' : 'border-gray-300'
+              }`}
+              placeholder="0,00"
+            />
+            {errors.valor_estimado && (
+              <p className="mt-1 text-sm text-red-600">{errors.valor_estimado}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Data de Contato
+            </label>
+            <input
+              type="date"
+              value={formData.data_contato}
+              onChange={(e) => handleInputChange('data_contato', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Endereço */}
+      <div className="bg-white p-6 rounded-lg border">
+        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+          <MapPin size={20} />
+          Endereço
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Endereço
+            </label>
+            <input
+              type="text"
+              value={formData.endereco}
+              onChange={(e) => handleInputChange('endereco', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Rua, número, complemento"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cidade
+            </label>
+            <input
+              type="text"
+              value={formData.cidade}
+              onChange={(e) => handleInputChange('cidade', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Cidade"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Estado
+            </label>
+            <input
+              type="text"
+              value={formData.estado}
+              onChange={(e) => handleInputChange('estado', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Estado"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              CEP
+            </label>
+            <input
+              type="text"
+              value={formData.cep}
+              onChange={(e) => handleInputChange('cep', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="00000-000"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Observações */}
+      <div className="bg-white p-6 rounded-lg border">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
+          Observações
+        </h3>
+        
+        <textarea
+          value={formData.observacoes}
+          onChange={(e) => handleInputChange('observacoes', e.target.value)}
+          rows={4}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="Observações adicionais sobre o lead..."
+        />
+      </div>
+
+      {/* Botões de ação */}
+      <div className="flex justify-end gap-3 pt-6 border-t">
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+          disabled={loading}
+        >
+          <X size={20} />
+          Cancelar
+        </button>
+        
+        <button
+          type="submit"
+          disabled={loading}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+        >
+          {loading ? (
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+          ) : (
+            <Save size={20} />
+          )}
+          {loading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar Lead')}
+        </button>
+      </div>
+    </form>
+  );
+
+  if (isModal) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">
+              {isEditing ? 'Editar Lead' : 'Novo Lead'}
+            </h2>
+            {formContent}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-gray-600 bg-opacity-50">
-      <div className="relative w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">
-            {lead ? 'Editar Lead' : 'Novo Lead'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {/* Nome */}
-            <div>
-              <label htmlFor="nome" className="block text-sm font-medium text-gray-700">
-                Nome <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="nome"
-                name="nome"
-                value={formData.nome || ''}
-                onChange={handleChange}
-                className={`mt-1 block w-full rounded-md border ${
-                  errors.nome ? 'border-red-500' : 'border-gray-300'
-                } px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500`}
-              />
-              {errors.nome && (
-                <p className="mt-1 text-xs text-red-500">{errors.nome}</p>
-              )}
-            </div>
-
-            {/* Empresa */}
-            <div>
-              <label htmlFor="empresa" className="block text-sm font-medium text-gray-700">
-                Empresa <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="empresa"
-                name="empresa"
-                value={formData.empresa || ''}
-                onChange={handleChange}
-                className={`mt-1 block w-full rounded-md border ${
-                  errors.empresa ? 'border-red-500' : 'border-gray-300'
-                } px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500`}
-              />
-              {errors.empresa && (
-                <p className="mt-1 text-xs text-red-500">{errors.empresa}</p>
-              )}
-            </div>
-
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email || ''}
-                onChange={handleChange}
-                className={`mt-1 block w-full rounded-md border ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                } px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500`}
-              />
-              {errors.email && (
-                <p className="mt-1 text-xs text-red-500">{errors.email}</p>
-              )}
-            </div>
-
-            {/* Telefone */}
-            <div>
-              <label htmlFor="telefone" className="block text-sm font-medium text-gray-700">
-                Telefone
-              </label>
-              <input
-                type="tel"
-                id="telefone"
-                name="telefone"
-                value={formData.telefone || ''}
-                onChange={handleChange}
-                placeholder="(00) 00000-0000"
-                className={`mt-1 block w-full rounded-md border ${
-                  errors.telefone ? 'border-red-500' : 'border-gray-300'
-                } px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500`}
-              />
-              {errors.telefone && (
-                <p className="mt-1 text-xs text-red-500">{errors.telefone}</p>
-              )}
-            </div>
-
-            {/* Status */}
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                Status
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status || 'novo'}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              >
-                {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Valor */}
-            <div>
-              <label htmlFor="valor" className="block text-sm font-medium text-gray-700">
-                Valor Estimado (R$)
-              </label>
-              <input
-                type="number"
-                id="valor"
-                name="valor"
-                min="0"
-                step="0.01"
-                value={formData.valor || ''}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              />
-            </div>
-
-            {/* Origem */}
-            <div>
-              <label htmlFor="origem" className="block text-sm font-medium text-gray-700">
-                Origem
-              </label>
-              <select
-                id="origem"
-                name="origem"
-                value={formData.origem || ''}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              >
-                <option value="">Selecione a origem</option>
-                {originOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Próximo Contato */}
-            <div>
-              <label htmlFor="proximoContato" className="block text-sm font-medium text-gray-700">
-                Próximo Contato
-              </label>
-              <input
-                type="date"
-                id="proximoContato"
-                name="proximoContato"
-                value={formData.proximoContato || ''}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              />
-            </div>
-
-            {/* Responsável */}
-            <div>
-              <label htmlFor="responsavel" className="block text-sm font-medium text-gray-700">
-                Responsável
-              </label>
-              <select
-                id="responsavel"
-                name="responsavel"
-                value={formData.responsavel?.id || ''}
-                onChange={handleResponsibleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              >
-                <option value="">Selecione o responsável</option>
-                {responsibleUsers.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Observações - Span 2 columns */}
-            <div className="md:col-span-2">
-              <label htmlFor="observacoes" className="block text-sm font-medium text-gray-700">
-                Observações
-              </label>
-              <textarea
-                id="observacoes"
-                name="observacoes"
-                rows={3}
-                value={formData.observacoes || ''}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              />
-            </div>
-          </div>
-
-          {/* Form Actions */}
-          <div className="mt-8 flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600"
-            >
-              {lead ? 'Atualizar' : 'Cadastrar'}
-            </button>
-          </div>
-        </form>
+    <div className="max-w-4xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">
+          {isEditing ? 'Editar Lead' : 'Novo Lead'}
+        </h1>
+        <p className="text-gray-600">
+          {isEditing ? 'Atualize as informações do lead' : 'Preencha as informações do novo lead'}
+        </p>
       </div>
+      {formContent}
     </div>
   );
-}
+};
+
+export default LeadForm;
+
