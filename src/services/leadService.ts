@@ -122,8 +122,20 @@ class LeadService {
     });
   }
 
-  async getLeadStats(): Promise<any> {
-    return await this.makeRequest('/leads/stats', { method: 'GET' });
+  async getLeadStats(): Promise<{
+    total: number;
+    today: number;
+    growth: number;
+    growthPercent: number;
+  }> {
+    const response = await this.makeRequest('/leads/stats', { method: 'GET' });
+    const data = response.data;
+    return {
+      total: data.total,
+      today: data.today,
+      growth: data.growth,
+      growthPercent: parseFloat(data.growth_percent)
+    };
   }
 
   async searchLeads(searchTerm: string): Promise<any> {

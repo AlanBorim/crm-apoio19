@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react';
 import { SummaryCard } from './SummaryCard';
 import { PerformanceChart } from './PerformanceChart';
 import { FunnelChart } from './FunnelChart';
 import { RecentActivities } from './RecentActivities';
 import { PendingTasks } from './PendingTasks';
 import { Users, FileText, CheckSquare, DollarSign } from 'lucide-react';
+import leadService from '../../services/leadService';
 
 // Dados mockados para o dashboard
 const mockPerformanceData = [
@@ -110,6 +112,27 @@ const mockTasks = [
 ];
 
 export function Dashboard() {
+
+  const [totalLeads, setTotalLeads] = useState(0);
+  const [leadsToday, setLeadsToday] = useState(0);
+  const [growth, setGrowth] = useState(0);
+  const [growthPercent, setGrowthPercent] = useState(0);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const stats = await leadService.getLeadStats();
+        setTotalLeads(stats.total);
+        setLeadsToday(stats.today);
+        setGrowth(stats.growth);
+        setGrowthPercent(stats.growthPercent);
+      } catch (err) {
+        console.error('Erro ao carregar estatísticas de leads:', err);
+      }
+    };
+
+    fetchStats();
+  }, []);
   return (
     <>
       <div className="mb-6">
@@ -121,12 +144,12 @@ export function Dashboard() {
       <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard
           title="Total de Leads"
-          value="156"
-          subtitle="12 novos hoje"
+          value={totalLeads}
+          subtitle={`${Number(leadsToday)} novos hoje`}
           icon={<Users size={24} />}
-          trend={{ value: 8, isPositive: true }}
-          color="orange"
-          onClick={() => console.log('Leads clicked')}
+          trend={{ value: growthPercent, isPositive: growthPercent >= 0 }}
+        color="orange"
+        onClick={() => console.log('Leads clicked')}
         />
         <SummaryCard
           title="Propostas Ativas"
