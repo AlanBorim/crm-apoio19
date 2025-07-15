@@ -1,27 +1,52 @@
-// src/services/leadService.ts
-import React from 'react';
+// src/services/leadService.ts - Versão final corrigida para estrutura real da API
 
+import { useState, useEffect } from 'react';
+import { Lead, LeadFilter, LeadSortOptions, LeadPaginationOptions } from '../components/leads/types/lead';
+
+// Configuração da API
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://crm.apoio19.com.br/api';
 
-export interface Lead {
-  id: number;
-  nome: string;
-  email: string;
-  telefone?: string;
-  origem?: string;
-  criado_em?: string;
-  valor_estimado?: number;
-  [key: string]: any;
+// Interface para resposta da API (estrutura real)
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  error?: string;
+}
+
+// Interface para resposta de leads (estrutura esperada pelo componente)
+interface LeadsResponse {
+  leads: Lead[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+interface LeadStats {
+  total?: number;
+  novo?: number;
+  contato?: number;
+  qualificado?: number;
+  proposta?: number;
+  negociacao?: number;
+  fechado?: number;
+  perdido?: number;
+  valorTotal?: number;
+  valorMedio?: number;
+  // Propriedades adicionais para o Dashboard
+  today?: number;
+  growth?: number;
+  growthPercent?: number;
 }
 
 class LeadService {
-  baseURL: string;
+  private baseURL: string;
 
   constructor() {
     this.baseURL = API_BASE_URL;
   }
 
-  getHeaders(): HeadersInit {
+  private getHeaders(): HeadersInit {
     const token = localStorage.getItem('token');
     return {
       'Content-Type': 'application/json',
@@ -30,211 +55,327 @@ class LeadService {
     };
   }
 
-  async makeRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
-    const url = `${this.baseURL}${endpoint}`;
+  private async request<T>(url: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const config: RequestInit = {
-      headers: this.getHeaders(),
       ...options,
+      headers: {
+        ...this.getHeaders(),
+        ...options.headers,
+      },
     };
 
     try {
-      const response = await fetch(url, config);
+      const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
+      const response = await fetch(fullUrl, config);
+
       const data = await response.json();
       console.log('API Response:', data);
+      
       if (!response.ok) {
-        throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
       }
+
       return data;
-    } catch (error: any) {
-      console.error('API Request Error:', error);
+    } catch (error) {
+      console.error('API request failed:', error);
       throw error;
     }
   }
 
-  async getLeads(filters: Record<string, any> = {}): Promise<any> {
+  // Buscar estatísticas dos leads
+  async getLeadStats(): Promise<ApiResponse<LeadStats>> {
+    return this.request<LeadStats>('/leads/stats');
+  }
+
+  // Buscar leads com filtros - CORRIGIDO para estrutura real da API
+  async getLeads(
+    filters: LeadFilter = {},
+    sort: LeadSortOptions = { campo: 'dataCriacao', ordem: 'desc' },
+    pagination: LeadPaginationOptions = { pagina: 1, itensPorPagina: 50 }
+  ): Promise<ApiResponse<LeadsResponse>> {
     const queryParams = new URLSearchParams();
-    Object.keys(filters).forEach((key) => {
-      if (filters[key] != null && filters[key] !== '') {
-        queryParams.append(key, filters[key]);
+
+    // Adicionar filtros
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        if (Array.isArray(value)) {
+          value.forEach(v => queryParams.append(key, v));
+        } else {
+          queryParams.append(key, value.toString());
+        }
       }
     });
-    const endpoint = `/leads${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    return await this.makeRequest(endpoint, { method: 'GET' });
+
+    // Adicionar ordenação
+    queryParams.append('sortBy', sort.campo);
+    queryParams.append('sortOrder', sort.ordem);
+
+    // Adicionar paginação
+    queryParams.append('page', pagination.pagina.toString());
+    queryParams.append('limit', pagination.itensPorPagina.toString());
+
+    try {
+      const response = await this.request<Lead[]>(`/leads?${queryParams.toString()}`);
+      
+      // Transformar a resposta para o formato esperado pelo componente
+      const transformedResponse: ApiResponse<LeadsResponse> = {
+        success: response.success,
+        message: response.message,
+        error: response.error,
+        data: {
+          leads: Array.isArray(response.data) ? response.data : [],
+          total: Array.isArray(response.data) ? response.data.length : 0,
+          page: pagination.pagina,
+          totalPages: Math.ceil((Array.isArray(response.data) ? response.data.length : 0) / pagination.itensPorPagina)
+        }
+      };
+
+      return transformedResponse;
+    } catch (error) {
+      // Retornar estrutura segura em caso de erro
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        data: {
+          leads: [],
+          total: 0,
+          page: 1,
+          totalPages: 0
+        }
+      };
+    }
   }
 
-  async getLead(leadId: number | string): Promise<any> {
-    return await this.makeRequest(`/leads/${leadId}`, { method: 'GET' });
+  // Buscar lead por ID
+  async getLead(id: string): Promise<ApiResponse<{ lead: Lead; historico?: any[] }>> {
+    return this.request<{ lead: Lead; historico?: any[] }>(`/leads/${id}`);
   }
 
-  async createLead(leadData: Partial<Lead>): Promise<any> {
-    return await this.makeRequest('/leads', {
+  // Criar novo lead
+  async createLead(leadData: Partial<Lead>): Promise<ApiResponse<Lead>> {
+    return this.request<Lead>('/leads', {
       method: 'POST',
       body: JSON.stringify(leadData),
     });
   }
 
-  async updateLead(leadId: number | string, leadData: Partial<Lead>): Promise<any> {
-    return await this.makeRequest(`/leads/${leadId}`, {
+  // Atualizar lead
+  async updateLead(id: string, leadData: Partial<Lead>): Promise<ApiResponse<Lead>> {
+    return this.request<Lead>(`/leads/${id}`, {
       method: 'PUT',
       body: JSON.stringify(leadData),
     });
   }
 
-  async deleteLead(leadId: number | string): Promise<any> {
-    return await this.makeRequest(`/leads/${leadId}`, { method: 'DELETE' });
-  }
-
-  async batchUpdateStatus(leadIds: (number | string)[], status: string): Promise<any> {
-    return await this.makeRequest('/leads/batch/status', {
-      method: 'POST',
-      body: JSON.stringify({ ids: leadIds, status }),
+  // Excluir lead
+  async deleteLead(id: string): Promise<ApiResponse<{ message: string }>> {
+    return this.request<{ message: string }>(`/leads/${id}`, {
+      method: 'DELETE',
     });
   }
 
-  async batchAssignResponsible(leadIds: (number | string)[], responsavelId: number): Promise<any> {
-    return await this.makeRequest('/leads/batch/assign', {
-      method: 'POST',
-      body: JSON.stringify({ ids: leadIds, responsavel_id: responsavelId }),
+  // Ações em lote
+  async batchUpdateStatus(leadIds: string[], status: string): Promise<ApiResponse<{ updated: number }>> {
+    return this.request<{ updated: number }>('/leads/batch/status', {
+      method: 'PATCH',
+      body: JSON.stringify({ leadIds, status }),
     });
   }
 
-  async batchDelete(leadIds: (number | string)[]): Promise<any> {
-    return await this.makeRequest('/leads/batch/delete', {
-      method: 'POST',
-      body: JSON.stringify({ ids: leadIds }),
+  async batchAssignResponsible(leadIds: string[], responsavelId: string): Promise<ApiResponse<{ updated: number }>> {
+    return this.request<{ updated: number }>('/leads/batch/assign', {
+      method: 'PATCH',
+      body: JSON.stringify({ leadIds, responsavelId }),
     });
   }
 
-  async importCsv(file: File, fieldMapping: Record<string, any>, defaultResponsavelId: number | null = null): Promise<any> {
-    const formData = new FormData();
-    formData.append('csv_file', file);
-    formData.append('field_mapping', JSON.stringify(fieldMapping));
-    if (defaultResponsavelId) {
-      formData.append('default_responsavel_id', defaultResponsavelId.toString());
+  async batchDelete(leadIds: string[]): Promise<ApiResponse<{ deleted: number }>> {
+    return this.request<{ deleted: number }>('/leads/batch/delete', {
+      method: 'DELETE',
+      body: JSON.stringify({ leadIds }),
+    });
+  }
+
+  // Exportar leads
+  async exportLeads(leadIds?: string[]): Promise<void> {
+    const endpoint = leadIds && leadIds.length > 0
+      ? '/leads/export/selected'
+      : '/leads/export';
+
+    const body = leadIds && leadIds.length > 0
+      ? JSON.stringify({ leadIds })
+      : undefined;
+
+    try {
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body,
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao exportar leads');
+      }
+
+      // Fazer download do arquivo
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `leads_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Erro ao exportar leads:', error);
+      throw error;
     }
-    const headers = { ...this.getHeaders() };
-    delete headers['Content-Type'];
+  }
 
-    return await this.makeRequest('/leads/import', {
+  // Adicionar interação
+  async addInteraction(leadId: string, interaction: {
+    tipo: string;
+    descricao: string;
+    data_interacao: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>(`/leads/${leadId}/interactions`, {
       method: 'POST',
-      headers,
-      body: formData,
+      body: JSON.stringify(interaction),
     });
-  }
-
-  async getLeadStats(): Promise<{
-    total: number;
-    today: number;
-    growth: number;
-    growthPercent: number;
-  }> {
-    const response = await this.makeRequest('/leads/stats', { method: 'GET' });
-    const data = response.data;
-    return {
-      total: data.total,
-      today: data.today,
-      growth: data.growth,
-      growthPercent: parseFloat(data.growth_percent)
-    };
-  }
-
-  async searchLeads(searchTerm: string): Promise<any> {
-    const queryParams = new URLSearchParams({ search: searchTerm });
-    return await this.makeRequest(`/leads/search?${queryParams.toString()}`, { method: 'GET' });
   }
 }
 
-const leadService = new LeadService();
-export default leadService;
+// Hook personalizado para gerenciar leads - COM VERIFICAÇÕES DE SEGURANÇA
+export function useLeads() {
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-// React Hooks
-export const useLeads = () => {
-  const [leads, setLeads] = React.useState<Lead[]>([]);
-  const [loading, setLoading] = React.useState<boolean>(false);
-  const [error, setError] = React.useState<string | null>(null);
-
-  const fetchLeads = async (filters: Record<string, any> = {}) => {
+  const fetchLeads = async (filters: LeadFilter = {}) => {
     setLoading(true);
     setError(null);
+
     try {
       const response = await leadService.getLeads(filters);
-      setLeads(response.data || []);
+      if (response.success && response.data) {
+        // Verificação de segurança: garantir que leads é sempre um array
+        const leadsArray = Array.isArray(response.data.leads) ? response.data.leads : [];
+        setLeads(leadsArray);
+      } else {
+        setError(response.error || 'Erro ao carregar leads');
+        setLeads([]); // Garantir que leads seja sempre um array
+      }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Erro ao carregar leads');
+      setLeads([]); // Garantir que leads seja sempre um array
     } finally {
       setLoading(false);
     }
   };
 
-  const createLead = async (leadData: Partial<Lead>) => {
-    setLoading(true);
-    setError(null);
+  const deleteLead = async (id: string) => {
     try {
-      const response = await leadService.createLead(leadData);
-      await fetchLeads();
-      return response;
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
+      const response = await leadService.deleteLead(id);
+      if (response.success) {
+        setLeads(prev => Array.isArray(prev) ? prev.filter(lead => lead.id !== id) : []);
+      } else {
+        throw new Error(response.error || 'Erro ao excluir lead');
+      }
+    } catch (error) {
+      console.error('Erro ao excluir lead:', error);
+      throw error;
     }
   };
 
-  const updateLead = async (leadId: number, leadData: Partial<Lead>) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await leadService.updateLead(leadId, leadData);
-      await fetchLeads();
-      return response;
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+  return {
+    leads: Array.isArray(leads) ? leads : [], // Garantir que sempre retorne um array
+    loading,
+    error,
+    fetchLeads,
+    deleteLead
   };
+}
 
-  const deleteLead = async (leadId: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await leadService.deleteLead(leadId);
-      await fetchLeads();
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { leads, loading, error, fetchLeads, createLead, updateLead, deleteLead };
-};
-
-export const useLead = (leadId: number | string) => {
-  const [lead, setLead] = React.useState<Lead | null>(null);
-  const [loading, setLoading] = React.useState<boolean>(false);
-  const [error, setError] = React.useState<string | null>(null);
+// Hook para gerenciar um lead individual - COM VERIFICAÇÕES DE SEGURANÇA
+export function useLead(leadId: string) {
+  const [lead, setLead] = useState<Lead | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchLead = async () => {
     if (!leadId) return;
+
     setLoading(true);
     setError(null);
+
     try {
       const response = await leadService.getLead(leadId);
-      setLead(response.data);
+      if (response.success && response.data) {
+        setLead(response.data.lead || null);
+      } else {
+        setError(response.error || 'Erro ao carregar lead');
+        setLead(null);
+      }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Erro ao carregar lead');
+      setLead(null);
     } finally {
       setLoading(false);
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchLead();
   }, [leadId]);
 
-  return { lead, loading, error, refetch: fetchLead };
-};
+  return {
+    lead,
+    loading,
+    error,
+    refetch: fetchLead
+  };
+}
+
+// Hook para estatísticas do dashboard - COM VERIFICAÇÕES DE SEGURANÇA
+export function useLeadStats() {
+  const [stats, setStats] = useState<LeadStats | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStats = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await leadService.getLeadStats();
+      if (response.success && response.data) {
+        setStats(response.data);
+      } else {
+        setError(response.error || 'Erro ao carregar estatísticas');
+        setStats(null);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Erro ao carregar estatísticas');
+      setStats(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  return {
+    stats,
+    loading,
+    error,
+    refetch: fetchStats
+  };
+}
+
+// Instância do serviço
+const leadService = new LeadService();
+export default leadService;
+

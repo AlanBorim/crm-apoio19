@@ -121,18 +121,38 @@ export function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const stats = await leadService.getLeadStats();
-        setTotalLeads(stats.total);
-        setLeadsToday(stats.today);
-        setGrowth(stats.growth);
-        setGrowthPercent(stats.growthPercent);
+        const response = await leadService.getLeadStats();
+        
+        // Verificar se a resposta foi bem-sucedida e tem dados
+        if (response.success && response.data) {
+          const stats = response.data;
+          
+          // Usar as propriedades disponíveis ou valores padrão
+          setTotalLeads(stats.total || 0);
+          setLeadsToday(stats.today || 0);
+          setGrowth(stats.growth || 0);
+          setGrowthPercent(stats.growthPercent || 0);
+        } else {
+          // Usar valores padrão se não houver dados
+          console.warn('Não foi possível carregar estatísticas, usando valores padrão');
+          setTotalLeads(0);
+          setLeadsToday(0);
+          setGrowth(0);
+          setGrowthPercent(0);
+        }
       } catch (err) {
         console.error('Erro ao carregar estatísticas de leads:', err);
+        // Usar valores padrão em caso de erro
+        setTotalLeads(0);
+        setLeadsToday(0);
+        setGrowth(0);
+        setGrowthPercent(0);
       }
     };
 
     fetchStats();
   }, []);
+
   return (
     <>
       <div className="mb-6">
@@ -148,8 +168,8 @@ export function Dashboard() {
           subtitle={`${Number(leadsToday)} novos hoje`}
           icon={<Users size={24} />}
           trend={{ value: growthPercent, isPositive: growthPercent >= 0 }}
-        color="orange"
-        onClick={() => console.log('Leads clicked')}
+          color="orange"
+          onClick={() => console.log('Leads clicked')}
         />
         <SummaryCard
           title="Propostas Ativas"
@@ -194,3 +214,4 @@ export function Dashboard() {
     </>
   );
 }
+

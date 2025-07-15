@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { LoginForm } from './components/LoginForm';
@@ -8,6 +9,9 @@ import { KanbanBoard } from './components/kanban/KanbanBoard';
 import { ProposalsModule } from './components/propostas/ProposalsModule';
 import { ConfigurationsModule } from './components/configuracoes/ConfigurationsModule';
 import { WhatsAppModule } from './components/whatsapp/WhatsAppModule';
+import { setupActivityListeners } from './utils/activityTracker';
+import { isUserInactive } from './utils/activityTracker';
+import { isTokenExpired, refreshToken } from './utils/auth';
 
 function App() {
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -17,6 +21,36 @@ function App() {
     }
     return <MainLayout>{children}</MainLayout>;
   };
+
+  useEffect(() => {
+    setupActivityListeners();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const token = localStorage.getItem('token');
+      const userInactive = isUserInactive(5 * 60 * 1000); // 5 minutos
+
+      if (!token) return;
+
+      if (isTokenExpired(token)) {
+        if (userInactive) {
+          // desloga
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        } else {
+          const newToken = await refreshToken();
+          if (!newToken) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+          }
+        }
+      }
+    }, 60 * 1000); // checa a cada minuto
+
+    return () => clearInterval(interval);
+  }, []);
+
 
   return (
     <Router>
@@ -61,4 +95,3 @@ function App() {
 }
 
 export default App;
-

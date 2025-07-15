@@ -1,61 +1,111 @@
 // src/components/leads/LeadForm.tsx
 
 import React, { useState, useEffect } from 'react';
-import { Save, X, User, Mail, Phone, Building, MapPin, Calendar } from 'lucide-react';
+import { Save, X, User, Mail, Phone, Building, MapPin, Calendar, DollarSign, Thermometer } from 'lucide-react';
 import leadService from '../../services/leadService';
-import { Lead } from './types/lead';
+import { Lead, LeadStage, LeadTemperature, CreateLeadRequest, UpdateLeadRequest } from './types/lead';
 
 type LeadFormErrors = {
-  nome?: string;
+  name?: string;
   email?: string;
-  telefone?: string;
-  valor_estimado?: string;
+  phone?: string;
+  value?: string;
+  company?: string;
+  cep?: string;
+  city?: string;
+  state?: string;
+  address?: string;
+  next_contact?: string;
   general?: string;
 };
 
 type Props = {
   leadId?: string;
   lead?: Lead;
-  onSave: (lead: Partial<Lead>) => void;
+  onSave: (lead: CreateLeadRequest | UpdateLeadRequest) => Promise<void>;
   onCancel: () => void;
   isModal?: boolean;
 };
 
-const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
+const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isModal = false }) => {
   const [formData, setFormData] = useState({
-    nome: '',
+    name: '',
     email: '',
-    telefone: '',
-    empresa: '',
-    cargo: '',
-    origem: '',
-    status: 'novo',
-    endereco: '',
-    cidade: '',
-    estado: '',
+    phone: '',
+    company: '',
+    position: '',
+    source: '',
+    interest: '',
+    stage: 'novo' as LeadStage,
+    temperature: 'frio' as LeadTemperature,
+    address: '',
+    city: '',
+    state: '',
     cep: '',
-    observacoes: '',
-    responsavel_id: '',
-    valor_estimado: '',
-    data_contato: ''
+    assigned_to: '',
+    value: '',
+    next_contact: ''
   });
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<LeadFormErrors>({});
-  const [isEditing, setIsEditing] = useState(!!leadId);
+  const [isEditing, setIsEditing] = useState(!!leadId || !!lead);
 
   useEffect(() => {
-    if (leadId) {
+    if (lead) {
+      // Se o lead foi passado como prop, usar os dados diretamente
+      setFormData({
+        name: lead.name || '',
+        email: lead.email || '',
+        phone: lead.phone || '',
+        company: lead.company || '',
+        position: lead.position || '',
+        source: lead.source || '',
+        interest: lead.interest || '',
+        stage: lead.stage || 'novo',
+        temperature: lead.temperature || 'frio',
+        address: lead.address || '',
+        city: lead.city || '',
+        state: lead.state || '',
+        cep: lead.cep || '',
+        assigned_to: lead.assigned_to ? lead.assigned_to.toString() : '',
+        value: lead.value ? lead.value.toString() : '',
+        next_contact: lead.next_contact || ''
+      });
+      setIsEditing(true);
+    } else if (leadId) {
+      // Se apenas o ID foi passado, carregar os dados
       loadLead();
     }
-  }, [leadId]);
+  }, [leadId, lead]);
 
   const loadLead = async () => {
+    if (!leadId) return;
+    
     setLoading(true);
     try {
       const response = await leadService.getLead(leadId);
       if (response.data && response.data.lead) {
-        setFormData(response.data.lead);
+        const leadData = response.data.lead;
+        setFormData({
+          name: leadData.name || '',
+          email: leadData.email || '',
+          phone: leadData.phone || '',
+          company: leadData.company || '',
+          position: leadData.position || '',
+          source: leadData.source || '',
+          interest: leadData.interest || '',
+          stage: leadData.stage || 'novo',
+          temperature: leadData.temperature || 'frio',
+          address: leadData.address || '',
+          city: leadData.city || '',
+          state: leadData.state || '',
+          cep: leadData.cep || '',
+          assigned_to: leadData.assigned_to ? leadData.assigned_to.toString() : '',
+          value: leadData.value ? leadData.value.toString() : '',
+          next_contact: leadData.next_contact || ''
+        });
+        setIsEditing(true);
       }
     } catch (error) {
       console.error('Erro ao carregar lead:', error);
@@ -65,12 +115,54 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
     }
   };
 
+  // Função para aplicar máscara de telefone
+  const applyPhoneMask = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 10) {
+      return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    } else {
+      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    }
+  };
+
+  // Função para aplicar máscara de CEP
+  const applyCepMask = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    return numbers.replace(/(\d{5})(\d{3})/, '$1-$2');
+  };
+
+  // Função para aplicar máscara de valor monetário
+  const applyMoneyMask = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    const amount = parseFloat(numbers) / 100;
+    return amount.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
   const handleInputChange = (field: string, value: string) => {
+    let maskedValue = value;
+
+    // Aplicar máscaras específicas
+    switch (field) {
+      case 'phone':
+        maskedValue = applyPhoneMask(value);
+        break;
+      case 'cep':
+        maskedValue = applyCepMask(value);
+        break;
+      case 'value':
+        maskedValue = applyMoneyMask(value);
+        break;
+    }
+
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: maskedValue
     }));
 
+    // Limpar erro do campo se existir
     if (errors[field as keyof LeadFormErrors]) {
       setErrors(prev => ({
         ...prev,
@@ -82,20 +174,65 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
   const validateForm = (): boolean => {
     const newErrors: LeadFormErrors = {};
 
-    if (!formData.nome.trim()) {
-      newErrors.nome = 'Nome é obrigatório';
+    // Nome é obrigatório
+    if (!formData.name.trim()) {
+      newErrors.name = 'Nome é obrigatório';
     }
 
+    // Empresa é obrigatória
+    if (!formData.company.trim()) {
+      newErrors.company = 'Empresa é obrigatória';
+    }
+
+    // CEP é obrigatório
+    if (!formData.cep.trim()) {
+      newErrors.cep = 'CEP é obrigatório';
+    }
+
+    // Cidade é obrigatória
+    if (!formData.city.trim()) {
+      newErrors.city = 'Cidade é obrigatória';
+    }
+
+    // Estado é obrigatório
+    if (!formData.state.trim()) {
+      newErrors.state = 'Estado é obrigatório';
+    }
+
+    // Endereço é obrigatório
+    if (!formData.address.trim()) {
+      newErrors.address = 'Endereço é obrigatório';
+    }
+
+    // Valor é obrigatório
+    if (!formData.value.trim()) {
+      newErrors.value = 'Valor é obrigatório';
+    }
+
+    // Data de próximo contato é obrigatória
+    if (!formData.next_contact.trim()) {
+      newErrors.next_contact = 'Data de próximo contato é obrigatória';
+    }
+
+    // Validar email se preenchido
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Email inválido';
     }
 
-    if (formData.telefone && !/^[\d\s\-\(\)\+]+$/.test(formData.telefone)) {
-      newErrors.telefone = 'Telefone inválido';
+    // Validar telefone se preenchido
+    if (formData.phone) {
+      const phoneNumbers = formData.phone.replace(/\D/g, '');
+      if (phoneNumbers.length < 10 || phoneNumbers.length > 11) {
+        newErrors.phone = 'Telefone deve ter 10 ou 11 dígitos';
+      }
     }
 
-    if (formData.valor_estimado && isNaN(parseFloat(formData.valor_estimado))) {
-      newErrors.valor_estimado = 'Valor deve ser numérico';
+    // Validar valor se preenchido
+    if (formData.value) {
+      const value = parseFloat(formData.value.replace(/[^\d,]/g, '').replace(',', '.'));
+      if (isNaN(value) || value < 0) {
+        newErrors.value = 'Valor deve ser um número positivo';
+      }
     }
 
     setErrors(newErrors);
@@ -110,25 +247,37 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
     }
 
     setLoading(true);
+    setErrors({});
+
     try {
-      const dataToSend = {
-        ...formData,
-        valor_estimado: parseFloat(formData.valor_estimado || '0'),
+      // Preparar dados para envio
+      const dataToSend: CreateLeadRequest | UpdateLeadRequest = {
+        name: formData.name,
+        email: formData.email || undefined,
+        phone: formData.phone ? formData.phone.replace(/\D/g, '') : undefined, // Remover máscara
+        company: formData.company,
+        position: formData.position || undefined,
+        source: formData.source || undefined,
+        interest: formData.interest || undefined,
+        stage: formData.stage,
+        temperature: formData.temperature,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        cep: formData.cep.replace(/\D/g, ''), // Remover máscara
+        assigned_to: formData.assigned_to ? parseInt(formData.assigned_to) : undefined,
+        value: formData.value ? 
+          parseFloat(formData.value.replace(/[^\d,]/g, '').replace(',', '.')) : 0,
+        next_contact: formData.next_contact
       };
 
-      let response;
-      if (isEditing) {
-        response = await leadService.updateLead(leadId, dataToSend);
-      } else {
-        response = await leadService.createLead(dataToSend);
-      }
-
-      if (onSave) {
-        onSave(response.data);
-      }
+      await onSave(dataToSend);
+      
     } catch (error: any) {
       console.error('Erro ao salvar lead:', error);
-      setErrors({ general: error.message || 'Erro ao salvar lead' });
+      setErrors({ 
+        general: error.response?.data?.message || error.message || 'Erro ao salvar lead' 
+      });
     } finally {
       setLoading(false);
     }
@@ -163,15 +312,35 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
             </label>
             <input
               type="text"
-              value={formData.nome}
-              onChange={(e) => handleInputChange('nome', e.target.value)}
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.nome ? 'border-red-300' : 'border-gray-300'
+                errors.name ? 'border-red-300' : 'border-gray-300'
               }`}
               placeholder="Nome completo do lead"
+              disabled={loading}
             />
-            {errors.nome && (
-              <p className="mt-1 text-sm text-red-600">{errors.nome}</p>
+            {errors.name && (
+              <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Empresa *
+            </label>
+            <input
+              type="text"
+              value={formData.company}
+              onChange={(e) => handleInputChange('company', e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.company ? 'border-red-300' : 'border-gray-300'
+              }`}
+              placeholder="Nome da empresa"
+              disabled={loading}
+            />
+            {errors.company && (
+              <p className="mt-1 text-sm text-red-600">{errors.company}</p>
             )}
           </div>
 
@@ -187,6 +356,7 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
                 errors.email ? 'border-red-300' : 'border-gray-300'
               }`}
               placeholder="email@exemplo.com"
+              disabled={loading}
             />
             {errors.email && (
               <p className="mt-1 text-sm text-red-600">{errors.email}</p>
@@ -199,29 +369,17 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
             </label>
             <input
               type="tel"
-              value={formData.telefone}
-              onChange={(e) => handleInputChange('telefone', e.target.value)}
+              value={formData.phone}
+              onChange={(e) => handleInputChange('phone', e.target.value)}
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.telefone ? 'border-red-300' : 'border-gray-300'
+                errors.phone ? 'border-red-300' : 'border-gray-300'
               }`}
               placeholder="(11) 99999-9999"
+              disabled={loading}
             />
-            {errors.telefone && (
-              <p className="mt-1 text-sm text-red-600">{errors.telefone}</p>
+            {errors.phone && (
+              <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
             )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Empresa
-            </label>
-            <input
-              type="text"
-              value={formData.empresa}
-              onChange={(e) => handleInputChange('empresa', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Nome da empresa"
-            />
           </div>
 
           <div>
@@ -230,10 +388,11 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
             </label>
             <input
               type="text"
-              value={formData.cargo}
-              onChange={(e) => handleInputChange('cargo', e.target.value)}
+              value={formData.position}
+              onChange={(e) => handleInputChange('position', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Cargo na empresa"
+              disabled={loading}
             />
           </div>
 
@@ -242,9 +401,10 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
               Origem
             </label>
             <select
-              value={formData.origem}
-              onChange={(e) => handleInputChange('origem', e.target.value)}
+              value={formData.source}
+              onChange={(e) => handleInputChange('source', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={loading}
             >
               <option value="">Selecione a origem</option>
               <option value="website">Website</option>
@@ -257,27 +417,43 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
             </select>
           </div>
         </div>
+
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Interesse
+          </label>
+          <textarea
+            value={formData.interest}
+            onChange={(e) => handleInputChange('interest', e.target.value)}
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Descreva o interesse do lead..."
+            disabled={loading}
+          />
+        </div>
       </div>
 
-      {/* Status e Responsável */}
+      {/* Informações Comerciais */}
       <div className="bg-white p-6 rounded-lg border">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">
-          Status e Responsabilidade
+        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+          <DollarSign size={20} />
+          Informações Comerciais
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
+              Estágio
             </label>
             <select
-              value={formData.status}
-              onChange={(e) => handleInputChange('status', e.target.value)}
+              value={formData.stage}
+              onChange={(e) => handleInputChange('stage', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={loading}
             >
               <option value="novo">Novo</option>
-              <option value="contato">Em Contato</option>
-              <option value="qualificado">Qualificado</option>
+              <option value="contatado">Contatado</option>
+              <option value="reuniao">Reunião</option>
               <option value="proposta">Proposta</option>
               <option value="fechado">Fechado</option>
               <option value="perdido">Perdido</option>
@@ -285,33 +461,70 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+              <Thermometer size={16} />
+              Temperatura
+            </label>
+            <select
+              value={formData.temperature}
+              onChange={(e) => handleInputChange('temperature', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={loading}
+            >
+              <option value="frio">🧊 Frio</option>
+              <option value="morno">🌡️ Morno</option>
+              <option value="quente">🔥 Quente</option>
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Valor Estimado
+              Valor Estimado *
             </label>
             <input
-              type="number"
-              step="0.01"
-              value={formData.valor_estimado}
-              onChange={(e) => handleInputChange('valor_estimado', e.target.value)}
+              type="text"
+              value={formData.value}
+              onChange={(e) => handleInputChange('value', e.target.value)}
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.valor_estimado ? 'border-red-300' : 'border-gray-300'
+                errors.value ? 'border-red-300' : 'border-gray-300'
               }`}
               placeholder="0,00"
+              disabled={loading}
             />
-            {errors.valor_estimado && (
-              <p className="mt-1 text-sm text-red-600">{errors.valor_estimado}</p>
+            {errors.value && (
+              <p className="mt-1 text-sm text-red-600">{errors.value}</p>
             )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data de Contato
+              Data de Próximo Contato *
             </label>
             <input
               type="date"
-              value={formData.data_contato}
-              onChange={(e) => handleInputChange('data_contato', e.target.value)}
+              value={formData.next_contact}
+              onChange={(e) => handleInputChange('next_contact', e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.next_contact ? 'border-red-300' : 'border-gray-300'
+              }`}
+              disabled={loading}
+            />
+            {errors.next_contact && (
+              <p className="mt-1 text-sm text-red-600">{errors.next_contact}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Responsável
+            </label>
+            <input
+              type="number"
+              value={formData.assigned_to}
+              onChange={(e) => handleInputChange('assigned_to', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="ID do responsável"
+              disabled={loading}
             />
           </div>
         </div>
@@ -327,71 +540,108 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Endereço
+              Endereço *
             </label>
             <input
               type="text"
-              value={formData.endereco}
-              onChange={(e) => handleInputChange('endereco', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={formData.address}
+              onChange={(e) => handleInputChange('address', e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.address ? 'border-red-300' : 'border-gray-300'
+              }`}
               placeholder="Rua, número, complemento"
+              disabled={loading}
             />
+            {errors.address && (
+              <p className="mt-1 text-sm text-red-600">{errors.address}</p>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cidade
+              Cidade *
             </label>
             <input
               type="text"
-              value={formData.cidade}
-              onChange={(e) => handleInputChange('cidade', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={formData.city}
+              onChange={(e) => handleInputChange('city', e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.city ? 'border-red-300' : 'border-gray-300'
+              }`}
               placeholder="Cidade"
+              disabled={loading}
             />
+            {errors.city && (
+              <p className="mt-1 text-sm text-red-600">{errors.city}</p>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Estado
+              Estado *
             </label>
-            <input
-              type="text"
-              value={formData.estado}
-              onChange={(e) => handleInputChange('estado', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Estado"
-            />
+            <select
+              value={formData.state}
+              onChange={(e) => handleInputChange('state', e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.state ? 'border-red-300' : 'border-gray-300'
+              }`}
+              disabled={loading}
+            >
+              <option value="">Selecione o estado</option>
+              <option value="AC">Acre</option>
+              <option value="AL">Alagoas</option>
+              <option value="AP">Amapá</option>
+              <option value="AM">Amazonas</option>
+              <option value="BA">Bahia</option>
+              <option value="CE">Ceará</option>
+              <option value="DF">Distrito Federal</option>
+              <option value="ES">Espírito Santo</option>
+              <option value="GO">Goiás</option>
+              <option value="MA">Maranhão</option>
+              <option value="MT">Mato Grosso</option>
+              <option value="MS">Mato Grosso do Sul</option>
+              <option value="MG">Minas Gerais</option>
+              <option value="PA">Pará</option>
+              <option value="PB">Paraíba</option>
+              <option value="PR">Paraná</option>
+              <option value="PE">Pernambuco</option>
+              <option value="PI">Piauí</option>
+              <option value="RJ">Rio de Janeiro</option>
+              <option value="RN">Rio Grande do Norte</option>
+              <option value="RS">Rio Grande do Sul</option>
+              <option value="RO">Rondônia</option>
+              <option value="RR">Roraima</option>
+              <option value="SC">Santa Catarina</option>
+              <option value="SP">São Paulo</option>
+              <option value="SE">Sergipe</option>
+              <option value="TO">Tocantins</option>
+            </select>
+            {errors.state && (
+              <p className="mt-1 text-sm text-red-600">{errors.state}</p>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              CEP
+              CEP *
             </label>
             <input
               type="text"
               value={formData.cep}
               onChange={(e) => handleInputChange('cep', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.cep ? 'border-red-300' : 'border-gray-300'
+              }`}
               placeholder="00000-000"
+              maxLength={9}
+              disabled={loading}
             />
+            {errors.cep && (
+              <p className="mt-1 text-sm text-red-600">{errors.cep}</p>
+            )}
           </div>
         </div>
-      </div>
-
-      {/* Observações */}
-      <div className="bg-white p-6 rounded-lg border">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">
-          Observações
-        </h3>
-        
-        <textarea
-          value={formData.observacoes}
-          onChange={(e) => handleInputChange('observacoes', e.target.value)}
-          rows={4}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Observações adicionais sobre o lead..."
-        />
       </div>
 
       {/* Botões de ação */}
@@ -399,7 +649,7 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
         <button
           type="button"
           onClick={handleCancel}
-          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50"
           disabled={loading}
         >
           <X size={20} />
@@ -416,7 +666,7 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
           ) : (
             <Save size={20} />
           )}
-          {loading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar Lead')}
+          {loading ? 'Salvando...' : (isEditing ? 'Atualizar Lead' : 'Criar Lead')}
         </button>
       </div>
     </form>
@@ -453,5 +703,4 @@ const LeadForm = ({ leadId = null, onSave, onCancel, isModal = false }) => {
 };
 
 export default LeadForm;
-
 
