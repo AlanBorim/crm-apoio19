@@ -29,7 +29,7 @@ export const useAuth = create<AuthState>((set: any) => ({
   initializeAuth: () => {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
-    
+
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr);
@@ -44,21 +44,17 @@ export const useAuth = create<AuthState>((set: any) => ({
 
   login: async (email: string, senha: string) => {
     set({ isLoading: true, error: null });
-    console.log('Iniciando login com', email);
 
     try {
       // Usar URL relativa já que frontend e backend estão no mesmo servidor
       const response = await fetch('/api/login', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
         body: JSON.stringify({ email, senha }),
       });
-
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
 
       if (!response.ok) {
         let errorMessage = 'Erro ao fazer login';
@@ -73,8 +69,6 @@ export const useAuth = create<AuthState>((set: any) => ({
       }
 
       const responseData = await response.json();
-      console.log('Login bem-sucedido:', responseData);
-
       const { token, user } = responseData;
 
       localStorage.setItem('token', token);
@@ -85,13 +79,13 @@ export const useAuth = create<AuthState>((set: any) => ({
     } catch (err: any) {
       console.error('Erro ao fazer login:', err);
       let errorMessage = 'Erro inesperado';
-      
+
       if (err.name === 'TypeError' && err.message.includes('fetch')) {
         errorMessage = 'Erro de conexão com o servidor. Verifique sua conexão com a internet.';
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       set({ error: errorMessage, isLoading: false });
       return false;
     }

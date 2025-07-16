@@ -12,15 +12,22 @@ import { WhatsAppModule } from './components/whatsapp/WhatsAppModule';
 import { setupActivityListeners } from './utils/activityTracker';
 import { isUserInactive } from './utils/activityTracker';
 import { isTokenExpired, refreshToken } from './utils/auth';
+import { NotificationProvider } from './components/notifications/NotificationSystemDB';
 
 function App() {
   const { isAuthenticated } = useAuth();
 
+  // Componente para rotas protegidas COM NotificationProvider
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     if (!isAuthenticated) {
       return <Navigate to="/login" replace />;
     }
-    return <MainLayout>{children}</MainLayout>;
+    
+    return (
+      <NotificationProvider>
+        <MainLayout>{children}</MainLayout>
+      </NotificationProvider>
+    );
   };
 
   useEffect(() => {

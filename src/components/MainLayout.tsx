@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { NotificationProvider } from './notifications/NotificationSystemDB';
 import { NotificationBell } from './NotificationBell';
 
 interface MainLayoutProps {
@@ -52,6 +51,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <div className={`fixed inset-0 z-40 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
+          {/* Cabeçalho da sidebar mobile - APENAS LOGO */}
           <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
             <div className="flex items-center">
               <img src="/logo.png" alt="CRM Apoio19" className="h-8 w-auto" />
@@ -74,6 +74,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                       ? 'bg-orange-50 text-orange-600'
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
+                  onClick={() => setSidebarOpen(false)}
                 >
                   <div className={`mr-3 ${
                     location.pathname === item.path ? 'text-orange-500' : 'text-gray-400 group-hover:text-gray-500'
@@ -100,8 +101,10 @@ export function MainLayout({ children }: MainLayoutProps) {
       {/* Sidebar para desktop */}
       <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
         <div className="flex flex-col flex-grow border-r border-gray-200 bg-white">
+          {/* Cabeçalho da sidebar desktop - APENAS LOGO */}
           <div className="flex h-16 items-center justify-center border-b border-gray-200">
             <img src="/logo.png" alt="CRM Apoio19" className="h-8 w-auto" />
+            {/* ❌ REMOVIDO: Qualquer sino de notificação aqui */}
           </div>
           <div className="flex flex-1 flex-col overflow-y-auto">
             <nav className="flex-1 space-y-1 px-2 py-4">
@@ -139,7 +142,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       
       {/* Conteúdo principal */}
       <div className="flex flex-1 flex-col lg:pl-64">
-        {/* Cabeçalho */}
+        {/* Cabeçalho - ÚNICO LOCAL COM NOTIFICAÇÕES */}
         <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 border-b border-gray-200 bg-white">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -163,10 +166,8 @@ export function MainLayout({ children }: MainLayoutProps) {
               </div>
             </div>
             <div className="ml-4 flex items-center md:ml-6">
-              {/* Sistema de Notificações */}
-              <NotificationProvider>
-                <NotificationBell />
-              </NotificationProvider>
+              {/* ✅ ÚNICO SINO DE NOTIFICAÇÃO - NO CABEÇALHO */}
+              <NotificationBell />
               
               {/* Perfil */}
               <div className="relative ml-3">

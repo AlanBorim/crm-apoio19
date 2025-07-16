@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SummaryCard } from './SummaryCard';
 import { PerformanceChart } from './PerformanceChart';
 import { FunnelChart } from './FunnelChart';
@@ -117,6 +118,7 @@ export function Dashboard() {
   const [leadsToday, setLeadsToday] = useState(0);
   const [growth, setGrowth] = useState(0);
   const [growthPercent, setGrowthPercent] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -169,7 +171,7 @@ export function Dashboard() {
           icon={<Users size={24} />}
           trend={{ value: growthPercent, isPositive: growthPercent >= 0 }}
           color="orange"
-          onClick={() => console.log('Leads clicked')}
+          onClick={() => navigate('/leads')}
         />
         <SummaryCard
           title="Propostas Ativas"

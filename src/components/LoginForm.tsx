@@ -10,18 +10,15 @@ export function LoginForm() {
   const [senha, setSenha] = useState('');
   const { login, isLoading, error, clearError } = useAuth();
   const navigate = useNavigate();
-console.log('LoginForm component loaded' + email + senha);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
-
-    console.log('Formulário submetido');
-    
+   
     const success = await login(email, senha);
     if (success) {
       navigate('/dashboard');
     }
-    console.log('Login attempt:', { email, senha, success });
+
   };
 
   return (
