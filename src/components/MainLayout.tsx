@@ -1,6 +1,3 @@
-// Correção para o erro: Cannot find name 'LayoutGrid'
-// Importando o ícone correto da biblioteca lucide-react
-
 import { useState } from 'react';
 import { 
   LayoutDashboard, 
@@ -11,13 +8,14 @@ import {
   Menu,
   X,
   Search,
-  Bell,
-  Grid, // Usando Grid em vez de LayoutGrid
+  Grid,
   ChevronDown,
   MessageSquare
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { NotificationProvider } from './notifications/NotificationSystemDB';
+import { NotificationBell } from './NotificationBell';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -165,13 +163,10 @@ export function MainLayout({ children }: MainLayoutProps) {
               </div>
             </div>
             <div className="ml-4 flex items-center md:ml-6">
-              {/* Notificações */}
-              <button className="relative rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
-                <Bell size={20} />
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
-                  3
-                </span>
-              </button>
+              {/* Sistema de Notificações */}
+              <NotificationProvider>
+                <NotificationBell />
+              </NotificationProvider>
               
               {/* Perfil */}
               <div className="relative ml-3">

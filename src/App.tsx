@@ -14,8 +14,9 @@ import { isUserInactive } from './utils/activityTracker';
 import { isTokenExpired, refreshToken } from './utils/auth';
 
 function App() {
+  const { isAuthenticated } = useAuth();
+
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    const { isAuthenticated } = useAuth();
     if (!isAuthenticated) {
       return <Navigate to="/login" replace />;
     }
@@ -51,43 +52,53 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-
   return (
     <Router>
       <div className="App">
         <Routes>
+          {/* Rota de login - SEM NotificationProvider */}
           <Route path="/login" element={<LoginForm />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
+          
+          {/* Todas as rotas protegidas envolvidas pelo NotificationProvider */}
+          <Route path="/*" element={
+            isAuthenticated ? (
+                <Routes>
+                  <Route path="/dashboard" element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/leads" element={
+                    <ProtectedRoute>
+                      <LeadsModule />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/kanban" element={
+                    <ProtectedRoute>
+                      <KanbanBoard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/propostas" element={
+                    <ProtectedRoute>
+                      <ProposalsModule />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/configuracoes" element={
+                    <ProtectedRoute>
+                      <ConfigurationsModule />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/whatsapp" element={
+                    <ProtectedRoute>
+                      <WhatsAppModule />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+            ) : (
+              <Navigate to="/login" replace />
+            )
           } />
-          <Route path="/leads" element={
-            <ProtectedRoute>
-              <LeadsModule />
-            </ProtectedRoute>
-          } />
-          <Route path="/kanban" element={
-            <ProtectedRoute>
-              <KanbanBoard />
-            </ProtectedRoute>
-          } />
-          <Route path="/propostas" element={
-            <ProtectedRoute>
-              <ProposalsModule />
-            </ProtectedRoute>
-          } />
-          <Route path="/configuracoes" element={
-            <ProtectedRoute>
-              <ConfigurationsModule />
-            </ProtectedRoute>
-          } />
-          <Route path="/whatsapp" element={
-            <ProtectedRoute>
-              <WhatsAppModule />
-            </ProtectedRoute>
-          } />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </div>
     </Router>
@@ -95,3 +106,4 @@ function App() {
 }
 
 export default App;
+
