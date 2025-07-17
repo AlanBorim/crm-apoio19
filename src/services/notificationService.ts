@@ -103,7 +103,6 @@ class NotificationService {
       const cacheKey = this.getCacheKey(url, options);
       const cached = this.getFromCache(cacheKey);
       if (cached) {
-        console.log('Notification API Cache Hit:', url);
         return cached;
       }
     }
@@ -121,7 +120,7 @@ class NotificationService {
       const response = await fetch(fullUrl, config);
 
       const data = await response.json();
-      console.log('Notification API Response:', data);
+      
       
       if (!response.ok) {
         throw new Error(data.message || `HTTP error! status: ${response.status}`);

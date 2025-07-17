@@ -69,7 +69,7 @@ const LeadList: React.FC<LeadListProps> = ({
     const newSelection = selectedLeads.includes(leadId)
       ? selectedLeads.filter(id => id !== leadId)
       : [...selectedLeads, leadId];
-    
+
     setSelectedLeads(newSelection);
     onSelectLeads(newSelection);
     setShowBatchActions(newSelection.length > 0);
@@ -406,7 +406,7 @@ const LeadList: React.FC<LeadListProps> = ({
       </div>
 
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <div className="bg-white p-4 rounded-lg border">
           <div className="flex items-center justify-between">
             <div>
@@ -425,7 +425,31 @@ const LeadList: React.FC<LeadListProps> = ({
                 {safeLeads.filter(lead => lead.temperature === 'quente').length}
               </p>
             </div>
-            <Thermometer className="text-red-600" size={24} />
+            {getTemperatureIcon('quente')}
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Leads Mornos</p>
+              <p className="text-2xl font-bold text-yellow-600">
+                {safeLeads.filter(lead => lead.temperature === 'morno').length}
+              </p>
+            </div>
+            {getTemperatureIcon('morno')}
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Leads Frios</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {safeLeads.filter(lead => lead.temperature === 'frio').length}
+              </p>
+            </div>
+            {getTemperatureIcon('frio')}
           </div>
         </div>
 
@@ -453,6 +477,7 @@ const LeadList: React.FC<LeadListProps> = ({
           </div>
         </div>
       </div>
+
     </div>
   );
 };
