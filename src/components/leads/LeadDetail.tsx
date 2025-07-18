@@ -1,14 +1,14 @@
 // src/components/leads/LeadDetail.tsx
 
 import React, { useState, useEffect } from 'react';
-import { 
-  ArrowLeft, 
-  Edit, 
-  Trash2, 
-  Phone, 
-  Mail, 
-  Building, 
-  MapPin, 
+import {
+  ArrowLeft,
+  Edit,
+  Trash2,
+  Phone,
+  Mail,
+  Building,
+  MapPin,
   Calendar,
   DollarSign,
   User,
@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import leadService from '../../services/leadService';
 import { Lead, LeadStage, LeadTemperature } from './types/lead';
+import { useAuth } from '../../hooks/useAuth';
 
 interface LeadDetailProps {
   leadId: string;
@@ -44,6 +45,7 @@ interface Interaction {
 
 const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelete }) => {
   const [lead, setLead] = useState<Lead | null>(null);
+  const { user } = useAuth();
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,10 +79,26 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
 
   const loadInteractions = async () => {
     try {
-      // Simular carregamento de interações - implementar conforme sua API
-      setInteractions([]);
+      const response = await leadService.getInteractions(leadId); // certifique-se de que lead.id está definido
+
+      if (response.success && Array.isArray(response.data)) {
+        // Adapte os campos conforme a resposta real da API
+        const formatted = response.data.map((item: any) => ({
+          id: item.id,
+          tipo: item.acao,
+          descricao: item.observacao,
+          data_interacao: item.data,
+          usuario: item.usuario_nome || 'Desconhecido'
+        }));
+
+        setInteractions(formatted);
+      } else {
+        console.warn('Nenhuma interação encontrada ou erro na resposta:', response.message);
+        setInteractions([]);
+      }
     } catch (error) {
       console.error('Erro ao carregar interações:', error);
+      setInteractions([]);
     }
   };
 
@@ -103,20 +121,36 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
     }
 
     try {
-      // Implementar conforme sua API de interações
-      const interaction: Interaction = {
-        id: Date.now().toString(),
-        tipo: newInteraction.tipo,
-        descricao: newInteraction.descricao,
-        data_interacao: new Date().toISOString(),
-        usuario: 'Usuário Atual'
+      const interactionPayload = {
+        lead_id: lead.id, // pegue o ID do lead selecionado
+        contato_id: null, // ou outro valor se tiver
+        usuario_id: user.id.toString(), // substitua pela info real do usuário logado
+        acao: newInteraction.tipo, // "tipo" vira "acao"
+        observacao: newInteraction.descricao
       };
 
-      setInteractions(prev => [interaction, ...prev]);
-      setNewInteraction({ tipo: '', descricao: '' });
-      setShowAddInteraction(false);
+      const response = await leadService.addInteraction(interactionPayload);
+
+      if (response.success) {
+        // só atualiza localmente se salvou no backend
+        const interaction: Interaction = {
+          id: Date.now().toString(),
+          tipo: newInteraction.tipo,
+          descricao: newInteraction.descricao,
+          data_interacao: new Date().toISOString(),
+          usuario: user.nome // se tiver nome, exiba
+        };
+
+        setInteractions(prev => [interaction, ...prev]);
+        setNewInteraction({ tipo: '', descricao: '' });
+        setShowAddInteraction(false);
+      } else {
+        console.error('Erro na API ao adicionar interação:', response.message);
+        alert('Erro ao salvar interação: ' + response.message);
+      }
     } catch (error) {
-      console.error('Erro ao adicionar interação:', error);
+      console.error('Erro inesperado ao adicionar interação:', error);
+      alert('Erro inesperado ao salvar interação.');
     }
   };
 
@@ -158,7 +192,16 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    // Substitui espaço por 'T' para garantir compatibilidade com o Date
+    const safeDateString = dateString.replace(' ', 'T');
+    const date = new Date(safeDateString);
+
+    const dataFormatada = date.toLocaleDateString('pt-BR');
+    const horaFormatada = date.toLocaleTimeString('pt-BR', {
+      hour12: false
+    });
+
+    return `${dataFormatada}\n${horaFormatada}`;
   };
 
   const getDaysSinceCreation = (dateString: string) => {
@@ -231,7 +274,7 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
               <User size={20} />
               Informações de Contato
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-3">
                 <div>
@@ -239,7 +282,7 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
                   <div className="flex items-center gap-2">
                     <Mail size={16} className="text-gray-400" />
                     {lead.email ? (
-                      <a 
+                      <a
                         href={`mailto:${lead.email}`}
                         className="text-blue-600 hover:text-blue-800"
                       >
@@ -256,7 +299,7 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
                     <label className="block text-sm font-medium text-gray-700">Telefone</label>
                     <div className="flex items-center gap-2">
                       <Phone size={16} className="text-gray-400" />
-                      <a 
+                      <a
                         href={`tel:${lead.phone || lead.telefone}`}
                         className="text-blue-600 hover:text-blue-800"
                       >
@@ -290,7 +333,7 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
                 <MapPin size={20} />
                 Endereço
               </h2>
-              
+
               <div className="space-y-2">
                 {(lead.address || lead.endereco) && (
                   <p className="text-gray-700">{lead.address || lead.endereco}</p>
@@ -444,7 +487,7 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
               <DollarSign size={20} />
               Informações Comerciais
             </h3>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Origem</label>
@@ -519,7 +562,7 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
               <Clock size={20} />
               Estatísticas
             </h3>
-            
+
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Dias desde criação:</span>

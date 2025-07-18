@@ -70,7 +70,7 @@ class LeadService {
 
       const data = await response.json();
       console.log('API Response:', data);
-      
+
       if (!response.ok) {
         throw new Error(data.message || `HTTP error! status: ${response.status}`);
       }
@@ -116,7 +116,7 @@ class LeadService {
 
     try {
       const response = await this.request<Lead[]>(`/leads?${queryParams.toString()}`);
-      
+
       // Transformar a resposta para o formato esperado pelo componente
       const transformedResponse: ApiResponse<LeadsResponse> = {
         success: response.success,
@@ -233,16 +233,70 @@ class LeadService {
     }
   }
 
-  // Adicionar interação
-  async addInteraction(leadId: string, interaction: {
-    tipo: string;
-    descricao: string;
-    data_interacao: string;
+  // Adicionar interação na base pela api
+  async addInteraction(interaction: {
+    lead_id: string;
+    contato_id: string | null;
+    usuario_id: string;
+    acao: string;
+    observacao: string;
   }): Promise<ApiResponse<any>> {
-    return this.request<any>(`/leads/${leadId}/interactions`, {
-      method: 'POST',
-      body: JSON.stringify(interaction),
-    });
+    try {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        console.log('Token não encontrado no localStorage.');
+        return {
+          success: false,
+          message: 'Token de autenticação ausente.',
+          data: null,
+        };
+      }
+
+      const response = await this.request<any>(`/history`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(interaction),
+      });
+
+      if (!response || (response as any).error) {
+        console.log('Erro na resposta ao adicionar interação:', response);
+      }
+
+      return response;
+    } catch (error) {
+      console.log('Erro inesperado ao enviar interação:', error);
+      return {
+        success: false,
+        message: 'Erro inesperado ao enviar interação.',
+        data: null,
+      };
+    }
+  }
+  // Buscar interações por leadId
+  async getInteractions(leadId: string): Promise<ApiResponse<any>> {
+    try {
+      const token = localStorage.getItem('token');
+
+      const response = await this.request<any>(`/history/${leadId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      return response;
+    } catch (error) {
+      console.error('Erro ao buscar interações do lead:', error);
+      return {
+        success: false,
+        message: 'Erro ao buscar interações.',
+        data: null,
+      };
+    }
   }
 }
 
