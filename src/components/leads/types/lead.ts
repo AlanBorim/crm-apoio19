@@ -15,7 +15,7 @@ export interface Lead {
   source?: string;
   interest?: string;
   temperature: LeadTemperature;
-  stage: LeadStage;
+  stage: LeadStage; // principal propriedade, não declare novamente abaixo como alias
   assigned_to?: number;
   cep: string;
   city: string;
@@ -37,7 +37,6 @@ export interface Lead {
   cidade?: string; // alias para city
   estado?: string; // alias para state
   valor?: number; // alias para value
-  status?: LeadStage; // alias para stage
   responsavelId?: string; // alias para assigned_to
   responsavelNome?: string;
   proximoContato?: string; // alias para next_contact

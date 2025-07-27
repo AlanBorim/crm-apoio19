@@ -255,8 +255,8 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
         </div>
 
         <div className="flex items-center gap-2">
-          <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${getStageColor(lead.stage || lead.status || 'novo')}`}>
-            {lead.stage || lead.status || 'novo'}
+          <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${getStageColor(lead.stage || 'novo')}`}>
+            {lead.stage || 'novo'}
           </span>
           <div className={`flex items-center gap-1 ${getTemperatureColor(lead.temperature || 'frio')}`}>
             <span>{getTemperatureIcon(lead.temperature || 'frio')}</span>

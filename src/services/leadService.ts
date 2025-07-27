@@ -90,8 +90,8 @@ class LeadService {
   // Buscar leads com filtros - CORRIGIDO para estrutura real da API
   async getLeads(
     filters: LeadFilter = {},
-    sort: LeadSortOptions = { campo: 'dataCriacao', ordem: 'desc' },
-    pagination: LeadPaginationOptions = { pagina: 1, itensPorPagina: 50 }
+    sort: LeadSortOptions = { campo: 'created_at', ordem: 'desc' },
+    pagination: LeadPaginationOptions = { pagina: 1, itensPorPagina: 20 }
   ): Promise<ApiResponse<LeadsResponse>> {
     const queryParams = new URLSearchParams();
 
@@ -311,18 +311,26 @@ export function useLeads() {
     setError(null);
 
     try {
-      const response = await leadService.getLeads(filters);
+      // Monta a query-string com os filtros que a API aceita
+      const params = new URLSearchParams();
+
+      if (filters.search) params.append('search', filters.search);
+      if (filters.stage) params.append('stage', filters.stage);
+      if (filters.temperature) params.append('temperature', filters.temperature);
+      if (filters.source) params.append('source', filters.source);
+      if (filters.assigned_to) params.append('assigned_to', String(filters.assigned_to));
+
+      const response = await leadService.getLeads(params.toString());
       if (response.success && response.data) {
-        // Verificação de segurança: garantir que leads é sempre um array
         const leadsArray = Array.isArray(response.data.leads) ? response.data.leads : [];
         setLeads(leadsArray);
       } else {
         setError(response.error || 'Erro ao carregar leads');
-        setLeads([]); // Garantir que leads seja sempre um array
+        setLeads([]);
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar leads');
-      setLeads([]); // Garantir que leads seja sempre um array
+      setLeads([]);
     } finally {
       setLoading(false);
     }
