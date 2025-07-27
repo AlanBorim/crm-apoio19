@@ -14,6 +14,7 @@ export function LeadsModule() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | undefined>(undefined);
   const [refreshList, setRefreshList] = useState(0);
+  const [refreshDetail, setRefreshDetail] = useState(0);
 
   const { showToast, addNotification } = useNotifications();
 
@@ -30,12 +31,12 @@ export function LeadsModule() {
   // Função para lidar com ações em lote
   const handleBatchAction = async (action: string, value?: string) => {
     console.log(`Ação em lote: ${action}`, value, selectedLeads);
-    
+
     try {
       let successMessage = '';
       let notificationTitle = '';
       let notificationMessage = '';
-      
+
       switch (action) {
         case 'changeStatus':
           if (value) {
@@ -108,12 +109,12 @@ export function LeadsModule() {
 
       // Limpar seleção após a ação
       setSelectedLeads([]);
-      
+
     } catch (error: any) {
       console.error('Erro na ação em lote:', error);
-      
+
       const errorMessage = error.message || 'Erro ao executar ação em lote';
-      
+
       // Mostrar toast de erro
       showToast({
         type: 'error',
@@ -150,13 +151,13 @@ export function LeadsModule() {
   // Função para salvar um lead (novo ou editado)
   const handleSaveLead = async (leadData: Partial<Lead>) => {
     console.log('Salvando lead:', leadData);
-    
+
     try {
       let successMessage = '';
       let notificationTitle = '';
       let notificationMessage = '';
       let response;
-      
+
       if (editingLead) {
         // Editando lead existente
         response = await leadService.updateLead(editingLead.id, leadData);
@@ -178,7 +179,7 @@ export function LeadsModule() {
           throw new Error(response.error || 'Erro ao criar lead');
         }
       }
-      
+
       // Mostrar toast de sucesso
       showToast({
         type: 'success',
@@ -193,16 +194,16 @@ export function LeadsModule() {
         message: notificationMessage,
         type: 'success'
       });
-      
+
       setIsFormOpen(false);
       setEditingLead(undefined);
       setRefreshList(prev => prev + 1); // Força atualização da lista
-      
+
     } catch (error: any) {
       console.error('Erro ao salvar lead:', error);
-      
+
       const errorMessage = error.message || 'Erro ao salvar lead';
-      
+
       // Mostrar toast de erro
       showToast({
         type: 'error',
@@ -221,7 +222,7 @@ export function LeadsModule() {
       } catch (notifError) {
         console.error('Erro ao salvar notificação de erro:', notifError);
       }
-      
+
       throw error; // Permite que o formulário trate o erro
     }
   };
@@ -244,7 +245,7 @@ export function LeadsModule() {
     try {
       if (window.confirm('Tem certeza que deseja excluir este lead?')) {
         const response = await leadService.deleteLead(leadId);
-        
+
         if (response.success) {
           // Mostrar toast de sucesso
           showToast({
@@ -260,14 +261,14 @@ export function LeadsModule() {
             message: 'O lead foi removido permanentemente do sistema',
             type: 'success'
           });
-          
+
           // Se estamos na visualização de detalhes, voltar para a lista
           if (currentView === 'detail') {
             handleBackToList();
           } else {
             setRefreshList(prev => prev + 1);
           }
-          
+
           setSelectedLeads(prev => prev.filter(id => id !== leadId));
         } else {
           throw new Error(response.error || 'Erro ao excluir lead');
@@ -275,9 +276,9 @@ export function LeadsModule() {
       }
     } catch (error: any) {
       console.error('Erro ao deletar lead:', error);
-      
+
       const errorMessage = error.message || 'Erro ao excluir lead';
-      
+
       // Mostrar toast de erro
       showToast({
         type: 'error',
@@ -330,6 +331,7 @@ export function LeadsModule() {
 
       {currentView === 'detail' && currentLeadId && (
         <LeadDetail
+          key={refreshDetail}
           leadId={currentLeadId}
           onEdit={(lead) => handleEditLead(lead)}
           onBack={handleBackToList}
@@ -345,6 +347,11 @@ export function LeadsModule() {
           onSave={handleSaveLead}
           onCancel={handleCancelForm}
           isModal={true}
+          onSuccess={() => {
+            setIsFormOpen(false);
+            setEditingLead(undefined);
+            setRefreshDetail(prev => prev + 1); // ← ATUALIZA DETALHES
+          }}
         />
       )}
     </div>

@@ -25,9 +25,10 @@ type Props = {
   onSave: (lead: CreateLeadRequest | UpdateLeadRequest) => Promise<void>;
   onCancel: () => void;
   isModal?: boolean;
+  onSuccess?: () => void;
 };
 
-const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isModal = false }) => {
+const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isModal = false, onSuccess, }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -272,6 +273,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
       };
 
       await onSave(dataToSend);
+      onSuccess?.(); // Chamar callback de sucesso se existir
       
     } catch (error: any) {
       console.error('Erro ao salvar lead:', error);
