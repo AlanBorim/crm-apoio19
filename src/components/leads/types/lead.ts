@@ -45,7 +45,7 @@ export interface Lead {
   observacoes?: string; // campo adicional
   responsavel?: {
     id: string;
-    nome: string;
+    name: string;
   };
 }
 

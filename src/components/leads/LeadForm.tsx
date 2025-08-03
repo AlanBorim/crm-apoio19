@@ -82,7 +82,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
 
   const loadLead = async () => {
     if (!leadId) return;
-    
+
     setLoading(true);
     try {
       const response = await leadService.getLead(leadId);
@@ -267,18 +267,18 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
         state: formData.state,
         cep: formData.cep.replace(/\D/g, ''), // Remover máscara
         assigned_to: formData.assigned_to ? parseInt(formData.assigned_to) : undefined,
-        value: formData.value ? 
+        value: formData.value ?
           parseFloat(formData.value.replace(/[^\d,]/g, '').replace(',', '.')) : 0,
         next_contact: formData.next_contact
       };
 
       await onSave(dataToSend);
       onSuccess?.(); // Chamar callback de sucesso se existir
-      
+
     } catch (error: any) {
       console.error('Erro ao salvar lead:', error);
-      setErrors({ 
-        general: error.response?.data?.message || error.message || 'Erro ao salvar lead' 
+      setErrors({
+        general: error.response?.data?.message || error.message || 'Erro ao salvar lead'
       });
     } finally {
       setLoading(false);
@@ -288,6 +288,27 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
   const handleCancel = () => {
     if (onCancel) {
       onCancel();
+    }
+  };
+
+  const buscarCep = async (cep: string) => {
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await response.json();
+      console.log('Dados do CEP:', data);
+      if (!data.erro) {
+        setFormData(prev => ({
+          ...prev,
+          address: data.logradouro || '',
+          city: data.localidade || '',
+          state: data.uf || '',
+        }));
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
     }
   };
 
@@ -306,7 +327,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           <User size={20} />
           Informações Básicas
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -316,9 +337,8 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
               type="text"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.name ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.name ? 'border-red-300' : 'border-gray-300'
+                }`}
               placeholder="Nome completo do lead"
               disabled={loading}
             />
@@ -335,9 +355,8 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
               type="text"
               value={formData.company}
               onChange={(e) => handleInputChange('company', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.company ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.company ? 'border-red-300' : 'border-gray-300'
+                }`}
               placeholder="Nome da empresa"
               disabled={loading}
             />
@@ -354,9 +373,8 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.email ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.email ? 'border-red-300' : 'border-gray-300'
+                }`}
               placeholder="email@exemplo.com"
               disabled={loading}
             />
@@ -373,9 +391,8 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
               type="tel"
               value={formData.phone}
               onChange={(e) => handleInputChange('phone', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.phone ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.phone ? 'border-red-300' : 'border-gray-300'
+                }`}
               placeholder="(11) 99999-9999"
               disabled={loading}
             />
@@ -441,7 +458,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           <DollarSign size={20} />
           Informações Comerciais
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -487,9 +504,8 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
               type="text"
               value={formData.value}
               onChange={(e) => handleInputChange('value', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.value ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.value ? 'border-red-300' : 'border-gray-300'
+                }`}
               placeholder="0,00"
               disabled={loading}
             />
@@ -506,9 +522,8 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
               type="date"
               value={formData.next_contact}
               onChange={(e) => handleInputChange('next_contact', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.next_contact ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.next_contact ? 'border-red-300' : 'border-gray-300'
+                }`}
               disabled={loading}
             />
             {errors.next_contact && (
@@ -538,7 +553,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           <MapPin size={20} />
           Endereço
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -548,9 +563,8 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
               type="text"
               value={formData.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.address ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.address ? 'border-red-300' : 'border-gray-300'
+                }`}
               placeholder="Rua, número, complemento"
               disabled={loading}
             />
@@ -567,9 +581,8 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
               type="text"
               value={formData.city}
               onChange={(e) => handleInputChange('city', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.city ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.city ? 'border-red-300' : 'border-gray-300'
+                }`}
               placeholder="Cidade"
               disabled={loading}
             />
@@ -585,9 +598,8 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
             <select
               value={formData.state}
               onChange={(e) => handleInputChange('state', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.state ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.state ? 'border-red-300' : 'border-gray-300'
+                }`}
               disabled={loading}
             >
               <option value="">Selecione o estado</option>
@@ -631,10 +643,15 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
             <input
               type="text"
               value={formData.cep}
-              onChange={(e) => handleInputChange('cep', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.cep ? 'border-red-300' : 'border-gray-300'
-              }`}
+              onChange={(e) => {
+                const val = applyCepMask(e.target.value);
+                handleInputChange('cep', val);
+                if (val.replace(/\D/g, '').length === 8) {
+                  buscarCep(val);
+                }
+              }}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.cep ? 'border-red-300' : 'border-gray-300'
+                }`}
               placeholder="00000-000"
               maxLength={9}
               disabled={loading}
@@ -657,7 +674,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           <X size={20} />
           Cancelar
         </button>
-        
+
         <button
           type="submit"
           disabled={loading}
