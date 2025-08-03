@@ -504,7 +504,7 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
               <div>
                 <label className="block text-sm font-medium text-gray-700">Responsável</label>
                 <p className="font-medium">
-                  {(lead.responsavelNome || lead.responsavel?.nome) || '-'}
+                  {(lead.responsavelNome || lead.responsavel?.name) || '-'}
                 </p>
               </div>
 
