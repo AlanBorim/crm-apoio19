@@ -315,12 +315,20 @@ export function useLeads() {
       const params = new URLSearchParams();
 
       if (filters.search) params.append('search', filters.search);
-      if (filters.stage) params.append('stage', filters.stage);
-      if (filters.temperature) params.append('temperature', filters.temperature);
-      if (filters.source) params.append('source', filters.source);
+      if (filters.stage) {
+        params.append('stage', Array.isArray(filters.stage) ? filters.stage.join(',') : filters.stage);
+      }
+
+      if (filters.temperature) {
+        params.append('temperature', Array.isArray(filters.temperature) ? filters.temperature.join(',') : filters.temperature);
+      }
+
+      if (filters.source) {
+        params.append('source', Array.isArray(filters.source) ? filters.source.join(',') : filters.source);
+      }
       if (filters.assigned_to) params.append('assigned_to', String(filters.assigned_to));
 
-      const response = await leadService.getLeads(params.toString());
+      const response = await leadService.getLeads(filters);
       if (response.success && response.data) {
         const leadsArray = Array.isArray(response.data.leads) ? response.data.leads : [];
         setLeads(leadsArray);

@@ -120,8 +120,8 @@ class NotificationService {
       const response = await fetch(fullUrl, config);
 
       const data = await response.json();
-      
-      
+
+
       if (!response.ok) {
         throw new Error(data.message || `HTTP error! status: ${response.status}`);
       }
@@ -176,7 +176,7 @@ class NotificationService {
         per_page: number;
         last_page: number;
       }>(`/notifications?${queryParams.toString()}`);
-      
+
       // Transformar a resposta para o formato esperado pelo componente
       const transformedResponse: ApiResponse<NotificationsResponse> = {
         success: response.success,
@@ -214,7 +214,7 @@ class NotificationService {
   async getUnreadCount(): Promise<ApiResponse<{ unread_count: number }>> {
     try {
       const response = await this.request<{ unread_count: number }>('/notifications/unread-count');
-      
+
       return {
         success: response.success,
         message: response.message,
@@ -286,14 +286,11 @@ export function useNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Usar useRef para evitar dependências circulares
-  const fetchNotificationsRef = useRef<(filters?: NotificationFilter) => Promise<void>>();
-
+  const fetchNotificationsRef = useRef<() => Promise<void>>(async () => {});
   const fetchNotifications = useCallback(async (filters: NotificationFilter = {}) => {
     // Evitar múltiplas chamadas simultâneas
     if (loading) return;
-    
+
     setLoading(true);
     setError(null);
 
@@ -345,9 +342,9 @@ export function useNotifications() {
       const response = await notificationService.markAsRead(id);
       if (response.success) {
         // Atualizar o estado local
-        setNotifications(prev => 
-          prev.map(notification => 
-            notification.id === id 
+        setNotifications(prev =>
+          prev.map(notification =>
+            notification.id === id
               ? { ...notification, is_read: true }
               : notification
           )
@@ -367,9 +364,9 @@ export function useNotifications() {
       const response = await notificationService.markAsUnread(id);
       if (response.success) {
         // Atualizar o estado local
-        setNotifications(prev => 
-          prev.map(notification => 
-            notification.id === id 
+        setNotifications(prev =>
+          prev.map(notification =>
+            notification.id === id
               ? { ...notification, is_read: false }
               : notification
           )
@@ -389,7 +386,7 @@ export function useNotifications() {
       const response = await notificationService.markAllAsRead();
       if (response.success) {
         // Atualizar o estado local
-        setNotifications(prev => 
+        setNotifications(prev =>
           prev.map(notification => ({ ...notification, is_read: true }))
         );
         setUnreadCount(0);
@@ -452,7 +449,8 @@ export function useNotifications() {
   };
 }
 
-// Instância do serviço
-const notificationService = new NotificationService();
+
+// Instância única do serviço
+export const notificationService = new NotificationService();
 export default notificationService;
 

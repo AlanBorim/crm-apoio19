@@ -13,6 +13,7 @@ import { setupActivityListeners } from './utils/activityTracker';
 import { isUserInactive } from './utils/activityTracker';
 import { isTokenExpired, refreshToken } from './utils/auth';
 import { NotificationProvider } from './components/notifications/NotificationSystemDB';
+import { UserProvider } from './hooks/useCurrentUser';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -22,11 +23,13 @@ function App() {
     if (!isAuthenticated) {
       return <Navigate to="/login" replace />;
     }
-    
+
     return (
-      <NotificationProvider>
-        <MainLayout>{children}</MainLayout>
-      </NotificationProvider>
+      <UserProvider>
+        <NotificationProvider>
+          <MainLayout>{children}</MainLayout>
+        </NotificationProvider>
+      </UserProvider>
     );
   };
 
@@ -65,43 +68,43 @@ function App() {
         <Routes>
           {/* Rota de login - SEM NotificationProvider */}
           <Route path="/login" element={<LoginForm />} />
-          
+
           {/* Todas as rotas protegidas envolvidas pelo NotificationProvider */}
           <Route path="/*" element={
             isAuthenticated ? (
-                <Routes>
-                  <Route path="/dashboard" element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/leads" element={
-                    <ProtectedRoute>
-                      <LeadsModule />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/kanban" element={
-                    <ProtectedRoute>
-                      <KanbanBoard />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/propostas" element={
-                    <ProtectedRoute>
-                      <ProposalsModule />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/configuracoes" element={
-                    <ProtectedRoute>
-                      <ConfigurationsModule />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/whatsapp" element={
-                    <ProtectedRoute>
-                      <WhatsAppModule />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                </Routes>
+              <Routes>
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/leads" element={
+                  <ProtectedRoute>
+                    <LeadsModule />
+                  </ProtectedRoute>
+                } />
+                <Route path="/kanban" element={
+                  <ProtectedRoute>
+                    <KanbanBoard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/propostas" element={
+                  <ProtectedRoute>
+                    <ProposalsModule />
+                  </ProtectedRoute>
+                } />
+                <Route path="/configuracoes" element={
+                  <ProtectedRoute>
+                    <ConfigurationsModule />
+                  </ProtectedRoute>
+                } />
+                <Route path="/whatsapp" element={
+                  <ProtectedRoute>
+                    <WhatsAppModule />
+                  </ProtectedRoute>
+                } />
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
             ) : (
               <Navigate to="/login" replace />
             )

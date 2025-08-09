@@ -89,8 +89,7 @@ const LeadList: React.FC<LeadListProps> = ({
   };
 
   const handleDelete = async (leadId: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este lead?')) {
-      try {
+    try {
         await deleteLead(leadId);
         if (onDelete) {
           onDelete(leadId);
@@ -98,7 +97,6 @@ const LeadList: React.FC<LeadListProps> = ({
       } catch (error) {
         console.error('Erro ao excluir lead:', error);
       }
-    }
   };
 
   const getStageColor = (stage: LeadStage) => {

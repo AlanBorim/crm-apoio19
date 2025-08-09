@@ -6,8 +6,11 @@ import LeadForm from './LeadForm';
 import LeadDetail from './LeadDetail';
 import leadService from '../../services/leadService';
 import { useNotifications } from '../notifications/NotificationSystemDB';
+import { useUserId } from '../../hooks/useCurrentUser';
 
 export function LeadsModule() {
+  const userId = useUserId();
+
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [currentView, setCurrentView] = useState<'list' | 'detail' | 'form'>('list');
   const [currentLeadId, setCurrentLeadId] = useState<string | null>(null);
@@ -103,7 +106,8 @@ export function LeadsModule() {
         await addNotification({
           title: notificationTitle,
           message: notificationMessage,
-          type: 'success'
+          type: 'success',
+          user_id: userId
         });
       }
 
@@ -128,7 +132,8 @@ export function LeadsModule() {
         await addNotification({
           title: 'Erro na Ação em Lote',
           message: `Falha ao executar ação: ${errorMessage}`,
-          type: 'error'
+          type: 'error',
+          user_id: userId
         });
       } catch (notifError) {
         console.error('Erro ao salvar notificação de erro:', notifError);
@@ -192,7 +197,8 @@ export function LeadsModule() {
       await addNotification({
         title: notificationTitle,
         message: notificationMessage,
-        type: 'success'
+        type: 'success',
+        user_id: userId
       });
 
       setIsFormOpen(false);
@@ -217,7 +223,8 @@ export function LeadsModule() {
         await addNotification({
           title: 'Erro ao Salvar Lead',
           message: `Falha ao salvar: ${errorMessage}`,
-          type: 'error'
+          type: 'error',
+          user_id: userId
         });
       } catch (notifError) {
         console.error('Erro ao salvar notificação de erro:', notifError);
@@ -259,7 +266,8 @@ export function LeadsModule() {
           await addNotification({
             title: 'Lead Excluído',
             message: 'O lead foi removido permanentemente do sistema',
-            type: 'success'
+            type: 'success',
+            user_id: userId
           });
 
           // Se estamos na visualização de detalhes, voltar para a lista
@@ -292,7 +300,8 @@ export function LeadsModule() {
         await addNotification({
           title: 'Erro ao Excluir Lead',
           message: `Falha ao excluir: ${errorMessage}`,
-          type: 'error'
+          type: 'error',
+          user_id: userId
         });
       } catch (notifError) {
         console.error('Erro ao salvar notificação de erro:', notifError);
