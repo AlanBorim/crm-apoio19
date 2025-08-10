@@ -235,122 +235,207 @@ const ToastContainer: React.FC<{
 
 // API Service sem hooks problemáticos
 const apiService = {
-  // Simular busca de notificações
+  // Buscar notificações do backend
   async fetchNotifications(): Promise<Notification[]> {
     try {
-      // SUBSTITUA por sua chamada de API real:
-      // const response = await fetch('/api/notifications');
-      // if (!response.ok) throw new Error('Erro ao buscar notificações');
-      // return response.json();
-      
-      // Simulação para desenvolvimento:
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return [
-        {
-          id: 1,
-          title: 'Sistema Funcionando',
-          message: 'Sistema de notificações corrigido e funcionando.',
-          type: 'success',
-          is_read: false,
-          created_at: new Date().toISOString(),
-          user_id: 1
-        },
-        {
-          id: 2,
-          title: 'Sintaxe Corrigida',
-          message: 'Problemas de generics em .tsx foram resolvidos.',
-          type: 'info',
-          is_read: true,
-          created_at: new Date(Date.now() - 3600000).toISOString(),
-          user_id: 1
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        console.warn('Token não encontrado no localStorage');
+        throw new Error('Token de autenticação não encontrado');
+      }
+
+      const response = await fetch('https://crm.apoio19.com.br/api/notifications', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         }
-      ];
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erro ao buscar notificações: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Notificações recebidas:', data);
+      
+      // Extrair o array de notificações do campo 'data'
+      let notifications = [];
+      if (data && typeof data === 'object') {
+        if (data.success && data.data) {
+          // Formato: {success: true, data: [...]} ou {success: true, data: {notifications: [...]}}
+          if (Array.isArray(data.data)) {
+            notifications = data.data;
+          } else if (data.data.notifications && Array.isArray(data.data.notifications)) {
+            notifications = data.data.notifications;
+          } else if (data.data.data && Array.isArray(data.data.data)) {
+            notifications = data.data.data;
+          }
+        } else if (Array.isArray(data)) {
+          // Formato direto: [...]
+          notifications = data;
+        }
+      }
+      
+      console.log('Array de notificações extraído:', notifications);
+      return notifications;
+      
+      
     } catch (error) {
       console.error('Erro ao buscar notificações:', error);
       return []; // ✅ Sempre retornar array, nunca undefined
     }
   },
 
-  // Simular criação de notificação
+  // Criar nova notificação
   async createNotification(notification: CreateNotificationRequest): Promise<Notification> {
     try {
-      // SUBSTITUA por sua chamada de API real:
-      // const response = await fetch('/api/notifications', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(notification)
-      // });
-      // if (!response.ok) throw new Error('Erro ao criar notificação');
-      // return response.json();
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
+      const response = await fetch('https://crm.apoio19.com.br/api/notifications', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(notification)
+      });
       
-      // Simulação para desenvolvimento:
-      await new Promise(resolve => setTimeout(resolve, 300));
-      return {
-        id: Date.now(),
-        ...notification,
-        is_read: false,
-        created_at: new Date().toISOString()
-      };
+      if (!response.ok) {
+        throw new Error(`Erro ao criar notificação: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Notificação criada:', data);
+      
+      // Extrair a notificação criada do campo 'data' se necessário
+      if (data && typeof data === 'object') {
+        if (data.success && data.data) {
+          return data.data;
+        } else if (data.id) {
+          // Formato direto da notificação
+          return data;
+        }
+      }
+      
+      return data;
     } catch (error) {
       console.error('Erro ao criar notificação:', error);
       throw error;
     }
   },
 
-  // Simular marcar como lida
+  // Marcar notificação como lida
   async markAsRead(id: number): Promise<void> {
     try {
-      // SUBSTITUA por sua chamada de API real:
-      // const response = await fetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
-      // if (!response.ok) throw new Error('Erro ao marcar como lida');
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
+      const response = await fetch(`https://crm.apoio19.com.br/api/notifications/${id}/read`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
       
-      // Simulação para desenvolvimento:
-      await new Promise(resolve => setTimeout(resolve, 200));
+      if (!response.ok) {
+        throw new Error(`Erro ao marcar como lida: ${response.status} ${response.statusText}`);
+      }
+      
+      console.log(`Notificação ${id} marcada como lida`);
     } catch (error) {
       console.error('Erro ao marcar como lida:', error);
       throw error;
     }
   },
 
-  // Simular marcar todas como lidas
+  // Marcar todas as notificações como lidas
   async markAllAsRead(): Promise<void> {
     try {
-      // SUBSTITUA por sua chamada de API real:
-      // const response = await fetch('/api/notifications/mark-all-read', { method: 'PATCH' });
-      // if (!response.ok) throw new Error('Erro ao marcar todas como lidas');
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
+      const response = await fetch('https://crm.apoio19.com.br/api/notifications/mark-all-read', {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
       
-      // Simulação para desenvolvimento:
-      await new Promise(resolve => setTimeout(resolve, 300));
+      if (!response.ok) {
+        throw new Error(`Erro ao marcar todas como lidas: ${response.status} ${response.statusText}`);
+      }
+      
+      console.log('Todas as notificações marcadas como lidas');
     } catch (error) {
       console.error('Erro ao marcar todas como lidas:', error);
       throw error;
     }
   },
 
-  // Simular exclusão de notificação
+  // Excluir notificação específica
   async deleteNotification(id: number): Promise<void> {
     try {
-      // SUBSTITUA por sua chamada de API real:
-      // const response = await fetch(`/api/notifications/${id}`, { method: 'DELETE' });
-      // if (!response.ok) throw new Error('Erro ao excluir notificação');
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
+      const response = await fetch(`https://crm.apoio19.com.br/api/notifications/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
       
-      // Simulação para desenvolvimento:
-      await new Promise(resolve => setTimeout(resolve, 200));
+      if (!response.ok) {
+        throw new Error(`Erro ao excluir notificação: ${response.status} ${response.statusText}`);
+      }
+      
+      console.log(`Notificação ${id} excluída`);
     } catch (error) {
       console.error('Erro ao excluir notificação:', error);
       throw error;
     }
   },
 
-  // Simular exclusão de todas as notificações
+  // Excluir todas as notificações
   async deleteAllNotifications(): Promise<void> {
     try {
-      // SUBSTITUA por sua chamada de API real:
-      // const response = await fetch('/api/notifications', { method: 'DELETE' });
-      // if (!response.ok) throw new Error('Erro ao excluir todas as notificações');
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
+      const response = await fetch('https://crm.apoio19.com.br/api/notifications', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
       
-      // Simulação para desenvolvimento:
-      await new Promise(resolve => setTimeout(resolve, 400));
+      if (!response.ok) {
+        throw new Error(`Erro ao excluir todas as notificações: ${response.status} ${response.statusText}`);
+      }
+      
+      console.log('Todas as notificações excluídas');
     } catch (error) {
       console.error('Erro ao excluir todas as notificações:', error);
       throw error;
@@ -422,10 +507,33 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       const safeData = ensureNotificationArray(data); // ✅ Garantir que data seja array
       const validNotifications = safeData.filter(validateNotification);
       setNotifications(validNotifications);
+      
+      // Log de sucesso
+      console.log(`✅ ${validNotifications.length} notificações carregadas com sucesso`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      setError(`Erro ao buscar notificações: ${errorMessage}`);
-      console.error('Erro ao buscar notificações:', error);
+      let errorMessage = 'Erro desconhecido';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Mensagens mais específicas baseadas no tipo de erro
+        if (errorMessage.includes('Token de autenticação não encontrado')) {
+          errorMessage = 'Você precisa fazer login para ver as notificações';
+        } else if (errorMessage.includes('401')) {
+          errorMessage = 'Sessão expirada. Faça login novamente';
+        } else if (errorMessage.includes('403')) {
+          errorMessage = 'Você não tem permissão para acessar as notificações';
+        } else if (errorMessage.includes('404')) {
+          errorMessage = 'Serviço de notificações não encontrado';
+        } else if (errorMessage.includes('500')) {
+          errorMessage = 'Erro interno do servidor. Tente novamente em alguns minutos';
+        } else if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+          errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente';
+        }
+      }
+      
+      setError(errorMessage);
+      console.error('❌ Erro ao buscar notificações:', error);
       setNotifications([]); // ✅ Sempre definir como array vazio em caso de erro
     } finally {
       setLoading(false);

@@ -36,12 +36,13 @@ interface NotificationBellProps {
 // COMPONENTE PRINCIPAL - EXPORT NOMEADO
 export function NotificationBell({ 
   className = '',
-  size = 20,
+  size = 25,
   showBadge = true,
   maxNotificationsDisplay = 50
 }: NotificationBellProps) {
   const [showPanel, setShowPanel] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState<number>(0);
   
   // Refs para gerenciamento de foco e elementos
   const bellButtonRef = useRef<HTMLButtonElement>(null);
@@ -185,6 +186,7 @@ export function NotificationBell({
     if (isRefreshing) return;
     
     setIsRefreshing(true);
+    setLastRefreshTime(Date.now());
     try {
       await refreshNotifications();
     } catch (error) {
@@ -192,14 +194,21 @@ export function NotificationBell({
     } finally {
       setIsRefreshing(false);
     }
-  }, [refreshNotifications, isRefreshing]);
+  }, [refreshNotifications]);
 
   // Atualizar notificações quando o panel abrir - OTIMIZADO
   useEffect(() => {
-    if (showPanel && isServiceAvailable) {
-      handleRefresh();
+    if (showPanel && isServiceAvailable && !loading) {
+      const now = Date.now();
+      // Só faz refresh se passou pelo menos 5 segundos desde o último refresh
+      if (now - lastRefreshTime > 5000) {
+        setLastRefreshTime(now);
+        refreshNotifications().catch(error => {
+          console.error('Erro ao atualizar notificações:', error);
+        });
+      }
     }
-  }, [showPanel, isServiceAvailable, handleRefresh]);
+  }, [showPanel, isServiceAvailable, loading, refreshNotifications, lastRefreshTime]);
 
   // Gerenciamento de foco para acessibilidade
   useEffect(() => {
@@ -277,7 +286,7 @@ export function NotificationBell({
       </span>
     );
   }, [showBadge, unreadCount]);
-
+console.log(loading, error, isServiceAvailable, notifications, unreadCount);
   return (
     <div className={`relative ${className}`}>
       {/* Botão do Sino */}
