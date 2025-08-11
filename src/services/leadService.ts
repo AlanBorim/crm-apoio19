@@ -1,7 +1,7 @@
 // src/services/leadService.ts - Versão final corrigida para estrutura real da API
 
 import { useState, useEffect } from 'react';
-import { Lead, LeadFilter, LeadSortOptions, LeadPaginationOptions } from '../components/leads/types/lead';
+import { Lead, LeadFilter, LeadSortOptions, LeadPaginationOptions, LeadSource, LeadSettingsResponse } from '../components/leads/types/lead';
 
 // Configuração da API
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://crm.apoio19.com.br/api';
@@ -173,6 +173,55 @@ class LeadService {
       method: 'DELETE',
     });
   }
+
+  // ADICIONAR ESTA FUNÇÃO À CLASSE LeadService no arquivo src/services/leadService.ts
+  // Inserir após a função deleteLead() e antes das funções batchUpdateStatus()
+
+  // NOVA FUNÇÃO: Buscar configurações de lead por tipo
+  async getLeadSettings(type: string): Promise<LeadSettingsResponse> {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('type', type);
+
+      const response = await this.request<LeadSource[]>(`/settings/leads?${queryParams.toString()}`);
+
+      // Processar meta_config se for string JSON
+      if (response.success && response.data) {
+        const processedData = response.data.map(item => {
+          if (item.meta_config && typeof item.meta_config === 'string') {
+            try {
+              item.meta_config = JSON.parse(item.meta_config);
+            } catch (e) {
+              console.warn('Erro ao fazer parse do meta_config:', e);
+              item.meta_config = undefined;
+            }
+          }
+          return item;
+        });
+
+        return {
+          success: response.success,
+          data: processedData,
+          message: response.message
+        };
+      }
+
+      return {
+        success: false,
+        data: [],
+        message: response.error || 'Erro ao carregar configurações'
+      };
+    } catch (error) {
+      console.error('Erro ao buscar configurações de lead:', error);
+      return {
+        success: false,
+        data: [],
+        message: error instanceof Error ? error.message : 'Erro ao carregar configurações'
+      };
+    }
+  }
+
+
 
   // Ações em lote
   async batchUpdateStatus(leadIds: string[], status: string): Promise<ApiResponse<{ updated: number }>> {

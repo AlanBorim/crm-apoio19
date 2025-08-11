@@ -1,9 +1,7 @@
-// src/components/leads/LeadForm.tsx
-
 import React, { useState, useEffect } from 'react';
 import { Save, X, User, Mail, Phone, Building, MapPin, Calendar, DollarSign, Thermometer } from 'lucide-react';
 import leadService from '../../services/leadService';
-import { Lead, LeadStage, LeadTemperature, CreateLeadRequest, UpdateLeadRequest } from './types/lead';
+import { Lead, LeadStage, LeadTemperature, CreateLeadRequest, UpdateLeadRequest, LeadSource } from './types/lead';
 
 type LeadFormErrors = {
   name?: string;
@@ -16,6 +14,7 @@ type LeadFormErrors = {
   state?: string;
   address?: string;
   next_contact?: string;
+  source_extra?: string; // Novo campo para validação de campos extras
   general?: string;
 };
 
@@ -36,6 +35,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
     company: '',
     position: '',
     source: '',
+    source_extra: '', // Novo campo para informações extras da origem
     interest: '',
     stage: 'novo' as LeadStage,
     temperature: 'frio' as LeadTemperature,
@@ -51,8 +51,16 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<LeadFormErrors>({});
   const [isEditing, setIsEditing] = useState(!!leadId || !!lead);
+  
+  // Novos estados para gerenciar origens dinâmicas
+  const [leadSources, setLeadSources] = useState<LeadSource[]>([]);
+  const [selectedSourceConfig, setSelectedSourceConfig] = useState<LeadSource | null>(null);
+  const [loadingSources, setLoadingSources] = useState(false);
 
   useEffect(() => {
+    // Carregar configurações de origem ao montar o componente
+    loadLeadSources();
+
     if (lead) {
       // Se o lead foi passado como prop, usar os dados diretamente
       setFormData({
@@ -62,6 +70,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
         company: lead.company || '',
         position: lead.position || '',
         source: lead.source || '',
+        source_extra: lead.source_extra || '', // Carregar campo extra se existir
         interest: lead.interest || '',
         stage: lead.stage || 'novo',
         temperature: lead.temperature || 'frio',
@@ -80,6 +89,100 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
     }
   }, [leadId, lead]);
 
+  // Função para carregar configurações de origem da API
+  const loadLeadSources = async () => {
+    setLoadingSources(true);
+    try {
+      const response = await leadService.getLeadSettings('source');
+      if (response.success && response.data) {
+        setLeadSources(response.data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações de origem:', error);
+      // Fallback para dados mock em caso de erro
+      setLeadSources([
+        {
+          id: 17,
+          type: 'source',
+          value: 'E-mail',
+          created_at: '2025-08-03 23:32:22'
+        },
+        {
+          id: 18,
+          type: 'source',
+          value: 'Evento',
+          meta_config: {
+            extra_field: {
+              label: 'Nome do evento',
+              type: 'text',
+              required: true
+            }
+          },
+          created_at: '2025-08-03 23:32:22'
+        },
+        {
+          id: 19,
+          type: 'source',
+          value: 'Grupos de WhatsApp',
+          meta_config: {
+            extra_field: {
+              label: 'Nome do grupo',
+              type: 'text',
+              required: false
+            }
+          },
+          created_at: '2025-08-03 23:32:22'
+        },
+        {
+          id: 20,
+          type: 'source',
+          value: 'Indicação',
+          created_at: '2025-08-03 23:32:22'
+        },
+        {
+          id: 21,
+          type: 'source',
+          value: 'Redes Sociais',
+          meta_config: {
+            extra_field: {
+              label: 'Nome da rede social',
+              type: 'text',
+              required: true
+            }
+          },
+          created_at: '2025-08-03 23:32:22'
+        },
+        {
+          id: 22,
+          type: 'source',
+          value: 'Telefone',
+          created_at: '2025-08-03 23:32:22'
+        },
+        {
+          id: 23,
+          type: 'source',
+          value: 'Website',
+          created_at: '2025-08-03 23:32:22'
+        },
+        {
+          id: 24,
+          type: 'source',
+          value: 'Outros',
+          meta_config: {
+            extra_field: {
+              label: 'Informe aqui',
+              type: 'text',
+              required: true
+            }
+          },
+          created_at: '2025-08-03 23:32:22'
+        }
+      ]);
+    } finally {
+      setLoadingSources(false);
+    }
+  };
+
   const loadLead = async () => {
     if (!leadId) return;
 
@@ -95,6 +198,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           company: leadData.company || '',
           position: leadData.position || '',
           source: leadData.source || '',
+          source_extra: leadData.source_extra || '', // Carregar campo extra
           interest: leadData.interest || '',
           stage: leadData.stage || 'novo',
           temperature: leadData.temperature || 'frio',
@@ -163,6 +267,19 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
       [field]: maskedValue
     }));
 
+    // Lógica especial para o campo source
+    if (field === 'source') {
+      const sourceConfig = leadSources.find(s => s.value === value);
+      setSelectedSourceConfig(sourceConfig || null);
+      
+      // Limpar o campo extra quando mudar a origem
+      setFormData(prev => ({
+        ...prev,
+        source: value,
+        source_extra: ''
+      }));
+    }
+
     // Limpar erro do campo se existir
     if (errors[field as keyof LeadFormErrors]) {
       setErrors(prev => ({
@@ -215,6 +332,11 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
       newErrors.next_contact = 'Data de próximo contato é obrigatória';
     }
 
+    // Validar campo extra da origem se necessário
+    if (selectedSourceConfig?.meta_config?.extra_field?.required && !formData.source_extra.trim()) {
+      newErrors.source_extra = `${selectedSourceConfig.meta_config.extra_field.label} é obrigatório`;
+    }
+
     // Validar email se preenchido
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Email inválido';
@@ -259,6 +381,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
         company: formData.company,
         position: formData.position || undefined,
         source: formData.source || undefined,
+        source_extra: formData.source_extra || undefined, // Incluir campo extra
         interest: formData.interest || undefined,
         stage: formData.stage,
         temperature: formData.temperature,
@@ -423,18 +546,41 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
               value={formData.source}
               onChange={(e) => handleInputChange('source', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={loading}
+              disabled={loading || loadingSources}
             >
               <option value="">Selecione a origem</option>
-              <option value="website">Website</option>
-              <option value="indicacao">Indicação</option>
-              <option value="telefone">Telefone</option>
-              <option value="email">Email</option>
-              <option value="redes_sociais">Redes Sociais</option>
-              <option value="evento">Evento</option>
-              <option value="outros">Outros</option>
+              {leadSources.map((source) => (
+                <option key={source.id} value={source.value}>
+                  {source.value}
+                </option>
+              ))}
             </select>
+            {loadingSources && (
+              <p className="mt-1 text-sm text-gray-500">Carregando origens...</p>
+            )}
           </div>
+
+          {/* Campo extra da origem - aparece condicionalmente */}
+          {selectedSourceConfig?.meta_config?.extra_field && (
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {selectedSourceConfig.meta_config.extra_field.label}
+                {selectedSourceConfig.meta_config.extra_field.required && ' *'}
+              </label>
+              <input
+                type={selectedSourceConfig.meta_config.extra_field.type}
+                value={formData.source_extra}
+                onChange={(e) => handleInputChange('source_extra', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.source_extra ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                placeholder={selectedSourceConfig.meta_config.extra_field.label}
+                disabled={loading}
+              />
+              {errors.source_extra && (
+                <p className="mt-1 text-sm text-red-600">{errors.source_extra}</p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="mt-4">

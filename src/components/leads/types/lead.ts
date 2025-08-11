@@ -5,6 +5,21 @@ export type LeadStage = 'novo' | 'contatado' | 'reuniao' | 'proposta' | 'fechado
 // Alias para compatibilidade com código existente
 export type LeadStatus = LeadStage;
 
+// Novo tipo para configurações de origem
+export interface LeadSource {
+  id: number;
+  type: string;
+  value: string;
+  meta_config?: {
+    extra_field?: {
+      label: string;
+      type: string;
+      required: boolean;
+    };
+  };
+  created_at: string;
+}
+
 export interface Lead {
   id?: string;
   name: string;
@@ -13,6 +28,7 @@ export interface Lead {
   position?: string;
   phone?: string;
   source?: string;
+  source_extra?: string; // Novo campo para informações extras da origem
   interest?: string;
   temperature: LeadTemperature;
   stage: LeadStage; // principal propriedade, não declare novamente abaixo como alias
@@ -81,6 +97,7 @@ export interface CreateLeadRequest {
   position?: string;
   phone?: string;
   source?: string;
+  source_extra?: string; // Novo campo para informações extras da origem
   interest?: string;
   temperature?: LeadTemperature;
   stage?: LeadStage;
@@ -101,6 +118,7 @@ export interface UpdateLeadRequest {
   position?: string;
   phone?: string;
   source?: string;
+  source_extra?: string; // Novo campo para informações extras da origem
   interest?: string;
   temperature?: LeadTemperature;
   stage?: LeadStage;
@@ -130,6 +148,13 @@ export interface LeadsListResponse {
     per_page: number;
     total_pages: number;
   };
+  message?: string;
+}
+
+// Nova interface para resposta das configurações de lead
+export interface LeadSettingsResponse {
+  success: boolean;
+  data: LeadSource[];
   message?: string;
 }
 
