@@ -146,6 +146,119 @@ class LeadService {
     }
   }
 
+  // Criar nova configuração de campo
+  async createLeadSetting(settingData: {
+    type: string;
+    value: string;
+    meta_config?: any;
+  }): Promise<ApiResponse<LeadSource>> {
+    try {
+      const response = await this.request<LeadSource>('/settings/leads', {
+        method: 'POST',
+        body: JSON.stringify(settingData),
+      });
+
+      // Processar meta_config se for string JSON
+      if (response.success && response.data && response.data.meta_config && typeof response.data.meta_config === 'string') {
+        try {
+          response.data.meta_config = JSON.parse(response.data.meta_config);
+        } catch (e) {
+          console.warn('Erro ao fazer parse do meta_config:', e);
+          response.data.meta_config = undefined;
+        }
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Erro ao criar configuração de lead:', error);
+      throw error;
+    }
+  }
+
+  // Atualizar configuração de campo existente
+  async updateLeadSetting(id: number, settingData: {
+    type?: string;
+    value?: string;
+    meta_config?: any;
+  }): Promise<ApiResponse<LeadSource>> {
+    try {
+      const response = await this.request<LeadSource>(`/settings/leads/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(settingData),
+      });
+
+      // Processar meta_config se for string JSON
+      if (response.success && response.data && response.data.meta_config && typeof response.data.meta_config === 'string') {
+        try {
+          response.data.meta_config = JSON.parse(response.data.meta_config);
+        } catch (e) {
+          console.warn('Erro ao fazer parse do meta_config:', e);
+          response.data.meta_config = undefined;
+        }
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Erro ao atualizar configuração de lead:', error);
+      throw error;
+    }
+  }
+
+  // Excluir configuração de campo
+  async deleteLeadSetting(id: number): Promise<ApiResponse<{ message: string }>> {
+    try {
+      const response = await this.request<{ message: string }>(`/settings/leads/${id}`, {
+        method: 'DELETE',
+      });
+
+      return response;
+    } catch (error) {
+      console.error('Erro ao excluir configuração de lead:', error);
+      throw error;
+    }
+  }
+
+  // Buscar todas as configurações (sem filtro por tipo)
+  async getAllLeadSettings(): Promise<LeadSettingsResponse> {
+    try {
+      const response = await this.request<LeadSource[]>('/settings/leads');
+
+      // Processar meta_config se for string JSON
+      if (response.success && response.data) {
+        const processedData = response.data.map(item => {
+          if (item.meta_config && typeof item.meta_config === 'string') {
+            try {
+              item.meta_config = JSON.parse(item.meta_config);
+            } catch (e) {
+              console.warn('Erro ao fazer parse do meta_config:', e);
+              item.meta_config = undefined;
+            }
+          }
+          return item;
+        });
+
+        return {
+          success: response.success,
+          data: processedData,
+          message: response.message
+        };
+      }
+
+      return {
+        success: false,
+        data: [],
+        message: response.error || 'Erro ao carregar configurações'
+      };
+    } catch (error) {
+      console.error('Erro ao buscar todas as configurações de lead:', error);
+      return {
+        success: false,
+        data: [],
+        message: error instanceof Error ? error.message : 'Erro ao carregar configurações'
+      };
+    }
+  }
+
   // Buscar lead por ID
   async getLead(id: string): Promise<ApiResponse<{ lead: Lead; historico?: any[] }>> {
     return this.request<{ lead: Lead; historico?: any[] }>(`/leads/${id}`);

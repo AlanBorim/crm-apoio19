@@ -11,6 +11,7 @@ import {
 import { UserManagement } from './UserManagement';
 import { WhatsAppSettings } from './WhatsAppSettings';
 import { LayoutSettings } from './LayoutSettings';
+import { SystemSettings } from './SystemSettings';
 
 type ConfigSection = 'users' | 'whatsapp' | 'layout' | 'system' | 'security' | 'notifications';
 
@@ -141,18 +142,6 @@ export function ConfigurationsModule() {
 }
 
 // Componentes placeholder para as outras seções
-function SystemSettings() {
-  return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-        <Database size={24} className="mr-2" />
-        Configurações do Sistema
-      </h2>
-      <p className="text-gray-600">Configurações gerais do sistema em desenvolvimento...</p>
-    </div>
-  );
-}
-
 function SecuritySettings() {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6">
