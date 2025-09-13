@@ -146,60 +146,77 @@ class LeadService {
     }
   }
 
-  // Criar nova configuração de campo
+  // Criar nova configuração de campo - VERSÃO CORRIGIDA COM DEBUG
   async createLeadSetting(settingData: {
     type: string;
     value: string;
     meta_config?: any;
   }): Promise<ApiResponse<LeadSource>> {
+    console.log('🚀 createLeadSetting chamado com:', settingData);
+
     try {
+      console.log('📡 Enviando POST para /settings/leads');
+      console.log('📦 Dados:', JSON.stringify(settingData));
+
       const response = await this.request<LeadSource>('/settings/leads', {
         method: 'POST',
         body: JSON.stringify(settingData),
       });
 
+      console.log('✅ Resposta recebida:', response);
+
       // Processar meta_config se for string JSON
       if (response.success && response.data && response.data.meta_config && typeof response.data.meta_config === 'string') {
         try {
           response.data.meta_config = JSON.parse(response.data.meta_config);
+          console.log('🔄 meta_config processado:', response.data.meta_config);
         } catch (e) {
-          console.warn('Erro ao fazer parse do meta_config:', e);
+          console.warn('⚠️ Erro ao fazer parse do meta_config:', e);
           response.data.meta_config = undefined;
         }
       }
 
       return response;
     } catch (error) {
-      console.error('Erro ao criar configuração de lead:', error);
+      console.error('❌ Erro em createLeadSetting:', error);
       throw error;
     }
   }
 
-  // Atualizar configuração de campo existente
+  // Atualizar configuração de campo existente - VERSÃO CORRIGIDA COM DEBUG
   async updateLeadSetting(id: number, settingData: {
     type?: string;
     value?: string;
     meta_config?: any;
   }): Promise<ApiResponse<LeadSource>> {
+    console.log('🚀 updateLeadSetting chamado com:', { id, settingData });
+
     try {
+      console.log('📡 Enviando PUT para /settings/leads/' + id);
+      console.log('📦 Dados:', JSON.stringify(settingData));
+
+      // REMOVIDO O console.log PROBLEMÁTICO QUE ESTAVA AQUI
       const response = await this.request<LeadSource>(`/settings/leads/${id}`, {
         method: 'PUT',
         body: JSON.stringify(settingData),
       });
 
+      console.log('✅ Resposta recebida:', response);
+
       // Processar meta_config se for string JSON
       if (response.success && response.data && response.data.meta_config && typeof response.data.meta_config === 'string') {
         try {
           response.data.meta_config = JSON.parse(response.data.meta_config);
+          console.log('🔄 meta_config processado:', response.data.meta_config);
         } catch (e) {
-          console.warn('Erro ao fazer parse do meta_config:', e);
+          console.warn('⚠️ Erro ao fazer parse do meta_config:', e);
           response.data.meta_config = undefined;
         }
       }
 
       return response;
     } catch (error) {
-      console.error('Erro ao atualizar configuração de lead:', error);
+      console.error('❌ Erro em updateLeadSetting:', error);
       throw error;
     }
   }
