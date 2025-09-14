@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Users, 
   Plus, 
@@ -13,10 +13,13 @@ import {
   Phone,
   MoreHorizontal,
   AlertCircle,
-  Loader2
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { User } from './types/config';
-import { useUsers } from '../../hooks/useUsers';
+import { useUsers } from '../../hooks/useUsers'; // Usar versão corrigida
+import { DebugPanel } from '../DebugPanel';
+import { ApiTestPanel } from '../ApiTestPanel';
 
 interface UserManagementProps {
   onCreateUser: () => void;
@@ -25,6 +28,11 @@ interface UserManagementProps {
 
 export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showDebug, setShowDebug] = useState(process.env.NODE_ENV === 'development');
+  const [apiStatus, setApiStatus] = useState<boolean | null>(null);
+  
+  // Ref para controlar debounce
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
   
   // Hook para gerenciamento de usuários
   const {
@@ -35,7 +43,6 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
     loading,
     error,
     selectedUsers,
-    loadUsers,
     refreshUsers,
     setFilters,
     deleteUser,
@@ -56,14 +63,38 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
     autoLoad: true,
   });
 
-  // Atualizar filtros quando o termo de busca mudar
+  // Debounce para busca - CORRIGIDO para evitar loop
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setFilters({ search: searchTerm || undefined });
-    }, 500); // Debounce de 500ms
+    // Limpar timeout anterior
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
 
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, setFilters]);
+    // Definir novo timeout
+    searchTimeoutRef.current = setTimeout(() => {
+      console.log('🔍 Aplicando filtro de busca:', searchTerm);
+      setFilters({ search: searchTerm || undefined });
+    }, 500);
+
+    // Cleanup
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchTerm]); // Removido setFilters da dependência
+
+  // Log para debug - OTIMIZADO
+  useEffect(() => {
+    console.log('🔍 UserManagement - Estado atual:', {
+      users: users?.length || 0,
+      total,
+      loading: loading.list,
+      error: !!error,
+      searchTerm,
+      apiStatus
+    });
+  }, [users?.length, total, loading.list, error, searchTerm, apiStatus]);
 
   const getFuncaoColor = (funcao: User['funcao']) => {
     switch (funcao) {
@@ -81,12 +112,25 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
   };
 
   const getUserInitials = (nome: string) => {
+    if (!nome) return '??';
     return nome
       .split(' ')
       .map(word => word.charAt(0))
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const getPermissionsText = (permissoes: string[] | undefined) => {
+    if (!permissoes || !Array.isArray(permissoes)) {
+      return '0 permissões';
+    }
+    
+    if (permissoes.includes('all')) {
+      return 'Todas';
+    }
+    
+    return `${permissoes.length} permissões`;
   };
 
   const handleSelectUser = (userId: string) => {
@@ -134,41 +178,111 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Nunca';
+    try {
+      return new Date(dateString).toLocaleDateString('pt-BR');
+    } catch {
+      return 'Data inválida';
+    }
   };
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('pt-BR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
+  const formatTime = (dateString: string | null | undefined) => {
+    if (!dateString) return '';
+    try {
+      return new Date(dateString).toLocaleTimeString('pt-BR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    } catch {
+      return '';
+    }
   };
+
+  const handleApiStatusChange = (isOnline: boolean) => {
+    setApiStatus(isOnline);
+    console.log('📡 Status da API atualizado:', isOnline ? 'Online' : 'Offline');
+    
+    if (isOnline && users.length === 0) {
+      // Se a API ficou online e não temos usuários, tentar recarregar
+      refreshUsers();
+    }
+  };
+
+  // Garantir que users seja sempre um array
+  const safeUsers = Array.isArray(users) ? users : [];
+  const safeSelectedUsers = Array.isArray(selectedUsers) ? selectedUsers : [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-gray-900 flex items-center">
             <Users size={24} className="mr-2" />
             Gerenciamento de Usuários
+            {process.env.NODE_ENV === 'development' && (
+              <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                DEV
+              </span>
+            )}
+            {apiStatus !== null && (
+              <span className={`ml-2 text-xs px-2 py-1 rounded ${
+                apiStatus 
+                  ? 'bg-green-100 text-green-800' 
+                  : 'bg-orange-100 text-orange-800'
+              }`}>
+                {apiStatus ? 'API Online' : 'Modo Mock'}
+              </span>
+            )}
           </h2>
-          <p className="text-gray-600">Gerencie usuários e suas permissões</p>
+          <p className="text-gray-600">
+            Gerencie usuários e suas permissões
+            {safeUsers.length > 0 && (
+              <span className="ml-2 text-sm text-gray-500">
+                ({safeUsers.length} de {total} usuários)
+              </span>
+            )}
+          </p>
         </div>
-        <button
-          onClick={onCreateUser}
-          disabled={loading.create}
-          className="inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading.create ? (
-            <Loader2 size={16} className="mr-2 animate-spin" />
-          ) : (
-            <Plus size={16} className="mr-2" />
-          )}
-          Novo Usuário
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={refreshUsers}
+            disabled={loading.list}
+            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            title="Atualizar lista"
+          >
+            <RefreshCw size={16} className={loading.list ? 'animate-spin' : ''} />
+          </button>
+          <button
+            onClick={onCreateUser}
+            disabled={loading.create}
+            className="inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading.create ? (
+              <Loader2 size={16} className="mr-2 animate-spin" />
+            ) : (
+              <Plus size={16} className="mr-2" />
+            )}
+            Novo Usuário
+          </button>
+        </div>
       </div>
+
+      {/* Alerta de status da API */}
+      {apiStatus === false && (
+        <div className="rounded-lg border border-orange-200 bg-orange-50 p-4">
+          <div className="flex items-center">
+            <AlertCircle size={20} className="text-orange-500 mr-2" />
+            <div>
+              <span className="text-orange-700 font-medium">Modo Offline:</span>
+              <span className="text-orange-600 ml-1">
+                Usando dados de exemplo. As alterações não serão salvas.
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Exibir erro se houver */}
       {error && (
@@ -218,7 +332,7 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
         <div className="rounded-lg border border-gray-200 bg-blue-50 p-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-blue-700">
-              {selectedUsers.length} usuário(s) selecionado(s)
+              {safeSelectedUsers.length} usuário(s) selecionado(s)
             </span>
             <div className="flex gap-2">
               <button 
@@ -252,7 +366,7 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
 
       {/* Lista de usuários */}
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        {loading.list && users.length === 0 ? (
+        {loading.list && safeUsers.length === 0 ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 size={32} className="animate-spin text-gray-400" />
             <span className="ml-2 text-gray-500">Carregando usuários...</span>
@@ -264,7 +378,7 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
                 <th className="px-6 py-3 text-left">
                   <input
                     type="checkbox"
-                    checked={selectedUsers.length === users.length && users.length > 0}
+                    checked={safeSelectedUsers.length === safeUsers.length && safeUsers.length > 0}
                     onChange={handleSelectAll}
                     className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                   />
@@ -290,14 +404,36 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
-              {users.length === 0 && !loading.list ? (
+              {safeUsers.length === 0 && !loading.list ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                    {searchTerm ? 'Nenhum usuário encontrado para a busca.' : 'Nenhum usuário cadastrado.'}
+                    <div className="flex flex-col items-center">
+                      <Users size={48} className="text-gray-300 mb-4" />
+                      <p className="text-lg font-medium text-gray-900 mb-2">
+                        {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
+                      </p>
+                      <p className="text-sm text-gray-500 mb-4">
+                        {searchTerm 
+                          ? 'Tente ajustar os filtros de busca.' 
+                          : apiStatus === false
+                            ? 'Configure a API para ver usuários reais ou use os dados de exemplo.'
+                            : 'Comece criando o primeiro usuário do sistema.'
+                        }
+                      </p>
+                      {!searchTerm && (
+                        <button
+                          onClick={onCreateUser}
+                          className="inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600"
+                        >
+                          <Plus size={16} className="mr-2" />
+                          Criar Primeiro Usuário
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ) : (
-                users.map((user) => (
+                safeUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <input
@@ -358,11 +494,13 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
                       {user.ultimoLogin ? (
                         <div className="text-sm text-gray-900 flex items-center">
                           <Calendar size={12} className="mr-1" />
-                          {formatDate(user.ultimoLogin)}
-                          <br />
-                          <span className="text-xs text-gray-500">
-                            {formatTime(user.ultimoLogin)}
-                          </span>
+                          <div>
+                            {formatDate(user.ultimoLogin)}
+                            <br />
+                            <span className="text-xs text-gray-500">
+                              {formatTime(user.ultimoLogin)}
+                            </span>
+                          </div>
                         </div>
                       ) : (
                         <span className="text-sm text-gray-500">Nunca</span>
@@ -372,7 +510,7 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
                       <div className="flex items-center">
                         <Shield size={16} className="mr-2 text-gray-400" />
                         <span className="text-sm text-gray-900">
-                          {user.permissoes.includes('all') ? 'Todas' : `${user.permissoes.length} permissões`}
+                          {getPermissionsText(user.permissoes)}
                         </span>
                       </div>
                     </td>
@@ -414,33 +552,85 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
       </div>
 
       {/* Paginação */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-700">
-          Mostrando {users.length} de {total} usuários
-          {totalPages > 1 && ` (Página ${currentPage} de ${totalPages})`}
-        </div>
-        {totalPages > 1 && (
-          <div className="flex items-center gap-2">
-            <button 
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+          <div className="flex flex-1 justify-between sm:hidden">
+            <button
               onClick={previousPage}
-              disabled={currentPage === 1 || loading.list}
-              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
               Anterior
             </button>
-            <span className="text-sm text-gray-500">
-              {currentPage} / {totalPages}
-            </span>
-            <button 
+            <button
               onClick={nextPage}
-              disabled={currentPage === totalPages || loading.list}
-              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={currentPage === totalPages}
+              className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
               Próximo
             </button>
           </div>
-        )}
-      </div>
+          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-gray-700">
+                Mostrando <span className="font-medium">{((currentPage - 1) * 10) + 1}</span> até{' '}
+                <span className="font-medium">{Math.min(currentPage * 10, total)}</span> de{' '}
+                <span className="font-medium">{total}</span> resultados
+              </p>
+            </div>
+            <div>
+              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                <button
+                  onClick={previousPage}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                >
+                  <span className="sr-only">Anterior</span>
+                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => goToPage(page)}
+                      className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                        page === currentPage
+                          ? 'z-10 bg-orange-600 text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600'
+                          : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+                
+                <button
+                  onClick={nextPage}
+                  disabled={currentPage === totalPages}
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                >
+                  <span className="sr-only">Próximo</span>
+                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Painéis de Debug e Teste (apenas em desenvolvimento) */}
+      {showDebug && (
+        <>
+          <DebugPanel />
+          <ApiTestPanel onApiStatusChange={handleApiStatusChange} />
+        </>
+      )}
     </div>
   );
 }

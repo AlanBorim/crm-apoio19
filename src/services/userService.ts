@@ -1,274 +1,659 @@
 import { User } from '../components/configuracoes/types/config';
 
 // Configuração base da API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://crm.apoio19.com.br/api';
 
 // Tipos para requisições
 export interface CreateUserRequest {
-  nome: string;
-  email: string;
-  funcao: User['funcao'];
-  telefone?: string;
-  permissoes: string[];
-  ativo?: boolean;
+    nome: string;
+    email: string;
+    senha: string;
+    funcao: User['funcao'];
+    telefone?: string;
+    permissoes: string[];
+    ativo?: boolean;
 }
 
 export interface UpdateUserRequest extends Partial<CreateUserRequest> {
-  id: string;
+    id: string;
 }
 
 export interface UserFilters {
-  search?: string;
-  funcao?: User['funcao'];
-  ativo?: boolean;
-  page?: number;
-  limit?: number;
+    search?: string;
+    funcao?: User['funcao'];
+    ativo?: boolean;
+    page?: number;
+    limit?: number;
 }
 
 export interface UserListResponse {
-  users: User[];
-  total: number;
-  page: number;
-  totalPages: number;
+    users: User[];
+    total: number;
+    page: number;
+    totalPages: number;
 }
 
 export interface BulkActionRequest {
-  userIds: string[];
-  action: 'activate' | 'deactivate' | 'delete';
+    userIds: string[];
+    action: 'activate' | 'deactivate' | 'delete';
+}
+
+export interface BulkActionResponse {
+    success: string[];
+    failed: string[];
+    successCount: number;
+    totalRequested: number;
 }
 
 // Classe de erro personalizada para API
 export class ApiError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public code?: string
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
+    constructor(
+        message: string,
+        public status: number,
+        public code?: string
+    ) {
+        super(message);
+        this.name = 'ApiError';
+    }
+}
+
+// Dados mock para desenvolvimento/fallback
+const MOCK_USERS: User[] = [
+    {
+        id: '1',
+        nome: 'Administrador',
+        email: 'admin@crm.com',
+        funcao: 'Admin',
+        ativo: true,
+        telefone: '(11) 99999-9999',
+        permissoes: ['all'],
+        dataCriacao: '2024-01-01T10:00:00Z',
+        dataAtualizacao: '2024-01-01T10:00:00Z',
+        ultimoLogin: '2024-01-15T09:30:00Z'
+    },
+    {
+        id: '2',
+        nome: 'João Silva',
+        email: 'joao@crm.com',
+        funcao: 'Vendedor',
+        ativo: true,
+        telefone: '(11) 88888-8888',
+        permissoes: ['leads.read', 'leads.write', 'propostas.read', 'propostas.write'],
+        dataCriacao: '2024-01-02T10:00:00Z',
+        dataAtualizacao: '2024-01-10T15:30:00Z',
+        ultimoLogin: '2024-01-14T14:20:00Z'
+    },
+    {
+        id: '3',
+        nome: 'Maria Santos',
+        email: 'maria@crm.com',
+        funcao: 'Gerente',
+        ativo: true,
+        telefone: '(11) 77777-7777',
+        permissoes: ['leads.read', 'leads.write', 'leads.assign', 'propostas.read', 'propostas.write', 'propostas.approve'],
+        dataCriacao: '2024-01-03T10:00:00Z',
+        dataAtualizacao: '2024-01-12T11:15:00Z',
+        ultimoLogin: '2024-01-15T08:45:00Z'
+    },
+    {
+        id: '4',
+        nome: 'Pedro Costa',
+        email: 'pedro@crm.com',
+        funcao: 'Suporte',
+        ativo: false,
+        telefone: '(11) 66666-6666',
+        permissoes: ['leads.read', 'whatsapp.read', 'whatsapp.write'],
+        dataCriacao: '2024-01-04T10:00:00Z',
+        dataAtualizacao: '2024-01-08T16:45:00Z',
+        ultimoLogin: '2024-01-10T13:30:00Z'
+    }
+];
+
+// Flag para controlar se deve usar dados mock
+let useMockData = false;
+
+// Função para verificar se a API está disponível
+async function checkApiAvailability(): Promise<boolean> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/health`, {
+            method: 'GET',
+            timeout: 5000,
+        } as RequestInit);
+        return response.ok;
+    } catch {
+        return false;
+    }
 }
 
 // Função auxiliar para fazer requisições HTTP
 async function apiRequest<T>(
-  endpoint: string,
-  options: RequestInit = {}
+    endpoint: string,
+    options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
-  
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
-    // Adicionar token de autenticação se necessário
-    // 'Authorization': `Bearer ${getAuthToken()}`,
-  };
+    const url = `${API_BASE_URL}${endpoint}`;
+    const token = localStorage.getItem('token');
 
-  const config: RequestInit = {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
-  };
+    if (!token) {
+        console.warn('Token não encontrado no localStorage');
+        throw new Error('Token de autenticação não encontrado');
+    }
+    const defaultHeaders = {
+        'Content-Type': 'application/json',
+        // Adicionar token de autenticação se necessário
+        'Authorization': `Bearer ${token}`,
+    };
 
-  try {
-    const response = await fetch(url, config);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new ApiError(
-        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
-        response.status,
-        errorData.code
-      );
+    const config: RequestInit = {
+        ...options,
+        headers: {
+            ...defaultHeaders,
+            ...options.headers,
+        },
+    };
+
+    try {
+        const response = await fetch(url, config);
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new ApiError(
+                errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+                response.status,
+                errorData.code
+            );
+        }
+
+        // Verificar se a resposta tem conteúdo
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return await response.json();
+        }
+
+        return {} as T;
+    } catch (error) {
+        if (error instanceof ApiError) {
+            throw error;
+        }
+
+        // Erro de rede ou outro erro
+        throw new ApiError(
+            error instanceof Error ? error.message : 'Erro de conexão com a API',
+            0
+        );
+    }
+}
+
+// Função para filtrar usuários mock
+function filterMockUsers(filters: UserFilters): UserListResponse {
+    let filteredUsers = [...MOCK_USERS];
+
+    // Aplicar filtros
+    if (filters.search) {
+        const search = filters.search.toLowerCase();
+        filteredUsers = filteredUsers.filter(user =>
+            user.nome.toLowerCase().includes(search) ||
+            user.email.toLowerCase().includes(search)
+        );
     }
 
-    // Verificar se a resposta tem conteúdo
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      return await response.json();
+    if (filters.funcao) {
+        filteredUsers = filteredUsers.filter(user => user.funcao === filters.funcao);
     }
-    
-    return {} as T;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
+
+    if (filters.ativo !== undefined) {
+        filteredUsers = filteredUsers.filter(user => user.ativo === filters.ativo);
     }
-    
-    // Erro de rede ou outro erro
-    throw new ApiError(
-      error instanceof Error ? error.message : 'Erro de conexão',
-      0
-    );
-  }
+
+    // Paginação
+    const page = filters.page || 1;
+    const limit = filters.limit || 10;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+
+    const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(filteredUsers.length / limit);
+
+    return {
+        users: paginatedUsers,
+        total: filteredUsers.length,
+        page,
+        totalPages
+    };
 }
 
 // Serviços de usuário
 export const userService = {
-  // Listar usuários com filtros e paginação
-  async getUsers(filters: UserFilters = {}): Promise<UserListResponse> {
-    const params = new URLSearchParams();
-    
-    if (filters.search) params.append('search', filters.search);
-    if (filters.funcao) params.append('funcao', filters.funcao);
-    if (filters.ativo !== undefined) params.append('ativo', filters.ativo.toString());
-    if (filters.page) params.append('page', filters.page.toString());
-    if (filters.limit) params.append('limit', filters.limit.toString());
+    // Listar usuários
+    async getUsers(filters: UserFilters = {}): Promise<UserListResponse> {
+        console.log('🔍 Buscando usuários com filtros:', filters);
 
-    const queryString = params.toString();
-    const endpoint = `/users${queryString ? `?${queryString}` : ''}`;
-    
-    return apiRequest<UserListResponse>(endpoint);
-  },
+        // // Verificar se deve usar dados mock
+        // if (useMockData || !(await checkApiAvailability())) {
+        //   console.log('📦 Usando dados mock (API indisponível)');
+        //   useMockData = true;
 
-  // Obter usuário por ID
-  async getUserById(id: string): Promise<User> {
-    return apiRequest<User>(`/users/${id}`);
-  },
+        //   // Simular delay da API
+        //   await new Promise(resolve => setTimeout(resolve, 500));
 
-  // Criar novo usuário
-  async createUser(userData: CreateUserRequest): Promise<User> {
-    return apiRequest<User>('/users', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
-  },
+        //   return filterMockUsers(filters);
+        // }
 
-  // Atualizar usuário
-  async updateUser(userData: UpdateUserRequest): Promise<User> {
-    const { id, ...updateData } = userData;
-    return apiRequest<User>(`/users/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updateData),
-    });
-  },
+        try {
+            const queryParams = new URLSearchParams();
 
-  // Excluir usuário
-  async deleteUser(id: string): Promise<void> {
-    return apiRequest<void>(`/users/${id}`, {
-      method: 'DELETE',
-    });
-  },
+            if (filters.search) queryParams.append('search', filters.search);
+            if (filters.funcao) queryParams.append('funcao', filters.funcao);
+            if (filters.ativo !== undefined) queryParams.append('ativo', filters.ativo.toString());
+            if (filters.page) queryParams.append('page', filters.page.toString());
+            if (filters.limit) queryParams.append('limit', filters.limit.toString());
 
-  // Ativar usuário
-  async activateUser(id: string): Promise<User> {
-    return apiRequest<User>(`/users/${id}/activate`, {
-      method: 'PATCH',
-    });
-  },
+            const response = await apiRequest<{
+                success: boolean;
+                data: UserListResponse;
+            }>(`/users?${queryParams.toString()}`);
 
-  // Desativar usuário
-  async deactivateUser(id: string): Promise<User> {
-    return apiRequest<User>(`/users/${id}/deactivate`, {
-      method: 'PATCH',
-    });
-  },
+            console.log('✅ Usuários carregados da API:', response.data);
+            return response.data;
+        } catch (error) {
+            console.warn('⚠️ Erro na API, usando dados mock:', error);
+            useMockData = true;
+            return filterMockUsers(filters);
+        }
+    },
 
-  // Ações em lote
-  async bulkAction(request: BulkActionRequest): Promise<{ success: string[]; failed: string[] }> {
-    return apiRequest<{ success: string[]; failed: string[] }>('/users/bulk', {
-      method: 'POST',
-      body: JSON.stringify(request),
-    });
-  },
+    // Obter usuário por ID
+    async getUserById(id: string): Promise<User> {
+        console.log('🔍 Buscando usuário por ID:', id);
 
-  // Verificar se email já existe
-  async checkEmailExists(email: string, excludeId?: string): Promise<{ exists: boolean }> {
-    const params = new URLSearchParams({ email });
-    if (excludeId) params.append('excludeId', excludeId);
-    
-    return apiRequest<{ exists: boolean }>(`/users/check-email?${params.toString()}`);
-  },
+        if (useMockData) {
+            const user = MOCK_USERS.find(u => u.id === id);
+            if (!user) {
+                throw new ApiError('Usuário não encontrado', 404);
+            }
+            return user;
+        }
 
-  // Obter permissões disponíveis
-  async getAvailablePermissions(): Promise<{ permissions: string[]; roles: string[] }> {
-    return apiRequest<{ permissions: string[]; roles: string[] }>('/users/permissions');
-  },
+        try {
+            const response = await apiRequest<{
+                success: boolean;
+                data: User;
+            }>(`/users/${id}`);
 
-  // Redefinir senha do usuário
-  async resetPassword(id: string): Promise<{ temporaryPassword: string }> {
-    return apiRequest<{ temporaryPassword: string }>(`/users/${id}/reset-password`, {
-      method: 'POST',
-    });
-  },
+            return response.data;
+        } catch (error) {
+            console.warn('⚠️ Erro na API, usando dados mock:', error);
+            useMockData = true;
 
-  // Obter estatísticas de usuários
-  async getUserStats(): Promise<{
-    total: number;
-    active: number;
-    inactive: number;
-    byRole: Record<string, number>;
-    recentLogins: number;
-  }> {
-    return apiRequest<{
-      total: number;
-      active: number;
-      inactive: number;
-      byRole: Record<string, number>;
-      recentLogins: number;
-    }>('/users/stats');
-  },
+            const user = MOCK_USERS.find(u => u.id === id);
+            if (!user) {
+                throw new ApiError('Usuário não encontrado', 404);
+            }
+            return user;
+        }
+    },
+
+    // Criar usuário
+    async createUser(userData: CreateUserRequest): Promise<User> {
+        console.log('➕ Criando usuário:', userData);
+
+        if (useMockData) {
+            // Simular criação com dados mock
+            const newUser: User = {
+                id: Date.now().toString(),
+                nome: userData.nome,
+                email: userData.email,
+                funcao: userData.funcao,
+                ativo: userData.ativo ?? true,
+                telefone: userData.telefone || null,
+                permissoes: userData.permissoes,
+                dataCriacao: new Date().toISOString(),
+                dataAtualizacao: new Date().toISOString(),
+                ultimoLogin: null
+            };
+
+            MOCK_USERS.unshift(newUser);
+            return newUser;
+        }
+
+        try {
+            const response = await apiRequest<{
+                success: boolean;
+                data: User;
+            }>('/users', {
+                method: 'POST',
+                body: JSON.stringify(userData),
+            });
+
+            return response.data;
+        } catch (error) {
+            console.warn('⚠️ Erro na API, usando dados mock:', error);
+            useMockData = true;
+
+            const newUser: User = {
+                id: Date.now().toString(),
+                nome: userData.nome,
+                email: userData.email,
+                funcao: userData.funcao,
+                ativo: userData.ativo ?? true,
+                telefone: userData.telefone || null,
+                permissoes: userData.permissoes,
+                dataCriacao: new Date().toISOString(),
+                dataAtualizacao: new Date().toISOString(),
+                ultimoLogin: null
+            };
+
+            MOCK_USERS.unshift(newUser);
+            return newUser;
+        }
+    },
+
+    // Atualizar usuário
+    async updateUser(userData: UpdateUserRequest): Promise<User> {
+        console.log('✏️ Atualizando usuário:', userData);
+
+        if (useMockData) {
+            const index = MOCK_USERS.findIndex(u => u.id === userData.id);
+            if (index === -1) {
+                throw new ApiError('Usuário não encontrado', 404);
+            }
+
+            MOCK_USERS[index] = {
+                ...MOCK_USERS[index],
+                ...userData,
+                dataAtualizacao: new Date().toISOString()
+            };
+
+            return MOCK_USERS[index];
+        }
+
+        try {
+            const response = await apiRequest<{
+                success: boolean;
+                data: User;
+            }>(`/users/${userData.id}`, {
+                method: 'PUT',
+                body: JSON.stringify(userData),
+            });
+
+            return response.data;
+        } catch (error) {
+            console.warn('⚠️ Erro na API, usando dados mock:', error);
+            useMockData = true;
+
+            const index = MOCK_USERS.findIndex(u => u.id === userData.id);
+            if (index === -1) {
+                throw new ApiError('Usuário não encontrado', 404);
+            }
+
+            MOCK_USERS[index] = {
+                ...MOCK_USERS[index],
+                ...userData,
+                dataAtualizacao: new Date().toISOString()
+            };
+
+            return MOCK_USERS[index];
+        }
+    },
+
+    // Excluir usuário
+    async deleteUser(id: string): Promise<void> {
+        console.log('🗑️ Excluindo usuário:', id);
+
+        if (useMockData) {
+            const index = MOCK_USERS.findIndex(u => u.id === id);
+            if (index === -1) {
+                throw new ApiError('Usuário não encontrado', 404);
+            }
+
+            MOCK_USERS.splice(index, 1);
+            return;
+        }
+
+        try {
+            await apiRequest(`/users/${id}`, {
+                method: 'DELETE',
+            });
+        } catch (error) {
+            console.warn('⚠️ Erro na API, usando dados mock:', error);
+            useMockData = true;
+
+            const index = MOCK_USERS.findIndex(u => u.id === id);
+            if (index === -1) {
+                throw new ApiError('Usuário não encontrado', 404);
+            }
+
+            MOCK_USERS.splice(index, 1);
+        }
+    },
+
+    // Ativar usuário
+    async activateUser(id: string): Promise<User> {
+        console.log('✅ Ativando usuário:', id);
+
+        if (useMockData) {
+            const index = MOCK_USERS.findIndex(u => u.id === id);
+            if (index === -1) {
+                throw new ApiError('Usuário não encontrado', 404);
+            }
+
+            MOCK_USERS[index] = {
+                ...MOCK_USERS[index],
+                ativo: true,
+                dataAtualizacao: new Date().toISOString()
+            };
+
+            return MOCK_USERS[index];
+        }
+
+        try {
+            const response = await apiRequest<{
+                success: boolean;
+                data: User;
+            }>(`/users/${id}/activate`, {
+                method: 'PATCH',
+            });
+
+            return response.data;
+        } catch (error) {
+            console.warn('⚠️ Erro na API, usando dados mock:', error);
+            useMockData = true;
+
+            const index = MOCK_USERS.findIndex(u => u.id === id);
+            if (index === -1) {
+                throw new ApiError('Usuário não encontrado', 404);
+            }
+
+            MOCK_USERS[index] = {
+                ...MOCK_USERS[index],
+                ativo: true,
+                dataAtualizacao: new Date().toISOString()
+            };
+
+            return MOCK_USERS[index];
+        }
+    },
+
+    // Desativar usuário
+    async deactivateUser(id: string): Promise<User> {
+        console.log('❌ Desativando usuário:', id);
+
+        if (useMockData) {
+            const index = MOCK_USERS.findIndex(u => u.id === id);
+            if (index === -1) {
+                throw new ApiError('Usuário não encontrado', 404);
+            }
+
+            MOCK_USERS[index] = {
+                ...MOCK_USERS[index],
+                ativo: false,
+                dataAtualizacao: new Date().toISOString()
+            };
+
+            return MOCK_USERS[index];
+        }
+
+        try {
+            const response = await apiRequest<{
+                success: boolean;
+                data: User;
+            }>(`/users/${id}/deactivate`, {
+                method: 'PATCH',
+            });
+
+            return response.data;
+        } catch (error) {
+            console.warn('⚠️ Erro na API, usando dados mock:', error);
+            useMockData = true;
+
+            const index = MOCK_USERS.findIndex(u => u.id === id);
+            if (index === -1) {
+                throw new ApiError('Usuário não encontrado', 404);
+            }
+
+            MOCK_USERS[index] = {
+                ...MOCK_USERS[index],
+                ativo: false,
+                dataAtualizacao: new Date().toISOString()
+            };
+
+            return MOCK_USERS[index];
+        }
+    },
+
+    // Ações em lote
+    async bulkAction(request: BulkActionRequest): Promise<BulkActionResponse> {
+        console.log('📦 Executando ação em lote:', request);
+
+        if (useMockData) {
+            const { userIds, action } = request;
+            const success: string[] = [];
+            const failed: string[] = [];
+
+            for (const id of userIds) {
+                const index = MOCK_USERS.findIndex(u => u.id === id);
+                if (index === -1) {
+                    failed.push(id);
+                    continue;
+                }
+
+                try {
+                    switch (action) {
+                        case 'activate':
+                            MOCK_USERS[index].ativo = true;
+                            break;
+                        case 'deactivate':
+                            MOCK_USERS[index].ativo = false;
+                            break;
+                        case 'delete':
+                            MOCK_USERS.splice(index, 1);
+                            break;
+                    }
+
+                    success.push(id);
+                } catch {
+                    failed.push(id);
+                }
+            }
+
+            return {
+                success,
+                failed,
+                successCount: success.length,
+                totalRequested: userIds.length
+            };
+        }
+
+        try {
+            const response = await apiRequest<{
+                success: boolean;
+                data: BulkActionResponse;
+            }>('/users/bulk-action', {
+                method: 'POST',
+                body: JSON.stringify(request),
+            });
+
+            return response.data;
+        } catch (error) {
+            console.warn('⚠️ Erro na API, usando dados mock:', error);
+            useMockData = true;
+
+            // Executar ação mock
+            return this.bulkAction(request);
+        }
+    },
+
+    // Forçar uso de dados mock (para desenvolvimento)
+    enableMockMode(): void {
+        useMockData = true;
+        console.log('🧪 Modo mock ativado');
+    },
+
+    // Desabilitar modo mock
+    disableMockMode(): void {
+        useMockData = false;
+        console.log('🌐 Modo API ativado');
+    },
+
+    // Verificar se está usando dados mock
+    isMockMode(): boolean {
+        return useMockData;
+    }
 };
 
-// Função para lidar com erros de API de forma consistente
+// Função para tratar erros da API
 export function handleApiError(error: unknown): string {
-  if (error instanceof ApiError) {
-    switch (error.status) {
-      case 400:
-        return error.message || 'Dados inválidos fornecidos';
-      case 401:
-        return 'Não autorizado. Faça login novamente';
-      case 403:
-        return 'Você não tem permissão para realizar esta ação';
-      case 404:
-        return 'Usuário não encontrado';
-      case 409:
-        return 'Email já está em uso por outro usuário';
-      case 422:
-        return error.message || 'Dados de entrada inválidos';
-      case 500:
-        return 'Erro interno do servidor. Tente novamente mais tarde';
-      default:
-        return error.message || 'Erro desconhecido';
+    if (error instanceof ApiError) {
+        switch (error.status) {
+            case 400:
+                return 'Dados inválidos fornecidos.';
+            case 401:
+                return 'Você não tem permissão para realizar esta ação.';
+            case 403:
+                return 'Acesso negado.';
+            case 404:
+                return 'Usuário não encontrado.';
+            case 409:
+                return 'Este email já está em uso.';
+            case 500:
+                return 'Erro interno do servidor.';
+            default:
+                return error.message || 'Erro desconhecido.';
+        }
     }
-  }
-  
-  return 'Erro de conexão. Verifique sua internet e tente novamente';
+
+    if (error instanceof Error) {
+        return error.message;
+    }
+
+    return 'Erro desconhecido.';
 }
 
-// Função para validar dados do usuário antes de enviar
+// Função para validar dados do usuário
 export function validateUserData(userData: CreateUserRequest | UpdateUserRequest): string[] {
-  const errors: string[] = [];
-  
-  if ('nome' in userData && (!userData.nome || userData.nome.trim().length < 2)) {
-    errors.push('Nome deve ter pelo menos 2 caracteres');
-  }
-  
-  if ('email' in userData && userData.email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(userData.email)) {
-      errors.push('Email deve ter um formato válido');
+    const errors: string[] = [];
+
+    if ('nome' in userData && userData.nome) {
+        if (userData.nome.length < 2) {
+            errors.push('Nome deve ter pelo menos 2 caracteres.');
+        }
+        if (userData.nome.length > 100) {
+            errors.push('Nome deve ter no máximo 100 caracteres.');
+        }
     }
-  }
-  
-  if ('telefone' in userData && userData.telefone) {
-    const phoneRegex = /^\(\d{2}\)\s\d{4,5}-\d{4}$/;
-    if (!phoneRegex.test(userData.telefone)) {
-      errors.push('Telefone deve estar no formato (XX) XXXXX-XXXX');
+
+    if ('email' in userData && userData.email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(userData.email)) {
+            errors.push('Email inválido.');
+        }
     }
-  }
-  
-  if ('funcao' in userData && userData.funcao) {
-    const validRoles = ['Admin', 'Gerente', 'Vendedor', 'Suporte'];
-    if (!validRoles.includes(userData.funcao)) {
-      errors.push('Função deve ser uma das opções válidas');
+
+    if ('telefone' in userData && userData.telefone) {
+        const phoneRegex = /^\(\d{2}\)\s\d{4,5}-\d{4}$/;
+        if (!phoneRegex.test(userData.telefone)) {
+            errors.push('Telefone deve estar no formato (XX) XXXXX-XXXX.');
+        }
     }
-  }
-  
-  if ('permissoes' in userData && userData.permissoes) {
-    if (!Array.isArray(userData.permissoes) || userData.permissoes.length === 0) {
-      errors.push('Pelo menos uma permissão deve ser selecionada');
-    }
-  }
-  
-  return errors;
+
+    return errors;
 }

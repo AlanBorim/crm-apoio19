@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { User } from '../components/configuracoes/types/config';
 import { 
   userService, 
@@ -67,7 +67,7 @@ export interface UseUsersReturn {
   deactivateUser: (id: string) => Promise<boolean>;
   
   // Ações em lote
-  bulkAction: (action: BulkActionRequest['action']) => Promise<boolean>;
+  bulkAction: (action: 'activate' | 'deactivate' | 'delete') => Promise<boolean>;
   selectUser: (id: string) => void;
   selectAllUsers: () => void;
   clearSelection: () => void;
@@ -92,6 +92,10 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     pageSize = 10,
     autoLoad = true
   } = options;
+
+  // Ref para evitar loops infinitos
+  const isLoadingRef = useRef(false);
+  const lastFiltersRef = useRef<string>('');
 
   // Estado principal
   const [state, setState] = useState<UseUsersState>({
@@ -124,36 +128,76 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     setState(prev => ({ ...prev, error }));
   }, []);
 
-  // Carregar usuários
+  // Carregar usuários - CORRIGIDO para evitar loop infinito
   const loadUsers = useCallback(async (newFilters?: UserFilters) => {
+    // Evitar múltiplas chamadas simultâneas
+    if (isLoadingRef.current) {
+      console.log('⏳ Carregamento já em andamento, ignorando...');
+      return;
+    }
+
+    const filtersToUse = newFilters || state.filters;
+    const filtersString = JSON.stringify(filtersToUse);
+    
+    // Evitar recarregar com os mesmos filtros
+    if (filtersString === lastFiltersRef.current && !newFilters) {
+      console.log('🔄 Filtros iguais, ignorando recarregamento...');
+      return;
+    }
+
+    isLoadingRef.current = true;
+    lastFiltersRef.current = filtersString;
+    
     setLoading('list', true);
     setError(null);
     
     try {
-      const filters = newFilters || state.filters;
-      const response = await userService.getUsers(filters);
+      console.log('📡 Carregando usuários com filtros:', filtersToUse);
+      const response = await userService.getUsers(filtersToUse);
+      
+      // Garantir que users seja sempre um array
+      const users = Array.isArray(response.users) ? response.users : [];
       
       setState(prev => ({
         ...prev,
-        users: response.users,
-        total: response.total,
-        currentPage: response.page,
-        totalPages: response.totalPages,
-        filters,
+        users,
+        total: response.total || 0,
+        currentPage: response.page || 1,
+        totalPages: response.totalPages || 0,
+        filters: filtersToUse,
       }));
+
+      console.log('✅ Usuários carregados:', users.length);
     } catch (error) {
+      console.error('❌ Erro ao carregar usuários:', error);
       setError(handleApiError(error));
+      // Em caso de erro, garantir que users seja um array vazio
+      setState(prev => ({
+        ...prev,
+        users: [],
+        total: 0,
+        currentPage: 1,
+        totalPages: 0,
+      }));
     } finally {
       setLoading('list', false);
+      isLoadingRef.current = false;
     }
-  }, [state.filters, setLoading, setError]);
+  }, []); // REMOVIDO state.filters da dependência para evitar loop
 
-  // Atualizar filtros
+  // Atualizar filtros - CORRIGIDO
   const setFilters = useCallback((newFilters: Partial<UserFilters>) => {
-    const updatedFilters = { ...state.filters, ...newFilters, page: 1 };
-    setState(prev => ({ ...prev, filters: updatedFilters }));
-    loadUsers(updatedFilters);
-  }, [state.filters, loadUsers]);
+    setState(prev => {
+      const updatedFilters = { ...prev.filters, ...newFilters, page: 1 };
+      
+      // Carregar com os novos filtros
+      setTimeout(() => {
+        loadUsers(updatedFilters);
+      }, 0);
+      
+      return { ...prev, filters: updatedFilters };
+    });
+  }, [loadUsers]);
 
   // Limpar filtros
   const clearFilters = useCallback(() => {
@@ -162,14 +206,21 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     loadUsers(defaultFilters);
   }, [pageSize, loadUsers]);
 
+  // Refresh (recarregar página atual)
+  const refreshUsers = useCallback(async () => {
+    // Forçar recarregamento mesmo com filtros iguais
+    lastFiltersRef.current = '';
+    await loadUsers(state.filters);
+  }, [loadUsers, state.filters]);
+
   // Atualizar página
   const goToPage = useCallback((page: number) => {
-    if (page >= 1 && page <= state.totalPages) {
+    if (page >= 1 && page <= state.totalPages && page !== state.currentPage) {
       const newFilters = { ...state.filters, page };
       setState(prev => ({ ...prev, filters: newFilters }));
       loadUsers(newFilters);
     }
-  }, [state.filters, state.totalPages, loadUsers]);
+  }, [state.filters, state.totalPages, state.currentPage, loadUsers]);
 
   // Próxima página
   const nextPage = useCallback(() => {
@@ -184,11 +235,6 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
       goToPage(state.currentPage - 1);
     }
   }, [state.currentPage, goToPage]);
-
-  // Refresh (recarregar página atual)
-  const refreshUsers = useCallback(() => {
-    return loadUsers(state.filters);
-  }, [loadUsers, state.filters]);
 
   // Criar usuário
   const createUser = useCallback(async (userData: CreateUserRequest): Promise<User | null> => {
@@ -207,6 +253,7 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
       
       return newUser;
     } catch (error) {
+      console.error('Erro ao criar usuário:', error);
       setError(handleApiError(error));
       return null;
     } finally {
@@ -226,12 +273,13 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
       setState(prev => ({
         ...prev,
         users: prev.users.map(user => 
-          user.id === updatedUser.id ? updatedUser : user
+          user.id === userData.id ? updatedUser : user
         ),
       }));
       
       return updatedUser;
     } catch (error) {
+      console.error('Erro ao atualizar usuário:', error);
       setError(handleApiError(error));
       return null;
     } finally {
@@ -257,6 +305,7 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
       
       return true;
     } catch (error) {
+      console.error('Erro ao excluir usuário:', error);
       setError(handleApiError(error));
       return false;
     } finally {
@@ -269,6 +318,7 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     try {
       return await userService.getUserById(id);
     } catch (error) {
+      console.error('Erro ao obter usuário:', error);
       setError(handleApiError(error));
       return null;
     }
@@ -279,6 +329,7 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     try {
       const updatedUser = await userService.activateUser(id);
       
+      // Atualizar lista local
       setState(prev => ({
         ...prev,
         users: prev.users.map(user => 
@@ -288,6 +339,7 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
       
       return true;
     } catch (error) {
+      console.error('Erro ao ativar usuário:', error);
       setError(handleApiError(error));
       return false;
     }
@@ -298,6 +350,7 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     try {
       const updatedUser = await userService.deactivateUser(id);
       
+      // Atualizar lista local
       setState(prev => ({
         ...prev,
         users: prev.users.map(user => 
@@ -307,46 +360,37 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
       
       return true;
     } catch (error) {
+      console.error('Erro ao desativar usuário:', error);
       setError(handleApiError(error));
       return false;
     }
   }, [setError]);
 
   // Ações em lote
-  const bulkAction = useCallback(async (action: BulkActionRequest['action']): Promise<boolean> => {
-    if (state.selectedUsers.length === 0) return false;
-    
+  const bulkAction = useCallback(async (action: 'activate' | 'deactivate' | 'delete'): Promise<boolean> => {
+    if (state.selectedUsers.length === 0) {
+      return false;
+    }
+
     setLoading('bulk', true);
     setError(null);
     
     try {
-      const result = await userService.bulkAction({
+      const request: BulkActionRequest = {
         userIds: state.selectedUsers,
         action,
-      });
+      };
       
-      if (result.success.length > 0) {
-        // Atualizar lista baseado na ação
-        if (action === 'delete') {
-          setState(prev => ({
-            ...prev,
-            users: prev.users.filter(user => !result.success.includes(user.id)),
-            total: prev.total - result.success.length,
-            selectedUsers: [],
-          }));
-        } else {
-          // Para ativar/desativar, recarregar a lista
-          await refreshUsers();
-          setState(prev => ({ ...prev, selectedUsers: [] }));
-        }
+      const result = await userService.bulkAction(request);
+      
+      if (result.successCount > 0) {
+        // Recarregar lista para refletir mudanças
+        await refreshUsers();
       }
       
-      if (result.failed.length > 0) {
-        setError(`Algumas ações falharam para ${result.failed.length} usuário(s)`);
-      }
-      
-      return result.failed.length === 0;
+      return result.successCount === state.selectedUsers.length;
     } catch (error) {
+      console.error('Erro na ação em lote:', error);
       setError(handleApiError(error));
       return false;
     } finally {
@@ -354,7 +398,7 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     }
   }, [state.selectedUsers, setLoading, setError, refreshUsers]);
 
-  // Seleção de usuários
+  // Selecionar usuário
   const selectUser = useCallback((id: string) => {
     setState(prev => ({
       ...prev,
@@ -364,6 +408,7 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     }));
   }, []);
 
+  // Selecionar todos os usuários
   const selectAllUsers = useCallback(() => {
     setState(prev => ({
       ...prev,
@@ -373,11 +418,12 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     }));
   }, []);
 
+  // Limpar seleção
   const clearSelection = useCallback(() => {
     setState(prev => ({ ...prev, selectedUsers: [] }));
   }, []);
 
-  // Utilitários
+  // Limpar erro
   const clearError = useCallback(() => {
     setError(null);
   }, [setError]);
@@ -395,22 +441,23 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     return state.selectedUsers.length > 0;
   }, [state.selectedUsers.length]);
 
-  // Carregar dados iniciais
+  // Carregar dados iniciais - CORRIGIDO para evitar loop
   useEffect(() => {
-    if (autoLoad) {
+    if (autoLoad && !isLoadingRef.current) {
+      console.log('🚀 Carregamento inicial dos usuários');
       loadUsers();
     }
-  }, [autoLoad]); // Remover loadUsers das dependências para evitar loop
+  }, [autoLoad]); // Removido loadUsers da dependência
 
   return {
     // Estado
-    users: state.users,
+    users: state.users || [], // Garantir que sempre retorne um array
     total: state.total,
     currentPage: state.currentPage,
     totalPages: state.totalPages,
     loading: state.loading,
     error: state.error,
-    selectedUsers: state.selectedUsers,
+    selectedUsers: state.selectedUsers || [], // Garantir que sempre retorne um array
     filters: state.filters,
     
     // Ações de listagem
