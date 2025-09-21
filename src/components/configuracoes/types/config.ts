@@ -6,7 +6,7 @@ export interface User {
   id: string;
   nome: string;
   email: string;
-  funcao: 'Admin' | 'Gerente' | 'Vendedor' | 'Suporte';
+  funcao: 'admin' | 'gerente' | 'vendedor' | 'suporte' | 'comercial' | 'financeiro';
   ativo: boolean;
   telefone?: string;
   permissoes: string[];
@@ -69,8 +69,8 @@ export const DEFAULT_PERMISSIONS: Permission[] = [
 
 // Funções padrão e suas permissões
 export const ROLE_PERMISSIONS: Record<User['funcao'], string[]> = {
-  Admin: ['all'], // Administrador tem todas as permissões
-  Gerente: [
+  admin: ['all'], // Administrador tem todas as permissões
+  gerente: [
     'leads.read', 'leads.write', 'leads.assign',
     'propostas.read', 'propostas.write', 'propostas.approve',
     'kanban.read', 'kanban.write',
@@ -78,16 +78,28 @@ export const ROLE_PERMISSIONS: Record<User['funcao'], string[]> = {
     'relatorios.read', 'relatorios.export',
     'usuarios.read'
   ],
-  Vendedor: [
+  vendedor: [
     'leads.read', 'leads.write',
     'propostas.read', 'propostas.write',
     'kanban.read', 'kanban.write',
     'whatsapp.read', 'whatsapp.write'
   ],
-  Suporte: [
+  suporte: [
     'leads.read',
     'kanban.read',
     'whatsapp.read', 'whatsapp.write',
+    'configuracoes.read'
+  ],
+  comercial: [
+    'leads.read',
+    'kanban.read',
+    'whatsapp.read',
+    'configuracoes.read'
+  ],
+  financeiro: [
+    'leads.read',
+    'kanban.read',
+    'whatsapp.read',
     'configuracoes.read'
   ]
 };

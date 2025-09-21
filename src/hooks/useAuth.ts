@@ -91,11 +91,25 @@ export const useAuth = create<AuthState>((set: any) => ({
     }
   },
 
-  logout: () => {
+  logout: async () => {
+  const token = localStorage.getItem('token');
+  try {
+    await fetch('/api/logout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`   // ou o padrão que sua API espera
+      }
+    });
+  } catch (e) {
+    console.error('Erro ao comunicar logout:', e);
+  } finally {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     set({ user: null, token: null, isAuthenticated: false });
-  },
+  }
+},
 
   clearError: () => set({ error: null }),
 }));

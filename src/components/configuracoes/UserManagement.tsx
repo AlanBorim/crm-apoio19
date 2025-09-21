@@ -14,22 +14,37 @@ import {
   MoreHorizontal,
   AlertCircle,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  Power,
+  PowerOff
 } from 'lucide-react';
 import { User } from './types/config';
-import { useUsers } from '../../hooks/useUsers'; // Usar versão corrigida
+import { useUsers } from '../../hooks/useUsers';
 import { DebugPanel } from '../DebugPanel';
 import { ApiTestPanel } from '../ApiTestPanel';
+import { UserFormModal } from './users/UserFormModal';
+import { CreateUserRequest, UpdateUserRequest } from '../../services/userService';
 
 interface UserManagementProps {
-  onCreateUser: () => void;
-  onEditUser: (userId: string) => void;
+  // Props opcionais para compatibilidade, mas sempre usa modal interno
+  onCreateUser?: () => void;
+  onEditUser?: (userId: string) => void;
+  // Nova prop para forçar uso do modal interno
+  useInternalModal?: boolean;
 }
 
-export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps) {
+export function UserManagement({ 
+  onCreateUser, 
+  onEditUser, 
+  useInternalModal = true 
+}: UserManagementProps = {}) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showDebug, setShowDebug] = useState(process.env.NODE_ENV === 'development');
   const [apiStatus, setApiStatus] = useState<boolean | null>(null);
+  
+  // Estados do modal - SEMPRE disponíveis
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   
   // Ref para controlar debounce
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
@@ -45,6 +60,8 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
     selectedUsers,
     refreshUsers,
     setFilters,
+    createUser,
+    updateUser,
     deleteUser,
     activateUser,
     deactivateUser,
@@ -63,28 +80,35 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
     autoLoad: true,
   });
 
-  // Debounce para busca - CORRIGIDO para evitar loop
+  // Debug do estado do modal
   useEffect(() => {
-    // Limpar timeout anterior
+    console.log('🔍 Estado do Modal:', {
+      isModalOpen,
+      editingUser: editingUser?.nome || null,
+      useInternalModal,
+      hasExternalProps: !!(onCreateUser || onEditUser)
+    });
+  }, [isModalOpen, editingUser, useInternalModal, onCreateUser, onEditUser]);
+
+  // Debounce para busca
+  useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    // Definir novo timeout
     searchTimeoutRef.current = setTimeout(() => {
       console.log('🔍 Aplicando filtro de busca:', searchTerm);
       setFilters({ search: searchTerm || undefined });
     }, 500);
 
-    // Cleanup
     return () => {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchTerm]); // Removido setFilters da dependência
+  }, [searchTerm]);
 
-  // Log para debug - OTIMIZADO
+  // Log para debug
   useEffect(() => {
     console.log('🔍 UserManagement - Estado atual:', {
       users: users?.length || 0,
@@ -98,14 +122,19 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
 
   const getFuncaoColor = (funcao: User['funcao']) => {
     switch (funcao) {
-      case 'Admin':
+      
+      case 'admin':
         return 'bg-red-100 text-red-800';
-      case 'Gerente':
+      case 'gerente':
         return 'bg-blue-100 text-blue-800';
-      case 'Vendedor':
+      case 'vendedor':
         return 'bg-green-100 text-green-800';
-      case 'Suporte':
+      case 'suporte':
         return 'bg-yellow-100 text-yellow-800';
+      case 'comercial':
+              return 'bg-darkyellow-100 text-darkyellow-800';
+      case 'financeiro':
+              return 'bg-lightyellow-100 text-lightyellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -133,6 +162,86 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
     return `${permissoes.length} permissões`;
   };
 
+  // Handlers do modal - SEMPRE usa modal interno se useInternalModal for true
+  const handleCreateUser = () => {
+    console.log('🆕 handleCreateUser chamado:', {
+      useInternalModal,
+      hasExternalOnCreateUser: !!onCreateUser,
+      currentModalState: isModalOpen
+    });
+    
+    if (useInternalModal) {
+      console.log('🔧 Usando modal interno (forçado)');
+      setEditingUser(null);
+      setIsModalOpen(true);
+    } else if (onCreateUser) {
+      console.log('📞 Chamando onCreateUser externo');
+      onCreateUser();
+    } else {
+      console.log('🔧 Usando modal interno (fallback)');
+      setEditingUser(null);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleEditUserInternal = (user: User) => {
+    console.log('✏️ handleEditUserInternal chamado:', {
+      user: user.nome,
+      useInternalModal,
+      hasExternalOnEditUser: !!onEditUser,
+      currentModalState: isModalOpen
+    });
+    
+    if (useInternalModal) {
+      console.log('🔧 Usando modal interno para edição (forçado)');
+      setEditingUser(user);
+      setIsModalOpen(true);
+    } else if (onEditUser) {
+      console.log('📞 Chamando onEditUser externo');
+      onEditUser(user.id);
+    } else {
+      console.log('🔧 Usando modal interno para edição (fallback)');
+      setEditingUser(user);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    console.log('❌ Fechando modal');
+    setIsModalOpen(false);
+    setEditingUser(null);
+  };
+
+  const handleSubmitUser = async (userData: CreateUserRequest | UpdateUserRequest): Promise<boolean> => {
+    console.log('💾 handleSubmitUser chamado:', {
+      isEditing: !!editingUser,
+      userData: userData.nome
+    });
+    
+    try {
+      if (editingUser) {
+        // Editando usuário existente
+        const updatedUser = await updateUser(userData as UpdateUserRequest);
+        if (updatedUser) {
+          console.log('✅ Usuário atualizado:', updatedUser);
+          return true;
+        }
+      } else {
+        // Criando novo usuário
+        const newUser = await createUser(userData as CreateUserRequest);
+        if (newUser) {
+          console.log('✅ Usuário criado:', newUser);
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('❌ Erro ao salvar usuário:', error);
+      return false;
+    }
+  };
+
+  // Handlers de seleção
   const handleSelectUser = (userId: string) => {
     selectUser(userId);
   };
@@ -141,6 +250,7 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
     selectAllUsers();
   };
 
+  // Handlers de ações em lote
   const handleBulkActivate = async () => {
     const success = await bulkAction('activate');
     if (success) {
@@ -164,20 +274,32 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
     }
   };
 
+  // Handlers individuais
   const handleDeleteUser = async (userId: string, userName: string) => {
     if (window.confirm(`Tem certeza que deseja excluir o usuário "${userName}"? Esta ação não pode ser desfeita.`)) {
       await deleteUser(userId);
     }
   };
 
+  const handleActivateUser = async (userId: string) => {
+    console.log('🟢 Ativando usuário:', userId);
+    await activateUser(userId);
+  };
+
+  const handleDeactivateUser = async (userId: string) => {
+    console.log('🔴 Desativando usuário:', userId);
+    await deactivateUser(userId);
+  };
+
   const handleToggleUserStatus = async (user: User) => {
     if (user.ativo) {
-      await deactivateUser(user.id);
+      await handleDeactivateUser(user.id);
     } else {
-      await activateUser(user.id);
+      await handleActivateUser(user.id);
     }
   };
 
+  // Formatação de datas
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'Nunca';
     try {
@@ -204,7 +326,6 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
     console.log('📡 Status da API atualizado:', isOnline ? 'Online' : 'Offline');
     
     if (isOnline && users.length === 0) {
-      // Se a API ficou online e não temos usuários, tentar recarregar
       refreshUsers();
     }
   };
@@ -215,6 +336,16 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
 
   return (
     <div className="space-y-6 relative">
+      {/* Debug info - apenas em desenvolvimento */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-xs">
+          <strong>Debug Modal:</strong> isOpen={isModalOpen.toString()}, 
+          useInternalModal={useInternalModal.toString()}, 
+          editingUser={editingUser?.nome || 'null'},
+          hasExternalProps={(onCreateUser || onEditUser) ? 'true' : 'false'}
+        </div>
+      )}
+
       {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -255,7 +386,7 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
             <RefreshCw size={16} className={loading.list ? 'animate-spin' : ''} />
           </button>
           <button
-            onClick={onCreateUser}
+            onClick={handleCreateUser}
             disabled={loading.create}
             className="inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -340,7 +471,7 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
                 disabled={loading.bulk}
                 className="inline-flex items-center rounded-md bg-green-500 px-3 py-1 text-sm font-medium text-white hover:bg-green-600 disabled:opacity-50"
               >
-                <Eye size={14} className="mr-1" />
+                <Power size={14} className="mr-1" />
                 Ativar
               </button>
               <button 
@@ -348,7 +479,7 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
                 disabled={loading.bulk}
                 className="inline-flex items-center rounded-md bg-yellow-500 px-3 py-1 text-sm font-medium text-white hover:bg-yellow-600 disabled:opacity-50"
               >
-                <EyeOff size={14} className="mr-1" />
+                <PowerOff size={14} className="mr-1" />
                 Desativar
               </button>
               <button 
@@ -422,7 +553,7 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
                       </p>
                       {!searchTerm && (
                         <button
-                          onClick={onCreateUser}
+                          onClick={handleCreateUser}
                           className="inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600"
                         >
                           <Plus size={16} className="mr-2" />
@@ -471,20 +602,21 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
                     <td className="px-6 py-4">
                       <button
                         onClick={() => handleToggleUserStatus(user)}
-                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold hover:opacity-80 ${
+                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold hover:opacity-80 transition-colors ${
                           user.ativo 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                            : 'bg-red-100 text-red-800 hover:bg-red-200'
                         }`}
+                        title={user.ativo ? 'Clique para desativar' : 'Clique para ativar'}
                       >
                         {user.ativo ? (
                           <>
-                            <Eye size={12} className="mr-1" />
+                            <Power size={12} className="mr-1" />
                             Ativo
                           </>
                         ) : (
                           <>
-                            <EyeOff size={12} className="mr-1" />
+                            <PowerOff size={12} className="mr-1" />
                             Inativo
                           </>
                         )}
@@ -517,17 +649,28 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => onEditUser(user.id)}
-                          className="text-gray-400 hover:text-gray-600"
-                          title="Editar"
+                          onClick={() => handleEditUserInternal(user)}
+                          className="text-gray-400 hover:text-blue-600 transition-colors"
+                          title="Editar usuário"
                         >
                           <Edit size={16} />
+                        </button>
+                        {/* <button
+                          onClick={() => handleToggleUserStatus(user)}
+                          className={`transition-colors ${
+                            user.ativo 
+                              ? 'text-gray-400 hover:text-red-600' 
+                              : 'text-gray-400 hover:text-green-600'
+                          }`}
+                          title={user.ativo ? 'Desativar usuário' : 'Ativar usuário'}
+                        >
+                          {user.ativo ? <PowerOff size={16} /> : <Power size={16} />}
                         </button>
                         <button
                           onClick={() => handleDeleteUser(user.id, user.nome)}
                           disabled={loading.delete}
-                          className="text-gray-400 hover:text-red-600 disabled:opacity-50"
-                          title="Excluir"
+                          className="text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors"
+                          title="Excluir usuário"
                         >
                           {loading.delete ? (
                             <Loader2 size={16} className="animate-spin" />
@@ -536,11 +679,11 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
                           )}
                         </button>
                         <button
-                          className="text-gray-400 hover:text-gray-600"
+                          className="text-gray-400 hover:text-gray-600 transition-colors"
                           title="Mais opções"
                         >
                           <MoreHorizontal size={16} />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>
@@ -622,6 +765,17 @@ export function UserManagement({ onCreateUser, onEditUser }: UserManagementProps
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de formulário - SEMPRE renderiza quando useInternalModal for true */}
+      {useInternalModal && (
+        <UserFormModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSubmit={handleSubmitUser}
+          user={editingUser}
+          loading={loading.create || loading.update}
+        />
       )}
 
       {/* Painéis de Debug e Teste (apenas em desenvolvimento) */}

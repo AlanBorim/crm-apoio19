@@ -63,7 +63,7 @@ const MOCK_USERS: User[] = [
         id: '1',
         nome: 'Administrador',
         email: 'admin@crm.com',
-        funcao: 'Admin',
+        funcao: 'admin',
         ativo: true,
         telefone: '(11) 99999-9999',
         permissoes: ['all'],
@@ -75,7 +75,7 @@ const MOCK_USERS: User[] = [
         id: '2',
         nome: 'João Silva',
         email: 'joao@crm.com',
-        funcao: 'Vendedor',
+        funcao: 'vendedor',
         ativo: true,
         telefone: '(11) 88888-8888',
         permissoes: ['leads.read', 'leads.write', 'propostas.read', 'propostas.write'],
@@ -87,7 +87,7 @@ const MOCK_USERS: User[] = [
         id: '3',
         nome: 'Maria Santos',
         email: 'maria@crm.com',
-        funcao: 'Gerente',
+        funcao: 'gerente',
         ativo: true,
         telefone: '(11) 77777-7777',
         permissoes: ['leads.read', 'leads.write', 'leads.assign', 'propostas.read', 'propostas.write', 'propostas.approve'],
@@ -99,7 +99,7 @@ const MOCK_USERS: User[] = [
         id: '4',
         nome: 'Pedro Costa',
         email: 'pedro@crm.com',
-        funcao: 'Suporte',
+        funcao: 'suporte',
         ativo: false,
         telefone: '(11) 66666-6666',
         permissoes: ['leads.read', 'whatsapp.read', 'whatsapp.write'],
@@ -370,7 +370,7 @@ export const userService = {
             const response = await apiRequest<{
                 success: boolean;
                 data: User;
-            }>(`/users/${userData.id}`, {
+            }>(`/users/update/${userData.id}`, {
                 method: 'PUT',
                 body: JSON.stringify(userData),
             });
@@ -449,7 +449,7 @@ export const userService = {
             const response = await apiRequest<{
                 success: boolean;
                 data: User;
-            }>(`/users/${id}/activate`, {
+            }>(`/users/activate/${id}`, {
                 method: 'PATCH',
             });
 
@@ -496,7 +496,7 @@ export const userService = {
             const response = await apiRequest<{
                 success: boolean;
                 data: User;
-            }>(`/users/${id}/deactivate`, {
+            }>(`/users/deactivate/${id}`, {
                 method: 'PATCH',
             });
 
