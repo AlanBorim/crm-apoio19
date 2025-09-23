@@ -93,14 +93,25 @@ export const useAuth = create<AuthState>((set: any) => ({
 
   logout: async () => {
   const token = localStorage.getItem('token');
+  const userStr = localStorage.getItem('user');
+  let userId: number | undefined;
+  if (userStr) {
+    try {
+      const userObj = JSON.parse(userStr);
+      userId = userObj.id;
+    } catch (e) {
+      console.error('Erro ao parsear usuário para logout:', e);
+    }
+  }
   try {
-    await fetch('/api/logout', {
+    await fetch(`/api/logout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
         Authorization: `Bearer ${token}`   // ou o padrão que sua API espera
-      }
+      },
+      body: userStr 
     });
   } catch (e) {
     console.error('Erro ao comunicar logout:', e);
