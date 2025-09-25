@@ -18,11 +18,44 @@ import {
   ExternalLink,
   Tag,
   AlertCircle,
-  Thermometer
+  Thermometer,
+  Info
 } from 'lucide-react';
 import leadService from '../../services/leadService';
 import { Lead, LeadStage, LeadTemperature } from './types/lead';
 import { useAuth } from '../../hooks/useAuth';
+
+// Interface para campos extras dinâmicos
+interface ExtraField {
+  id: string;
+  label: string;
+  type: 'text' | 'email' | 'tel' | 'number' | 'textarea' | 'select' | 'checkbox';
+  required: boolean;
+  placeholder?: string;
+  options?: string[];
+  condition?: {
+    field: string;
+    value: string;
+  };
+}
+
+// Interface estendida para LeadSource com suporte a múltiplos campos
+interface ExtendedLeadSource {
+  id?: number;
+  type: string;
+  value: string;
+  created_at: string;
+  meta_config?: {
+    extra_field?: {
+      label: string;
+      type: 'text' | 'email' | 'tel' | 'number' | 'textarea' | 'select';
+      required: boolean;
+      placeholder?: string;
+      options?: string[];
+    };
+    extra_fields?: ExtraField[];
+  };
+}
 
 interface LeadDetailProps {
   leadId: string;
@@ -55,9 +88,15 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
     descricao: ''
   });
 
+  // Estados para campos dinâmicos
+  const [leadSources, setLeadSources] = useState<ExtendedLeadSource[]>([]);
+  const [sourceConfig, setSourceConfig] = useState<ExtendedLeadSource | null>(null);
+  const [dynamicFieldValues, setDynamicFieldValues] = useState<Record<string, any>>({});
+
   useEffect(() => {
     loadLead();
     loadInteractions();
+    loadLeadSources();
   }, [leadId]);
 
   const loadLead = async () => {
@@ -65,7 +104,21 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
       setLoading(true);
       const response = await leadService.getLead(leadId);
       if (response.data && response.data.lead) {
-        setLead(response.data.lead);
+        const leadData = response.data.lead;
+        setLead(leadData);
+        
+        // Carregar valores de campos extras se existirem
+        if (leadData.source_extra) {
+          try {
+            const extraData = JSON.parse(leadData.source_extra);
+            if (typeof extraData === 'object') {
+              setDynamicFieldValues(extraData);
+            }
+          } catch (e) {
+            // Se não for JSON, tratar como campo único (compatibilidade)
+            setDynamicFieldValues({ legacy_field: leadData.source_extra });
+          }
+        }
       } else {
         setError('Lead não encontrado');
       }
@@ -77,12 +130,37 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
     }
   };
 
+  const loadLeadSources = async () => {
+    try {
+      const response = await leadService.getLeadSettings('source');
+      if (response.success && response.data) {
+        const convertedSources: ExtendedLeadSource[] = response.data.map((source: any) => ({
+          id: source.id,
+          type: source.type,
+          value: source.value,
+          created_at: source.created_at,
+          meta_config: source.meta_config
+        }));
+        setLeadSources(convertedSources);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações de origem:', error);
+    }
+  };
+
+  // Encontrar configuração da origem quando lead e sources estiverem carregados
+  useEffect(() => {
+    if (lead && leadSources.length > 0) {
+      const config = leadSources.find(s => s.value === lead.source);
+      setSourceConfig(config || null);
+    }
+  }, [lead, leadSources]);
+
   const loadInteractions = async () => {
     try {
-      const response = await leadService.getInteractions(leadId); // certifique-se de que lead.id está definido
+      const response = await leadService.getInteractions(leadId);
 
       if (response.success && Array.isArray(response.data)) {
-        // Adapte os campos conforme a resposta real da API
         const formatted = response.data.map((item: any) => ({
           id: item.id,
           tipo: item.acao,
@@ -122,23 +200,22 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
 
     try {
       const interactionPayload = {
-        lead_id: lead.id, // pegue o ID do lead selecionado
-        contato_id: null, // ou outro valor se tiver
-        usuario_id: user.id.toString(), // substitua pela info real do usuário logado
-        acao: newInteraction.tipo, // "tipo" vira "acao"
+        lead_id: lead.id,
+        contato_id: null,
+        usuario_id: user.id.toString(),
+        acao: newInteraction.tipo,
         observacao: newInteraction.descricao
       };
 
       const response = await leadService.addInteraction(interactionPayload);
 
       if (response.success) {
-        // só atualiza localmente se salvou no backend
         const interaction: Interaction = {
           id: Date.now().toString(),
           tipo: newInteraction.tipo,
           descricao: newInteraction.descricao,
           data_interacao: new Date().toISOString(),
-          usuario: user.nome // se tiver nome, exiba
+          usuario: user.nome
         };
 
         setInteractions(prev => [interaction, ...prev]);
@@ -152,6 +229,105 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
       console.error('Erro inesperado ao adicionar interação:', error);
       alert('Erro inesperado ao salvar interação.');
     }
+  };
+
+  // Função para renderizar campos dinâmicos
+  const renderDynamicFieldValue = (field: ExtraField) => {
+    const value = dynamicFieldValues[field.id];
+    
+    if (!value && value !== false && value !== 0) {
+      return null;
+    }
+
+    switch (field.type) {
+      case 'checkbox':
+        return (
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}>
+            {value ? 'Sim' : 'Não'}
+          </span>
+        );
+      
+      case 'email':
+        return (
+          <a href={`mailto:${value}`} className="text-blue-600 hover:text-blue-800">
+            {value}
+          </a>
+        );
+      
+      case 'tel':
+        return (
+          <a href={`tel:${value}`} className="text-blue-600 hover:text-blue-800">
+            {value}
+          </a>
+        );
+      
+      case 'textarea':
+        return <span className="whitespace-pre-wrap">{value}</span>;
+      
+      default:
+        return <span>{value}</span>;
+    }
+  };
+
+  // Função para renderizar informações extras formatadas
+  const renderExtraFieldsInfo = () => {
+    if (!sourceConfig?.meta_config || Object.keys(dynamicFieldValues).length === 0) {
+      return null;
+    }
+
+    const extraInfo = [];
+
+    // Campo legacy (compatibilidade)
+    if (sourceConfig.meta_config.extra_field && dynamicFieldValues.legacy_field) {
+      extraInfo.push({
+        label: sourceConfig.meta_config.extra_field.label,
+        value: dynamicFieldValues.legacy_field,
+        type: 'text'
+      });
+    }
+
+    // Campos extras múltiplos
+    if (sourceConfig.meta_config.extra_fields) {
+      sourceConfig.meta_config.extra_fields.forEach(field => {
+        const hasValue = dynamicFieldValues[field.id] !== undefined && 
+                         dynamicFieldValues[field.id] !== null && 
+                         dynamicFieldValues[field.id] !== '';
+        
+        if (hasValue || field.type === 'checkbox') {
+          extraInfo.push({
+            label: field.label,
+            value: dynamicFieldValues[field.id],
+            type: field.type,
+            field: field
+          });
+        }
+      });
+    }
+
+    if (extraInfo.length === 0) return null;
+
+    return (
+      <div className="mt-4 pt-4 border-t border-gray-200">
+        <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <Info size={16} />
+          Informações Adicionais - {lead.source}
+        </h4>
+        <div className="space-y-2">
+          {extraInfo.map((info, index) => (
+            <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+              <span className="text-sm font-medium text-gray-600 min-w-0 sm:min-w-[120px]">
+                {info.label}:
+              </span>
+              <div className="text-sm text-gray-900">
+                {info.field ? renderDynamicFieldValue(info.field) : <span>{info.value}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   const getStageColor = (stage: LeadStage) => {
@@ -192,7 +368,6 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
   };
 
   const formatDate = (dateString: string) => {
-    // Substitui espaço por 'T' para garantir compatibilidade com o Date
     const safeDateString = dateString.replace(' ', 'T');
     const date = new Date(safeDateString);
 
@@ -322,6 +497,13 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
                   <label className="block text-sm font-medium text-gray-700">Data de Criação</label>
                   <p className="font-medium">{formatDate(lead.created_at || lead.dataCriacao || '')}</p>
                 </div>
+
+                {lead.source && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Origem</label>
+                    <p className="font-medium">{lead.source}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -347,13 +529,22 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
             </div>
           )}
 
-          {/* Observações/Interesse */}
-          {(lead.interest || lead.observacoes) && (
+          {/* Observações/Interesse com Informações Extras Integradas */}
+          {((lead.interest || lead.observacoes) || (sourceConfig?.meta_config && Object.keys(dynamicFieldValues).length > 0)) && (
             <div className="bg-white p-6 rounded-lg border">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
                 Interesse/Observações
               </h2>
-              <p className="text-gray-700 whitespace-pre-wrap">{lead.interest || lead.observacoes}</p>
+              
+              {/* Interesse/Observações principais */}
+              {(lead.interest || lead.observacoes) && (
+                <div className="text-gray-700 whitespace-pre-wrap">
+                  {lead.interest || lead.observacoes}
+                </div>
+              )}
+              
+              {/* Informações extras dos campos dinâmicos */}
+              {renderExtraFieldsInfo()}
             </div>
           )}
 
@@ -462,7 +653,7 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
           {/* Ações */}
           <div className="bg-white p-6 rounded-lg border">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Ações</h3>
-            <div className="space-y-3">
+            <div className="space-y-2">
               <button
                 onClick={() => onEdit(lead)}
                 className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
@@ -488,16 +679,11 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
               Informações Comerciais
             </h3>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Origem</label>
-                <p className="font-medium capitalize">{(lead.source || lead.origem) || '-'}</p>
-              </div>
-
+            <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Valor Estimado</label>
-                <p className="font-medium text-green-600">
-                  {formatCurrency(lead.value || lead.valor || 0)}
+                <p className="font-medium text-lg text-green-600">
+                  {formatCurrency(lead.value || 0)}
                 </p>
               </div>
 
@@ -591,4 +777,3 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
 };
 
 export default LeadDetail;
-

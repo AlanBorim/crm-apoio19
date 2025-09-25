@@ -265,12 +265,12 @@ const LeadList: React.FC<LeadListProps> = ({
             {selectedLeads.length} lead(s) selecionado(s)
           </span>
           <div className="flex gap-2">
-            <button className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+            {/* <button className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
               Alterar Estágio
             </button>
             <button className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
               Excluir
-            </button>
+            </button> */}
           </div>
         </div>
       )}

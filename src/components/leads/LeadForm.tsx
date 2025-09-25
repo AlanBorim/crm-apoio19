@@ -3,6 +3,47 @@ import { Save, X, User, Mail, Phone, Building, MapPin, Calendar, DollarSign, The
 import leadService from '../../services/leadService';
 import { Lead, LeadStage, LeadTemperature, CreateLeadRequest, UpdateLeadRequest, LeadSource } from './types/lead';
 
+// Interface para usuários
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
+}
+
+// Interface para campos extras dinâmicos
+interface ExtraField {
+  id: string;
+  label: string;
+  type: 'text' | 'email' | 'tel' | 'number' | 'textarea' | 'select' | 'checkbox';
+  required: boolean;
+  placeholder?: string;
+  options?: string[];
+  condition?: {
+    field: string;
+    value: string;
+  };
+}
+
+// Interface estendida para LeadSource com suporte a múltiplos campos
+interface ExtendedLeadSource {
+  id?: number;
+  type: string;
+  value: string;
+  created_at: string;
+  meta_config?: {
+    extra_field?: {
+      label: string;
+      type: 'text' | 'email' | 'tel' | 'number' | 'textarea' | 'select';
+      required: boolean;
+      placeholder?: string;
+      options?: string[];
+    };
+    extra_fields?: ExtraField[];
+  };
+}
+
 type LeadFormErrors = {
   name?: string;
   email?: string;
@@ -14,7 +55,8 @@ type LeadFormErrors = {
   state?: string;
   address?: string;
   next_contact?: string;
-  source_extra?: string; // Novo campo para validação de campos extras
+  source_extra?: string;
+  [key: string]: string | undefined; // Para campos dinâmicos
   general?: string;
 };
 
@@ -35,7 +77,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
     company: '',
     position: '',
     source: '',
-    source_extra: '', // Novo campo para informações extras da origem
+    source_extra: '',
     interest: '',
     stage: 'novo' as LeadStage,
     temperature: 'frio' as LeadTemperature,
@@ -51,37 +93,30 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<LeadFormErrors>({});
   const [isEditing, setIsEditing] = useState(!!leadId || !!lead);
-  
-  // Novos estados para gerenciar origens dinâmicas
-  const [leadSources, setLeadSources] = useState<LeadSource[]>([]);
-  const [selectedSourceConfig, setSelectedSourceConfig] = useState<LeadSource | null>(null);
+
+  // Estados para gerenciar origens dinâmicas
+  const [leadSources, setLeadSources] = useState<ExtendedLeadSource[]>([]);
+  const [selectedSourceConfig, setSelectedSourceConfig] = useState<ExtendedLeadSource | null>(null);
   const [loadingSources, setLoadingSources] = useState(false);
+
+  // Estado para campos extras dinâmicos
+  const [dynamicFieldValues, setDynamicFieldValues] = useState<Record<string, any>>({});
+
+  // Estados para usuários
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   useEffect(() => {
     // Carregar configurações de origem ao montar o componente
     loadLeadSources();
+    // Carregar usuários
+    loadUsers();
+  }, []);
 
+  useEffect(() => {
     if (lead) {
       // Se o lead foi passado como prop, usar os dados diretamente
-      setFormData({
-        name: lead.name || '',
-        email: lead.email || '',
-        phone: lead.phone || '',
-        company: lead.company || '',
-        position: lead.position || '',
-        source: lead.source || '',
-        source_extra: lead.source_extra || '', // Carregar campo extra se existir
-        interest: lead.interest || '',
-        stage: lead.stage || 'novo',
-        temperature: lead.temperature || 'frio',
-        address: lead.address || '',
-        city: lead.city || '',
-        state: lead.state || '',
-        cep: lead.cep || '',
-        assigned_to: lead.assigned_to ? lead.assigned_to.toString() : '',
-        value: lead.value ? lead.value.toString() : '',
-        next_contact: lead.next_contact || ''
-      });
+      populateFormWithLead(lead);
       setIsEditing(true);
     } else if (leadId) {
       // Se apenas o ID foi passado, carregar os dados
@@ -89,13 +124,125 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
     }
   }, [leadId, lead]);
 
+  // Atualizar configuração da origem quando sources carregarem ou source mudar
+  useEffect(() => {
+    if (leadSources.length > 0 && formData.source) {
+      const sourceConfig = leadSources.find(s => s.value === formData.source);
+      setSelectedSourceConfig(sourceConfig || null);
+    }
+  }, [leadSources, formData.source]);
+
+  const populateFormWithLead = (leadData: Lead) => {
+    setFormData({
+      name: leadData.name || '',
+      email: leadData.email || '',
+      phone: leadData.phone || '',
+      company: leadData.company || '',
+      position: leadData.position || '',
+      source: leadData.source || '',
+      source_extra: leadData.source_extra || '',
+      interest: leadData.interest || '',
+      stage: leadData.stage || 'novo',
+      temperature: leadData.temperature || 'frio',
+      address: leadData.address || '',
+      city: leadData.city || '',
+      state: leadData.state || '',
+      cep: leadData.cep || '',
+      assigned_to: leadData.assigned_to ? leadData.assigned_to.toString() : '',
+      value: leadData.value ? leadData.value.toString() : '',
+      next_contact: leadData.next_contact || ''
+    });
+
+    // Carregar valores de campos extras se existirem
+    if (leadData.source_extra) {
+      try {
+        const extraData = JSON.parse(leadData.source_extra);
+        if (typeof extraData === 'object') {
+          setDynamicFieldValues(extraData);
+        }
+      } catch (e) {
+        // Se não for JSON, tratar como campo único (compatibilidade)
+        setDynamicFieldValues({ legacy_field: leadData.source_extra });
+      }
+    }
+  };
+
+  // Função para carregar usuários com permissões adequadas
+  const loadUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      // Assumindo que existe um endpoint para buscar usuários
+      // Ajuste conforme sua API
+      const token = localStorage.getItem('token')
+      const response = await fetch('/api/users', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // Adicione headers de autenticação se necessário
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        // Filtrar apenas usuários com permissões adequadas e ativos
+        const allowedRoles = ['admin', 'gerente', 'comercial'];
+        // Se a API retornar dentro de "users", usa isso, senão tenta usar direto
+        const usersArray = Array.isArray(data?.data?.users) ? data.data.users : [];
+
+        const normalizedUsers = usersArray.map((user: any) => ({
+          id: user.id,
+          name: user.nome,
+          email: user.email,
+          role: user.funcao,
+          active: user.ativo,
+        }));
+
+        const filteredUsers = normalizedUsers.filter((user: User) =>
+          user.active && allowedRoles.includes(user.role?.toLowerCase())
+        );
+
+        setUsers(filteredUsers);
+      } else {
+        console.error('Erro ao carregar usuários:', response.statusText);
+        // Fallback com dados mock para desenvolvimento
+        setUsers([
+          { id: 1, name: 'João Silva', email: 'joao@empresa.com', role: 'admin', active: true },
+          { id: 2, name: 'Maria Santos', email: 'maria@empresa.com', role: 'gerente', active: true },
+          { id: 3, name: 'Pedro Costa', email: 'pedro@empresa.com', role: 'comercial', active: true },
+          { id: 4, name: 'Ana Oliveira', email: 'ana@empresa.com', role: 'comercial', active: true },
+        ]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar usuários:', error);
+      // Fallback com dados mock
+      setUsers([
+        { id: 1, name: 'João Silva', email: 'joao@empresa.com', role: 'admin', active: true },
+        { id: 2, name: 'Maria Santos', email: 'maria@empresa.com', role: 'gerente', active: true },
+        { id: 3, name: 'Pedro Costa', email: 'pedro@empresa.com', role: 'comercial', active: true },
+        { id: 4, name: 'Ana Oliveira', email: 'ana@empresa.com', role: 'comercial', active: true },
+      ]);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
   // Função para carregar configurações de origem da API
   const loadLeadSources = async () => {
     setLoadingSources(true);
     try {
       const response = await leadService.getLeadSettings('source');
       if (response.success && response.data) {
-        setLeadSources(response.data);
+        // Converter dados da API para ExtendedLeadSource
+        const convertedSources: ExtendedLeadSource[] = response.data.map((source: any) => ({
+          id: source.id,
+          type: source.type,
+          value: source.value,
+          created_at: source.created_at,
+          meta_config: source.meta_config
+        }));
+        setLeadSources(convertedSources);
       }
     } catch (error) {
       console.error('Erro ao carregar configurações de origem:', error);
@@ -137,6 +284,24 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           id: 20,
           type: 'source',
           value: 'Indicação',
+          meta_config: {
+            extra_fields: [
+              {
+                id: 'legacy_field',
+                label: 'Percentual de indicação',
+                type: 'text',
+                required: true,
+                placeholder: ''
+              },
+              {
+                id: 'field_1758634125804',
+                label: 'teste',
+                type: 'checkbox',
+                required: false,
+                placeholder: 'teste'
+              }
+            ]
+          },
           created_at: '2025-08-03 23:32:22'
         },
         {
@@ -191,25 +356,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
       const response = await leadService.getLead(leadId);
       if (response.data && response.data.lead) {
         const leadData = response.data.lead;
-        setFormData({
-          name: leadData.name || '',
-          email: leadData.email || '',
-          phone: leadData.phone || '',
-          company: leadData.company || '',
-          position: leadData.position || '',
-          source: leadData.source || '',
-          source_extra: leadData.source_extra || '', // Carregar campo extra
-          interest: leadData.interest || '',
-          stage: leadData.stage || 'novo',
-          temperature: leadData.temperature || 'frio',
-          address: leadData.address || '',
-          city: leadData.city || '',
-          state: leadData.state || '',
-          cep: leadData.cep || '',
-          assigned_to: leadData.assigned_to ? leadData.assigned_to.toString() : '',
-          value: leadData.value ? leadData.value.toString() : '',
-          next_contact: leadData.next_contact || ''
-        });
+        populateFormWithLead(leadData);
         setIsEditing(true);
       }
     } catch (error) {
@@ -269,14 +416,16 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
 
     // Lógica especial para o campo source
     if (field === 'source') {
-      const sourceConfig = leadSources.find(s => s.value === value);
-      setSelectedSourceConfig(sourceConfig || null);
-      
-      // Limpar o campo extra quando mudar a origem
+      // Não limpar campos extras ao editar, apenas ao criar novo
+      if (!isEditing) {
+        setDynamicFieldValues({});
+      }
+
       setFormData(prev => ({
         ...prev,
         source: value,
-        source_extra: ''
+        // Não limpar source_extra ao editar
+        source_extra: isEditing ? prev.source_extra : ''
       }));
     }
 
@@ -286,6 +435,142 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
         ...prev,
         [field]: undefined
       }));
+    }
+  };
+
+  // Função para lidar com mudanças em campos dinâmicos
+  const handleDynamicFieldChange = (fieldId: string, value: any) => {
+    setDynamicFieldValues(prev => ({
+      ...prev,
+      [fieldId]: value
+    }));
+
+    // Limpar erro do campo se existir
+    if (errors[`dynamic_${fieldId}`]) {
+      setErrors(prev => ({
+        ...prev,
+        [`dynamic_${fieldId}`]: undefined
+      }));
+    }
+  };
+
+  // Função para verificar se um campo deve ser exibido baseado em condições
+  const shouldShowField = (field: ExtraField): boolean => {
+    if (!field.condition) return true;
+
+    const { field: conditionField, value: conditionValue } = field.condition;
+
+    switch (conditionField) {
+      case 'source':
+        return formData.source === conditionValue;
+      case 'stage':
+        return formData.stage === conditionValue;
+      case 'temperature':
+        return formData.temperature === conditionValue;
+      default:
+        return true;
+    }
+  };
+
+  // Função para renderizar campo dinâmico
+  const renderDynamicField = (field: ExtraField) => {
+    if (!shouldShowField(field)) return null;
+
+    const fieldValue = dynamicFieldValues[field.id] || '';
+    const fieldError = errors[`dynamic_${field.id}`];
+
+    switch (field.type) {
+      case 'checkbox':
+        return (
+          <div key={field.id} className="flex items-center">
+            <input
+              type="checkbox"
+              id={`dynamic_${field.id}`}
+              checked={fieldValue === true || fieldValue === 'true' || fieldValue === 1}
+              onChange={(e) => handleDynamicFieldChange(field.id, e.target.checked)}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              disabled={loading}
+            />
+            <label htmlFor={`dynamic_${field.id}`} className="ml-2 text-sm text-gray-700">
+              {field.label}
+              {field.required && ' *'}
+            </label>
+            {fieldError && (
+              <p className="ml-2 text-sm text-red-600">{fieldError}</p>
+            )}
+          </div>
+        );
+
+      case 'select':
+        return (
+          <div key={field.id}>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {field.label}
+              {field.required && ' *'}
+            </label>
+            <select
+              value={fieldValue}
+              onChange={(e) => handleDynamicFieldChange(field.id, e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${fieldError ? 'border-red-300' : 'border-gray-300'
+                }`}
+              disabled={loading}
+            >
+              <option value="">Selecione uma opção</option>
+              {field.options?.map((option, index) => (
+                <option key={index} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            {fieldError && (
+              <p className="mt-1 text-sm text-red-600">{fieldError}</p>
+            )}
+          </div>
+        );
+
+      case 'textarea':
+        return (
+          <div key={field.id}>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {field.label}
+              {field.required && ' *'}
+            </label>
+            <textarea
+              value={fieldValue}
+              onChange={(e) => handleDynamicFieldChange(field.id, e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${fieldError ? 'border-red-300' : 'border-gray-300'
+                }`}
+              placeholder={field.placeholder}
+              rows={3}
+              disabled={loading}
+            />
+            {fieldError && (
+              <p className="mt-1 text-sm text-red-600">{fieldError}</p>
+            )}
+          </div>
+        );
+
+      default:
+        return (
+          <div key={field.id}>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {field.label}
+              {field.required && ' *'}
+            </label>
+            <input
+              type={field.type}
+              value={fieldValue}
+              onChange={(e) => handleDynamicFieldChange(field.id, e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${fieldError ? 'border-red-300' : 'border-gray-300'
+                }`}
+              placeholder={field.placeholder}
+              disabled={loading}
+            />
+            {fieldError && (
+              <p className="mt-1 text-sm text-red-600">{fieldError}</p>
+            )}
+          </div>
+        );
     }
   };
 
@@ -332,9 +617,27 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
       newErrors.next_contact = 'Data de próximo contato é obrigatória';
     }
 
-    // Validar campo extra da origem se necessário
-    if (selectedSourceConfig?.meta_config?.extra_field?.required && !formData.source_extra.trim()) {
-      newErrors.source_extra = `${selectedSourceConfig.meta_config.extra_field.label} é obrigatório`;
+    // Validar campos dinâmicos
+    if (selectedSourceConfig?.meta_config) {
+      // Validar campo legacy se existir
+      if (selectedSourceConfig.meta_config.extra_field?.required) {
+        const legacyValue = dynamicFieldValues.legacy_field || '';
+        if (!legacyValue.toString().trim()) {
+          newErrors[`dynamic_legacy_field`] = `${selectedSourceConfig.meta_config.extra_field.label} é obrigatório`;
+        }
+      }
+
+      // Validar campos extras múltiplos
+      if (selectedSourceConfig.meta_config.extra_fields) {
+        selectedSourceConfig.meta_config.extra_fields.forEach(field => {
+          if (shouldShowField(field) && field.required) {
+            const fieldValue = dynamicFieldValues[field.id];
+            if (!fieldValue || (typeof fieldValue === 'string' && !fieldValue.trim())) {
+              newErrors[`dynamic_${field.id}`] = `${field.label} é obrigatório`;
+            }
+          }
+        });
+      }
     }
 
     // Validar email se preenchido
@@ -373,22 +676,30 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
     setErrors({});
 
     try {
+      // Preparar dados de campos extras para salvamento
+      let sourceExtraData = '';
+
+      if (selectedSourceConfig?.meta_config && Object.keys(dynamicFieldValues).length > 0) {
+        // Se há múltiplos campos ou apenas um campo, salvar como JSON
+        sourceExtraData = JSON.stringify(dynamicFieldValues);
+      }
+
       // Preparar dados para envio
       const dataToSend: CreateLeadRequest | UpdateLeadRequest = {
         name: formData.name,
         email: formData.email || undefined,
-        phone: formData.phone ? formData.phone.replace(/\D/g, '') : undefined, // Remover máscara
+        phone: formData.phone ? formData.phone.replace(/\D/g, '') : undefined,
         company: formData.company,
         position: formData.position || undefined,
         source: formData.source || undefined,
-        source_extra: formData.source_extra || undefined, // Incluir campo extra
+        source_extra: sourceExtraData || undefined,
         interest: formData.interest || undefined,
         stage: formData.stage,
         temperature: formData.temperature,
         address: formData.address,
         city: formData.city,
         state: formData.state,
-        cep: formData.cep.replace(/\D/g, ''), // Remover máscara
+        cep: formData.cep.replace(/\D/g, ''),
         assigned_to: formData.assigned_to ? parseInt(formData.assigned_to) : undefined,
         value: formData.value ?
           parseFloat(formData.value.replace(/[^\d,]/g, '').replace(',', '.')) : 0,
@@ -396,7 +707,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
       };
 
       await onSave(dataToSend);
-      onSuccess?.(); // Chamar callback de sucesso se existir
+      onSuccess?.();
 
     } catch (error: any) {
       console.error('Erro ao salvar lead:', error);
@@ -433,6 +744,13 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
     } catch (error) {
       console.error('Erro ao buscar CEP:', error);
     }
+  };
+
+  // Função para obter o nome do usuário pelo ID
+  const getUserNameById = (userId: string) => {
+    if (!userId) return '';
+    const user = users.find(u => u.id.toString() === userId);
+    return user ? user.name : '';
   };
 
   const formContent = (
@@ -559,29 +877,45 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
               <p className="mt-1 text-sm text-gray-500">Carregando origens...</p>
             )}
           </div>
+        </div>
 
-          {/* Campo extra da origem - aparece condicionalmente */}
-          {selectedSourceConfig?.meta_config?.extra_field && (
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {selectedSourceConfig.meta_config.extra_field.label}
-                {selectedSourceConfig.meta_config.extra_field.required && ' *'}
-              </label>
-              <input
-                type={selectedSourceConfig.meta_config.extra_field.type}
-                value={formData.source_extra}
-                onChange={(e) => handleInputChange('source_extra', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.source_extra ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                placeholder={selectedSourceConfig.meta_config.extra_field.label}
-                disabled={loading}
-              />
-              {errors.source_extra && (
-                <p className="mt-1 text-sm text-red-600">{errors.source_extra}</p>
+        {/* Campos extras dinâmicos da origem */}
+        {selectedSourceConfig?.meta_config && (
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
+            <h4 className="text-md font-medium text-gray-900 mb-4">
+              Informações Adicionais - {selectedSourceConfig.value}
+            </h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Campo legacy (compatibilidade) */}
+              {selectedSourceConfig.meta_config.extra_field && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {selectedSourceConfig.meta_config.extra_field.label}
+                    {selectedSourceConfig.meta_config.extra_field.required && ' *'}
+                  </label>
+                  <input
+                    type={selectedSourceConfig.meta_config.extra_field.type}
+                    value={dynamicFieldValues.legacy_field || ''}
+                    onChange={(e) => handleDynamicFieldChange('legacy_field', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.dynamic_legacy_field ? 'border-red-300' : 'border-gray-300'
+                      }`}
+                    placeholder={selectedSourceConfig.meta_config.extra_field.placeholder}
+                    disabled={loading}
+                  />
+                  {errors.dynamic_legacy_field && (
+                    <p className="mt-1 text-sm text-red-600">{errors.dynamic_legacy_field}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Campos extras múltiplos */}
+              {selectedSourceConfig.meta_config.extra_fields?.map(field =>
+                renderDynamicField(field)
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -681,14 +1015,22 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Responsável
             </label>
-            <input
-              type="number"
+            <select
               value={formData.assigned_to}
               onChange={(e) => handleInputChange('assigned_to', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="ID do responsável"
-              disabled={loading}
-            />
+              disabled={loading || loadingUsers}
+            >
+              <option value="">Selecione um responsável</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id.toString()}>
+                  {user.name} ({user.role})
+                </option>
+              ))}
+            </select>
+            {loadingUsers && (
+              <p className="mt-1 text-sm text-gray-500">Carregando usuários...</p>
+            )}
           </div>
         </div>
       </div>
@@ -868,4 +1210,3 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
 };
 
 export default LeadForm;
-
