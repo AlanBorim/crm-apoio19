@@ -1,19 +1,28 @@
 import { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
-import { KanbanCard, DragItem } from './types/kanban';
-import { User, Calendar, Tag } from 'lucide-react';
-import { useState } from 'react';
+import { KanbanCard, DragItem, User } from './types/kanban';
+import { AssignedUsers } from './components/AssignedUsers';
+import { Calendar, Tag, MessageSquare, Paperclip, AlertTriangle } from 'lucide-react';
 
 interface KanbanCardProps {
   card: KanbanCard;
   index: number;
   columnId: string;
+  currentUser: User;
+  users: User[];
   onMoveCard: (cardId: string, sourceColumnId: string, destinationColumnId: string, newIndex: number) => void;
+  onCardClick?: (cardId: string) => void;
 }
 
-export function KanbanCardComponent({ card, index, columnId, onMoveCard }: KanbanCardProps) {
-  const [showDetail, setShowDetail] = useState(false);
-  
+export function KanbanCardComponent({ 
+  card, 
+  index, 
+  columnId, 
+  currentUser,
+  users,
+  onMoveCard,
+  onCardClick 
+}: KanbanCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   
   // Configurar drag
@@ -59,8 +68,6 @@ export function KanbanCardComponent({ card, index, columnId, onMoveCard }: Kanba
       const hoverClientY = (clientOffset?.y || 0) - hoverBoundingRect.top;
       
       // Apenas realizar movimento quando o mouse cruzar metade da altura do item
-      // Quando arrastar para baixo, apenas mover quando passar do meio
-      // Quando arrastar para cima, apenas mover quando passar do meio
       if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
         return;
       }
@@ -77,9 +84,7 @@ export function KanbanCardComponent({ card, index, columnId, onMoveCard }: Kanba
         hoverIndex
       );
       
-      // Nota: estamos mutando o item do monitor aqui!
-      // Geralmente é melhor evitar mutações,
-      // mas é a maneira mais fácil de implementar este requisito
+      // Atualizar o item do monitor
       item.index = hoverIndex;
       item.columnId = columnId;
     }
@@ -92,14 +97,21 @@ export function KanbanCardComponent({ card, index, columnId, onMoveCard }: Kanba
   const getPriorityColor = () => {
     switch (card.priority) {
       case 'alta':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 border-red-200';
       case 'media':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'baixa':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
+  };
+
+  const getPriorityIcon = () => {
+    if (card.priority === 'alta') {
+      return <AlertTriangle size={12} className="text-red-600" />;
+    }
+    return null;
   };
   
   // Verificar se o card está atrasado
@@ -109,165 +121,129 @@ export function KanbanCardComponent({ card, index, columnId, onMoveCard }: Kanba
     const dueDate = new Date(card.dueDate);
     return dueDate < today;
   };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit'
+    });
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onCardClick) {
+      onCardClick(card.id);
+    }
+  };
   
   return (
-    <>
-      <div
-        ref={ref}
-        onClick={() => setShowDetail(true)}
-        className={`bg-white rounded border ${
-          isDragging ? 'opacity-50' : 'opacity-100'
-        } ${
-          isOverdue() ? 'border-red-300' : 'border-gray-200'
-        } p-3 shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-200`}
-        style={{ opacity: isDragging ? 0.5 : 1 }}
-      >
+    <div
+      ref={ref}
+      onClick={handleCardClick}
+      className={`bg-white rounded-lg border shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 ${
+        isDragging ? 'opacity-50 transform rotate-2' : 'opacity-100'
+      } ${
+        isOverdue() ? 'border-red-300 bg-red-50' : 'border-gray-200'
+      }`}
+    >
+      <div className="p-3">
+        {/* Header com prioridade */}
         <div className="flex justify-between items-start mb-2">
-          <h4 className="text-sm font-medium text-gray-900">{card.title}</h4>
-          <div className={`text-xs font-medium px-2 py-0.5 rounded-full ${getPriorityColor()}`}>
+          <div className="flex items-center space-x-2 flex-1">
+            {getPriorityIcon()}
+            <h4 className="text-sm font-medium text-gray-900 line-clamp-2 flex-1">
+              {card.title}
+            </h4>
+          </div>
+          <div className={`text-xs font-medium px-2 py-0.5 rounded-full border ${getPriorityColor()}`}>
             {card.priority === 'alta' ? 'Alta' : card.priority === 'media' ? 'Média' : 'Baixa'}
           </div>
         </div>
         
+        {/* Descrição */}
         {card.description && (
-          <p className="text-xs text-gray-500 mb-2 line-clamp-2">{card.description}</p>
+          <p className="text-xs text-gray-500 mb-3 line-clamp-2">
+            {card.description}
+          </p>
         )}
         
-        <div className="flex flex-wrap gap-1 mb-2">
-          {card.tags && card.tags.map((tag: string) => (
-            <span key={tag} className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
-              <Tag size={10} className="mr-1" />
-              {tag}
-            </span>
-          ))}
-        </div>
-        
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <div className="flex items-center">
-            {card.assignedTo && (
-              <div className="flex items-center mr-3">
-                <User size={12} className="mr-1" />
-                <span>{card.assignedTo}</span>
-              </div>
+        {/* Tags */}
+        {card.tags && card.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {card.tags.slice(0, 3).map((tag: string) => (
+              <span 
+                key={tag} 
+                className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700"
+              >
+                <Tag size={8} className="mr-1" />
+                {tag}
+              </span>
+            ))}
+            {card.tags.length > 3 && (
+              <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                +{card.tags.length - 3}
+              </span>
             )}
+          </div>
+        )}
+
+        {/* Usuários atribuídos */}
+        {card.assignedTo && card.assignedTo.length > 0 && (
+          <div className="mb-3">
+            <AssignedUsers 
+              users={card.assignedTo} 
+              size="sm" 
+              maxDisplay={3}
+              showRoles={false}
+            />
+          </div>
+        )}
+        
+        {/* Footer com informações */}
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="flex items-center space-x-3">
             {card.dueDate && (
-              <div className={`flex items-center ${isOverdue() ? 'text-red-500' : ''}`}>
-                <Calendar size={12} className="mr-1" />
-                <span>{card.dueDate}</span>
+              <div className={`flex items-center space-x-1 ${isOverdue() ? 'text-red-600' : ''}`}>
+                <Calendar size={12} />
+                <span>{formatDate(card.dueDate)}</span>
+                {isOverdue() && <span className="text-red-600 font-medium">!</span>}
               </div>
             )}
           </div>
           
-          <div className="flex items-center space-x-2">
-            {/* {card.comments && card.comments > 0 && (
-              <div className="flex items-center">
-                <MessageSquare size={12} className="mr-1" />
-                <span>{card.comments}</span>
+          <div className="flex items-center space-x-3">
+            {card.comments && card.comments.length > 0 && (
+              <div className="flex items-center space-x-1">
+                <MessageSquare size={12} />
+                <span>{card.comments.length}</span>
               </div>
             )}
-            {card.attachments && card.attachments > 0 && (
-              <div className="flex items-center">
-                <Paperclip size={12} className="mr-1" />
-                <span>{card.attachments}</span>
+            {card.attachments && card.attachments.length > 0 && (
+              <div className="flex items-center space-x-1">
+                <Paperclip size={12} />
+                <span>{card.attachments.length}</span>
               </div>
-            )} */}
+            )}
           </div>
         </div>
-      </div>
-      
-      {/* Modal de detalhes do card */}
-      {showDetail && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-screen items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-              onClick={() => setShowDetail(false)}
-            ></div>
-            
-            <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-              <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-lg font-medium leading-6 text-gray-900">
-                        {card.title}
-                      </h3>
-                      <div className={`text-xs font-medium px-2 py-0.5 rounded-full ${getPriorityColor()}`}>
-                        {card.priority === 'alta' ? 'Alta' : card.priority === 'media' ? 'Média' : 'Baixa'}
-                      </div>
-                    </div>
-                    
-                    <div className="mt-4">
-                      <p className="text-sm text-gray-500">{card.description}</p>
-                    </div>
-                    
-                    <div className="mt-4 flex flex-wrap gap-1">
-                      {card.tags && card.tags.map((tag: string) => (
-                        <span key={tag} className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
-                          <Tag size={10} className="mr-1" />
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    
-                    <div className="mt-4 border-t border-gray-200 pt-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-xs font-medium text-gray-500">Responsável</p>
-                          <p className="text-sm text-gray-900">{card.assignedTo || 'Não atribuído'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium text-gray-500">Data de vencimento</p>
-                          <p className={`text-sm ${isOverdue() ? 'text-red-600' : 'text-gray-900'}`}>
-                            {card.dueDate}
-                            {isOverdue() && ' (Atrasado)'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Seção de comentários (simulada) */}
-                    {/* {card.comments && card.comments > 0 && (
-                      <div className="mt-4 border-t border-gray-200 pt-4">
-                        <h4 className="text-sm font-medium text-gray-900">Comentários ({card.comments})</h4>
-                        <div className="mt-2 space-y-3">
-                          <div className="flex space-x-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-sm font-medium text-orange-600">
-                              {card.assignedTo?.charAt(0) || 'U'}
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-xs font-medium text-gray-900">{card.assignedTo || 'Usuário'}</p>
-                              <p className="text-xs text-gray-500">Há 2 dias</p>
-                              <p className="mt-1 text-sm text-gray-700">Entrei em contato com o cliente e agendamos uma reunião para a próxima semana.</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )} */}
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                <button
-                  type="button"
-                  className="inline-flex w-full justify-center rounded-md bg-orange-500 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-600 sm:ml-3 sm:w-auto"
-                >
-                  Editar
-                </button>
-                <button
-                  type="button"
-                  className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-medium text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-                  onClick={() => setShowDetail(false)}
-                >
-                  Fechar
-                </button>
-              </div>
+
+        {/* Indicador de atividade recente */}
+        {card.updatedAt !== card.createdAt && (
+          <div className="mt-2 pt-2 border-t border-gray-100">
+            <div className="flex items-center justify-between text-xs text-gray-400">
+              <span>Atualizado</span>
+              <span>{formatDate(card.updatedAt)}</span>
             </div>
           </div>
-        </div>
-      )}
-    </>
+        )}
+      </div>
+
+      {/* Barra lateral de prioridade */}
+      <div className={`h-1 rounded-b-lg ${
+        card.priority === 'alta' ? 'bg-red-400' :
+        card.priority === 'media' ? 'bg-yellow-400' : 'bg-blue-400'
+      }`} />
+    </div>
   );
 }
-
-
