@@ -13,10 +13,12 @@ import {
   CheckSquare,
   Download,
   RefreshCw,
-  Thermometer
+  Thermometer,
+  Upload
 } from 'lucide-react';
 import leadService, { useLeads } from '../../services/leadService';
 import { Lead, LeadFilter, LeadStage, LeadTemperature } from './types/lead';
+import LeadImportCSV from './LeadImportCSV';
 
 type LeadListProps = {
   onSelectLeads: (leadIds: string[]) => void;
@@ -46,6 +48,7 @@ const LeadList: React.FC<LeadListProps> = ({
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [showBatchActions, setShowBatchActions] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   // Verificação de segurança: garantir que leads é sempre um array
   const safeLeads = Array.isArray(leads) ? leads : [];
@@ -97,6 +100,15 @@ const LeadList: React.FC<LeadListProps> = ({
       } catch (error) {
         console.error('Erro ao excluir lead:', error);
       }
+  };
+
+  const handleImportComplete = (summary: any) => {
+    setShowImportModal(false);
+    // Atualizar lista de leads após importação
+    fetchLeads(filters);
+    
+    // Mostrar notificação de sucesso
+    alert(`Importação concluída! ${summary.valid} leads importados com sucesso.`);
   };
 
   const getStageColor = (stage: LeadStage) => {
@@ -174,6 +186,14 @@ const LeadList: React.FC<LeadListProps> = ({
           </button>
 
           <button
+            onClick={() => setShowImportModal(true)}
+            className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 flex items-center gap-2"
+          >
+            <Upload size={20} />
+            Importar CSV
+          </button>
+
+          <button
             onClick={onNewLead}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
           >
@@ -232,13 +252,13 @@ const LeadList: React.FC<LeadListProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Todas as origens</option>
-                <option value="website">Website</option>
-                <option value="indicacao">Indicação</option>
-                <option value="telefone">Telefone</option>
-                <option value="email">Email</option>
-                <option value="redes_sociais">Redes Sociais</option>
-                <option value="evento">Evento</option>
-                <option value="outros">Outros</option>
+                <option value="Website">Website</option>
+                <option value="E-mail">E-mail</option>
+                <option value="Telefone">Telefone</option>
+                <option value="Indicação">Indicação</option>
+                <option value="Redes Sociais">Redes Sociais</option>
+                <option value="Evento">Evento</option>
+                <option value="Outros">Outros</option>
               </select>
             </div>
 
@@ -246,42 +266,102 @@ const LeadList: React.FC<LeadListProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Responsável
               </label>
-              <input
-                type="number"
-                placeholder="ID do responsável"
+              <select
                 value={filters.assigned_to || ''}
                 onChange={(e) => handleFilterChange({ assigned_to: e.target.value ? parseInt(e.target.value) : undefined })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+              >
+                <option value="">Todos os responsáveis</option>
+                <option value="1">João Silva</option>
+                <option value="2">Maria Santos</option>
+                <option value="3">Pedro Costa</option>
+                <option value="4">Ana Oliveira</option>
+              </select>
             </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              onClick={() => {
+                setFilters({
+                  stage: '',
+                  temperature: '',
+                  assigned_to: undefined,
+                  source: '',
+                  search: ''
+                });
+                fetchLeads({});
+              }}
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+            >
+              Limpar Filtros
+            </button>
           </div>
         </div>
       )}
 
-      {/* Ações em lote */}
-      {showBatchActions && (
-        <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg flex items-center justify-between">
-          <span className="text-blue-800">
-            {selectedLeads.length} lead(s) selecionado(s)
-          </span>
-          <div className="flex gap-2">
-            {/* <button className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
-              Alterar Estágio
-            </button>
-            <button className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
-              Excluir
-            </button> */}
+      {/* Estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-lg border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total de Leads</p>
+              <p className="text-2xl font-bold text-gray-900">{safeLeads.length}</p>
+            </div>
+            <Users className="text-gray-400" size={24} />
           </div>
         </div>
-      )}
+
+        <div className="bg-white p-4 rounded-lg border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Novos</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {safeLeads.filter(lead => lead.stage === 'novo').length}
+              </p>
+            </div>
+            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+              <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Em Andamento</p>
+              <p className="text-2xl font-bold text-yellow-600">
+                {safeLeads.filter(lead => ['contatado', 'reuniao', 'proposta'].includes(lead.stage || '')).length}
+              </p>
+            </div>
+            <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
+              <div className="w-3 h-3 bg-yellow-600 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Fechados</p>
+              <p className="text-2xl font-bold text-green-600">
+                {safeLeads.filter(lead => lead.stage === 'fechado').length}
+              </p>
+            </div>
+            <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+              <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Tabela de leads */}
       <div className="bg-white rounded-lg border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-6 py-3 text-left">
+                <th className="px-4 py-3 text-left">
                   <input
                     type="checkbox"
                     checked={selectedLeads.length === safeLeads.length && safeLeads.length > 0}
@@ -289,33 +369,36 @@ const LeadList: React.FC<LeadListProps> = ({
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                   Lead
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                   Empresa
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  Origem
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                   Estágio
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                   Temperatura
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                   Valor
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Próximo Contato
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  Data
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                   Ações
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-4 text-center">
+                  <td colSpan={9} className="px-4 py-8 text-center">
                     <div className="flex items-center justify-center">
                       <RefreshCw className="animate-spin mr-2" size={20} />
                       Carregando leads...
@@ -324,71 +407,86 @@ const LeadList: React.FC<LeadListProps> = ({
                 </tr>
               ) : safeLeads.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
                     Nenhum lead encontrado
                   </td>
                 </tr>
               ) : (
                 safeLeads.map((lead) => (
                   <tr key={lead.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <input
                         type="checkbox"
-                        checked={selectedLeads.includes(lead.id!)}
-                        onChange={() => handleSelectLead(lead.id!)}
+                        checked={selectedLeads.includes(lead.id)}
+                        onChange={() => handleSelectLead(lead.id)}
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {lead.name}
+                        <div className="font-medium text-gray-900">
+                          {lead.name || lead.nome}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {lead.email}
-                        </div>
+                        {lead.email && (
+                          <div className="text-sm text-gray-500">{lead.email}</div>
+                        )}
+                        {(lead.phone || lead.telefone) && (
+                          <div className="text-sm text-gray-500">
+                            {lead.phone || lead.telefone}
+                          </div>
+                        )}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">{lead.company}</div>
-                      <div className="text-sm text-gray-500">{lead.position}</div>
+                    <td className="px-4 py-3">
+                      <div className="text-sm text-gray-900">
+                        {lead.company || lead.empresa}
+                      </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStageColor(lead.stage)}`}>
-                        {lead.stage}
+                    <td className="px-4 py-3">
+                      <div className="text-sm text-gray-900">{lead.source}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStageColor(lead.stage || 'novo')}`}>
+                        {lead.stage || 'novo'}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className={`flex items-center gap-1 ${getTemperatureColor(lead.temperature)}`}>
-                        <span>{getTemperatureIcon(lead.temperature)}</span>
-                        <span className="text-sm font-medium capitalize">{lead.temperature}</span>
+                    <td className="px-4 py-3">
+                      <div className={`flex items-center gap-1 ${getTemperatureColor(lead.temperature || 'frio')}`}>
+                        <span>{getTemperatureIcon(lead.temperature || 'frio')}</span>
+                        <span className="text-sm font-medium capitalize">
+                          {lead.temperature || 'frio'}
+                        </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {formatCurrency(lead.value)}
+                    <td className="px-4 py-3">
+                      <div className="text-sm font-medium text-green-600">
+                        {formatCurrency(lead.value || 0)}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {formatDate(lead.next_contact)}
+                    <td className="px-4 py-3">
+                      <div className="text-sm text-gray-900">
+                        {formatDate(lead.created_at || lead.dataCriacao || '')}
+                      </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => onViewDetail(lead.id!)}
-                          className="text-blue-600 hover:text-blue-900"
+                          onClick={() => onViewDetail(lead.id)}
+                          className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
                           title="Ver detalhes"
                         >
                           <Eye size={16} />
                         </button>
                         <button
                           onClick={() => onEditLead(lead)}
-                          className="text-green-600 hover:text-green-900"
+                          className="p-1 text-gray-400 hover:text-yellow-600 transition-colors"
                           title="Editar"
                         >
                           <Edit size={16} />
                         </button>
                         <button
-                          onClick={() => handleDelete(lead.id!)}
-                          className="text-red-600 hover:text-red-900"
+                          onClick={() => handleDelete(lead.id)}
+                          className="p-1 text-gray-400 hover:text-red-600 transition-colors"
                           title="Excluir"
                         >
                           <Trash2 size={16} />
@@ -402,6 +500,13 @@ const LeadList: React.FC<LeadListProps> = ({
           </table>
         </div>
       </div>
+
+      {/* Modal de Importação CSV */}
+      <LeadImportCSV
+        isOpen={showImportModal}
+        onImportComplete={handleImportComplete}
+        onCancel={() => setShowImportModal(false)}
+      />
 
       {/* Estatísticas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -481,4 +586,3 @@ const LeadList: React.FC<LeadListProps> = ({
 };
 
 export default LeadList;
-
