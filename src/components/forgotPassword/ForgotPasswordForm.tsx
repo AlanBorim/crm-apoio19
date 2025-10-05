@@ -1,24 +1,23 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { useAuth } from '../hooks/useAuth';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { usePasswordRecovery } from '../../hooks/usePasswordRecovery';
 
-export function LoginForm() {
+export function ForgotPasswordForm() {
   const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const { login, isLoading, error, clearError } = useAuth();
+  const { requestPasswordReset, isLoading, error, clearError } = usePasswordRecovery();
   const navigate = useNavigate();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
-   
-    const success = await login(email, senha);
-    if (success) {
-      navigate('/dashboard');
-    }
 
+    const success = await requestPasswordReset(email);
+    if (success) {
+      navigate('/password-reset-sent', { state: { email } });
+    }
   };
 
   return (
@@ -31,10 +30,10 @@ export function LoginForm() {
             className="mx-auto h-16 w-auto"
           />
           <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
-            Acesse sua conta
+            Recuperar senha
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Entre com suas credenciais para acessar o CRM Apoio19
+            Digite seu e-mail para receber um link de recuperação de senha
           </p>
         </div>
 
@@ -56,30 +55,6 @@ export function LoginForm() {
                 placeholder="seu@email.com"
               />
             </div>
-
-            <div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="senha" className="block text-sm font-medium text-gray-700">
-                  Senha
-                </Label>
-                <Link 
-                  to="/forgot-password" 
-                  className="text-sm font-medium text-purple-600 hover:text-purple-500 transition-colors duration-200"
-                >
-                  Esqueceu a senha?
-                </Link>
-              </div>
-              <Input
-                id="senha"
-                name="senha"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                className="mt-1"
-              />
-            </div>
           </div>
 
           {error && (
@@ -95,14 +70,23 @@ export function LoginForm() {
             </div>
           )}
 
-          <div>
+          <div className="space-y-4">
             <Button
               type="submit"
               className="w-full bg-orange-600 hover:bg-orange-700 focus:ring-orange-500 text-white"
               disabled={isLoading}
             >
-              {isLoading ? 'Entrando...' : 'Entrar'}
+              {isLoading ? 'Enviando...' : 'Enviar link de recuperação'}
             </Button>
+
+            <div className="text-center">
+              <Link
+                to="/login"
+                className="text-sm font-medium text-purple-600 hover:text-purple-500"
+              >
+                Voltar para o login
+              </Link>
+            </div>
           </div>
         </form>
       </div>

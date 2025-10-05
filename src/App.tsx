@@ -2,6 +2,10 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { LoginForm } from './components/LoginForm';
+import { ForgotPasswordForm } from './components/forgotPassword/ForgotPasswordForm';
+import { PasswordResetSent } from './components/forgotPassword/PasswordResetSent';
+import { ResetPasswordForm } from './components/forgotPassword/ResetPasswordForm';
+import { PasswordResetSuccess } from './components/forgotPassword/PasswordResetSuccess';
 import { MainLayout } from './components/MainLayout';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { LeadsModule } from './components/leads/LeadsModule';
@@ -68,7 +72,12 @@ function App() {
         <Routes>
           {/* Rota de login - SEM NotificationProvider */}
           <Route path="/login" element={<LoginForm />} />
-
+          {/* Rotas de recuperação de senha */}
+          <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+          <Route path="/password-reset-sent" element={<PasswordResetSent />} />
+          <Route path="/reset-password" element={<ResetPasswordForm />} />
+          <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
+          
           {/* Todas as rotas protegidas envolvidas pelo NotificationProvider */}
           <Route path="/*" element={
             isAuthenticated ? (
