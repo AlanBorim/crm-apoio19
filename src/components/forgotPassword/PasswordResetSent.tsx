@@ -26,7 +26,7 @@ export function PasswordResetSent() {
           <img
             src="/logo.png"
             alt="CRM Apoio19"
-            className="mx-auto h-28 w-auto" 
+            className="mx-auto h-16 w-auto"
           />
           <div className="mt-6">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
@@ -92,7 +92,7 @@ export function PasswordResetSent() {
             <Button
               onClick={handleResend}
               variant="outline"
-              className="w-full border-purple-600 text-purple-600 hover:bg-purple-50"
+              className="w-full border-orange-600 text-orange-600 hover:bg-orange-50"
               disabled={isLoading}
             >
               {isLoading ? 'Reenviando...' : 'Reenviar e-mail'}

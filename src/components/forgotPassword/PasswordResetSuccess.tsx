@@ -21,7 +21,7 @@ export function PasswordResetSuccess() {
           <img
             src="/logo.png"
             alt="CRM Apoio19"
-            className="mx-auto h-28 w-auto" 
+            className="mx-auto h-16 w-auto"
           />
           <div className="mt-6">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
@@ -73,7 +73,7 @@ export function PasswordResetSuccess() {
           <div className="space-y-4">
             <Button
               onClick={() => navigate('/login')}
-              className="w-full bg-purple-600 hover:bg-purple-700 focus:ring-purple-500"
+              className="w-full bg-orange-600 hover:bg-orange-700 focus:ring-orange-500 text-white"
             >
               Fazer login agora
             </Button>

@@ -70,7 +70,7 @@ export function ResetPasswordForm() {
           <img
             src="/logo.png"
             alt="CRM Apoio19"
-            className="mx-auto h-28 w-auto" 
+            className="mx-auto h-16 w-auto"
           />
           <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
             Nova senha
@@ -197,7 +197,7 @@ export function ResetPasswordForm() {
           <div>
             <Button
               type="submit"
-              className="w-full bg-purple-600 hover:bg-purple-700 focus:ring-purple-500"
+              className="w-full bg-orange-600 hover:bg-orange-700 focus:ring-orange-500 text-white"
               disabled={isLoading || !isFormValid}
             >
               {isLoading ? 'Redefinindo...' : 'Redefinir senha'}

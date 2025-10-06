@@ -26,7 +26,7 @@ export function usePasswordRecovery() {
 
     try {
       // Simular chamada para API
-      const response = await fetch('/api/auth/forgot-password', {
+      const response = await fetch('/api/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -53,7 +53,7 @@ export function usePasswordRecovery() {
 
     try {
       // Simular chamada para API
-      const response = await fetch('/api/auth/reset-password', {
+      const response = await fetch('/api/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
