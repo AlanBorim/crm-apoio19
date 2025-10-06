@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -12,11 +12,11 @@ export function ResetPasswordForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong'>('weak');
-  
+
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const navigate = useNavigate();
-  
+
   const { resetPassword, isLoading, error, clearError } = usePasswordRecovery();
 
   useEffect(() => {
@@ -125,7 +125,7 @@ export function ResetPasswordForm() {
                   </svg>
                 </button>
               </div>
-              
+
               {newPassword && (
                 <div className="mt-2">
                   <div className="flex items-center justify-between">
@@ -136,13 +136,12 @@ export function ResetPasswordForm() {
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-200 rounded">
                     <div
-                      className={`h-1 rounded transition-all duration-300 ${
-                        passwordStrength === 'weak' 
-                          ? 'w-1/3 bg-red-500' 
-                          : passwordStrength === 'medium' 
-                          ? 'w-2/3 bg-yellow-500' 
-                          : 'w-full bg-green-500'
-                      }`}
+                      className={`h-1 rounded transition-all duration-300 ${passwordStrength === 'weak'
+                          ? 'w-1/3 bg-red-500'
+                          : passwordStrength === 'medium'
+                            ? 'w-2/3 bg-yellow-500'
+                            : 'w-full bg-green-500'
+                        }`}
                     />
                   </div>
                 </div>
@@ -172,7 +171,7 @@ export function ResetPasswordForm() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="mt-1"
               />
-              
+
               {confirmPassword && !passwordsMatch && (
                 <p className="mt-2 text-xs text-red-600">
                   As senhas não coincidem
@@ -202,6 +201,15 @@ export function ResetPasswordForm() {
             >
               {isLoading ? 'Redefinindo...' : 'Redefinir senha'}
             </Button>
+          </div>
+
+          <div className="text-center">
+            <Link
+              to="/login"
+              className="text-sm font-medium text-purple-600 hover:text-purple-500"
+            >
+              Voltar para o login
+            </Link>
           </div>
         </form>
       </div>
