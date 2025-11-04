@@ -7,6 +7,7 @@ import { CardEditModal } from './components/CardEditModal';
 import { ActivityLogPanel } from './components/ActivityLogPanel';
 import { useActivityLog } from './hooks/useActivityLog';
 import { useUsers } from '../../hooks/useUsers';
+import kanbanApi from './services/kanbanApi';
 import { 
   KanbanColumn, 
   KanbanCard, 
@@ -23,7 +24,8 @@ import {
   User as UserIcon,
   Settings,
   Activity,
-  Search
+  Search,
+  RefreshCw
 } from 'lucide-react';
 
 interface KanbanBoardProps {
@@ -32,7 +34,7 @@ interface KanbanBoardProps {
 
 export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
   // Hook de usuários do sistema
-  const { users: systemUsers, loading } = useUsers({ autoLoad: true });
+  const { users: systemUsers, loading: usersLoading } = useUsers({ autoLoad: true });
 
   // Função para mapear funcao do sistema para role do Kanban
   const mapFuncaoToRole = (funcao: string): User['role'] => {
@@ -58,141 +60,66 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
     role: mapFuncaoToRole(user.funcao)
   }));
 
-  // Para fins de demonstração, vamos usar o primeiro usuário como atual
-  // Em produção, isso deveria vir de um contexto de autenticação
-  const currentUser: User = users.length > 0 ? users[0] : {
-    id: '1',
-    nome: 'Usuário Demo',
-    email: 'demo@apoio19.com.br',
-    role: 'admin'
+  // Obter usuário atual do localStorage
+  const getCurrentUser = (): User => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        return {
+          id: user.id,
+          nome: user.nome,
+          email: user.email,
+          role: mapFuncaoToRole(user.funcao)
+        };
+      } catch (e) {
+        console.error('Erro ao parsear usuário:', e);
+      }
+    }
+    
+    return users.length > 0 ? users[0] : {
+      id: '1',
+      nome: 'Usuário Demo',
+      email: 'demo@apoio19.com.br',
+      role: 'admin'
+    };
   };
+
+  const currentUser = getCurrentUser();
 
   // Activity log hook
   const activityLog = useActivityLog({ currentUser });
 
-  // Mock initial data with enhanced structure
-  const initialColumns: KanbanColumn[] = [
-    {
-      id: 'col1',
-      title: 'Novo',
-      order: 1,
-      color: 'blue',
-      cards: [
-        {
-          id: 'card1',
-          title: 'Contatar cliente ABC',
-          description: 'Fazer contato inicial para apresentação de proposta comercial detalhada',
-          priority: 'alta',
-          dueDate: '2025-06-10',
-          assignedTo: users.slice(0, 2),
-          tags: ['novo-cliente', 'urgente', 'comercial'],
-          status: 'pendente',
-          createdAt: '2025-01-15T10:00:00Z',
-          updatedAt: '2025-01-15T10:00:00Z',
-          createdBy: currentUser,
-          comments: [
-            {
-              id: 'comment1',
-              cardId: 'card1',
-              userId: currentUser.id,
-              user: currentUser,
-              content: 'Cliente demonstrou interesse no produto premium',
-              createdAt: '2025-01-15T14:30:00Z'
-            }
-          ]
-        },
-        {
-          id: 'card2',
-          title: 'Preparar apresentação',
-          description: 'Criar slides para reunião com diretoria sobre novos produtos',
-          priority: 'media',
-          dueDate: '2025-06-15',
-          assignedTo: users.slice(1, 2),
-          tags: ['apresentacao', 'diretoria'],
-          status: 'pendente',
-          createdAt: '2025-01-14T09:00:00Z',
-          updatedAt: '2025-01-15T11:00:00Z',
-          createdBy: currentUser,
-          comments: []
-        }
-      ]
-    },
-    {
-      id: 'col2',
-      title: 'Em Progresso',
-      order: 2,
-      color: 'yellow',
-      limit: 5,
-      cards: [
-        {
-          id: 'card3',
-          title: 'Análise de requisitos',
-          description: 'Levantar requisitos técnicos para novo módulo do sistema',
-          priority: 'alta',
-          dueDate: '2025-06-08',
-          assignedTo: users.slice(2, 4),
-          tags: ['desenvolvimento', 'requisitos'],
-          status: 'em_progresso',
-          createdAt: '2025-01-13T08:00:00Z',
-          updatedAt: '2025-01-15T16:00:00Z',
-          createdBy: currentUser,
-          comments: [
-            {
-              id: 'comment2',
-              cardId: 'card3',
-              userId: currentUser.id,
-              user: currentUser,
-              content: 'Já mapeei 80% dos requisitos funcionais',
-              createdAt: '2025-01-15T16:00:00Z'
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'col3',
-      title: 'Revisão',
-      order: 3,
-      color: 'purple',
-      cards: []
-    },
-    {
-      id: 'col4',
-      title: 'Concluído',
-      order: 4,
-      color: 'green',
-      cards: [
-        {
-          id: 'card4',
-          title: 'Reunião inicial',
-          description: 'Apresentação do projeto para equipe de desenvolvimento',
-          priority: 'baixa',
-          dueDate: '2025-05-30',
-          assignedTo: [currentUser],
-          tags: ['reuniao', 'kickoff'],
-          status: 'concluido',
-          createdAt: '2025-01-10T09:00:00Z',
-          updatedAt: '2025-01-12T17:00:00Z',
-          createdBy: currentUser,
-          comments: []
-        }
-      ]
-    }
-  ];
-
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showFilter, setShowFilter] = useState(false);
   const [showActivityLog, setShowActivityLog] = useState(false);
   const [selectedCard, setSelectedCard] = useState<KanbanCard | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredColumns, setFilteredColumns] = useState<KanbanColumn[]>([]);
 
-  // Inicializar colunas quando os usuários carregarem
-  useEffect(() => {
-    if (users.length > 0 && columns.length === 0) {
-      setColumns(initialColumns);
+  // Carregar dados do quadro Kanban
+  const loadBoard = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await kanbanApi.board.getBoard();
+      if (response.success && response.data) {
+        setColumns(response.data);
+      }
+    } catch (err: any) {
+      console.error('Erro ao carregar quadro Kanban:', err);
+      setError(err.message || 'Erro ao carregar quadro Kanban');
+    } finally {
+      setLoading(false);
     }
-  }, [users, columns.length]);
+  }, []);
+
+  // Carregar quadro ao montar o componente
+  useEffect(() => {
+    loadBoard();
+  }, [loadBoard]);
 
   // Filter columns based on search term
   const applySearch = useCallback((term: string) => {
@@ -219,7 +146,8 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
     applySearch(searchTerm);
   }, [columns, searchTerm, applySearch]);
 
-  const moveCard = useCallback((cardId: string, sourceColumnId: string, destinationColumnId: string, newIndex: number) => {
+  const moveCard = useCallback(async (cardId: string, sourceColumnId: string, destinationColumnId: string, newIndex: number) => {
+    // Atualizar UI otimisticamente
     const newColumns = [...columns];
     const sourceColumnIndex = newColumns.findIndex(col => col.id === sourceColumnId);
     const destinationColumnIndex = newColumns.findIndex(col => col.id === destinationColumnId);
@@ -240,337 +168,423 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
     
     setColumns(newColumns);
     
-    // Log the move
-    if (sourceColumnId !== destinationColumnId) {
-      activityLog.logCardMove(
+    // Atualizar no backend
+    try {
+      // Preparar dados para o backend
+      const taskIds = destinationColumn.cards.map(card => parseInt(card.id));
+      await kanbanApi.cards.update(cardId, {
+        columnId: destinationColumnId
+      });
+      
+      // Atualizar ordem das tarefas
+      const orderData = [{
+        columnId: parseInt(destinationColumnId),
+        taskIds: taskIds
+      }];
+      
+      // Nota: A API de ordem precisa ser ajustada para aceitar este formato
+      // await apiRequest('/kanban/tasks/order', { method: 'POST', body: JSON.stringify(orderData) });
+      
+      // Log the move
+      if (sourceColumnId !== destinationColumnId) {
+        activityLog.logCardMove(
+          cardId,
+          movedCard.title,
+          sourceColumn.title,
+          destinationColumn.title
+        );
+      }
+    } catch (err) {
+      console.error('Erro ao mover card:', err);
+      // Reverter mudança em caso de erro
+      loadBoard();
+    }
+  }, [columns, activityLog, loadBoard]);
+
+  const addColumn = useCallback(async () => {
+    try {
+      const newColumnData = {
+        title: `Nova Coluna ${columns.length + 1}`,
+        order: columns.length + 1
+      };
+      
+      const response = await kanbanApi.columns.create(newColumnData);
+      
+      if (response.success && response.data) {
+        setColumns([...columns, response.data]);
+        activityLog.logColumnCreate(response.data);
+      }
+    } catch (err) {
+      console.error('Erro ao criar coluna:', err);
+      setError('Erro ao criar coluna');
+    }
+  }, [columns, activityLog]);
+
+  const updateColumn = useCallback(async (columnId: string, updates: Partial<KanbanColumn>) => {
+    try {
+      const response = await kanbanApi.columns.update(columnId, updates);
+      
+      if (response.success && response.data) {
+        const newColumns = columns.map(col => 
+          col.id === columnId ? response.data! : col
+        );
+        setColumns(newColumns);
+        
+        const column = columns.find(col => col.id === columnId);
+        if (column) {
+          activityLog.logColumnUpdate(columnId, column.title, updates);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar coluna:', err);
+      setError('Erro ao atualizar coluna');
+    }
+  }, [columns, activityLog]);
+
+  const deleteColumn = useCallback(async (columnId: string) => {
+    const column = columns.find(col => col.id === columnId);
+    
+    if (column && column.cards.length > 0) {
+      alert('Não é possível excluir uma coluna que contém tarefas. Mova as tarefas primeiro.');
+      return;
+    }
+    
+    try {
+      await kanbanApi.columns.delete(columnId);
+      
+      if (column) {
+        activityLog.logColumnDelete(column);
+      }
+      
+      setColumns(columns.filter(col => col.id !== columnId));
+    } catch (err) {
+      console.error('Erro ao deletar coluna:', err);
+      setError('Erro ao deletar coluna');
+    }
+  }, [columns, activityLog]);
+
+  const addCard = useCallback(async (columnId: string) => {
+    try {
+      const newCardData = {
+        title: 'Novo Card',
+        description: 'Descrição do novo card',
+        columnId: columnId,
+        priority: 'media' as const,
+        dueDate: new Date().toISOString().split('T')[0],
+        assignedTo: [],
+        tags: []
+      };
+      
+      const response = await kanbanApi.cards.create(newCardData);
+      
+      if (response.success && response.data) {
+        const columnIndex = columns.findIndex(col => col.id === columnId);
+        if (columnIndex !== -1) {
+          const newColumns = [...columns];
+          newColumns[columnIndex].cards.push(response.data);
+          setColumns(newColumns);
+          
+          const column = columns[columnIndex];
+          activityLog.logCardCreate(response.data, column.title);
+          
+          // Abrir card para edição
+          setSelectedCard(response.data);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao criar card:', err);
+      setError('Erro ao criar card');
+    }
+  }, [columns, activityLog]);
+
+  const updateCard = useCallback(async (cardId: string, updates: Partial<KanbanCard>) => {
+    try {
+      const response = await kanbanApi.cards.update(cardId, updates);
+      
+      if (response.success && response.data) {
+        const newColumns = columns.map(column => ({
+          ...column,
+          cards: column.cards.map(card =>
+            card.id === cardId ? response.data! : card
+          )
+        }));
+        
+        setColumns(newColumns);
+        
+        // Encontrar card antigo para log
+        const oldCard = columns
+          .flatMap(col => col.cards)
+          .find(card => card.id === cardId);
+        
+        if (oldCard) {
+          activityLog.logCardUpdate(cardId, oldCard.title, updates);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar card:', err);
+      setError('Erro ao atualizar card');
+    }
+  }, [columns, activityLog]);
+
+  const deleteCard = useCallback(async (cardId: string) => {
+    const card = columns
+      .flatMap(col => col.cards)
+      .find(c => c.id === cardId);
+    
+    if (!card) return;
+    
+    try {
+      await kanbanApi.cards.delete(cardId);
+      
+      activityLog.logCardDelete(card);
+      
+      const newColumns = columns.map(column => ({
+        ...column,
+        cards: column.cards.filter(c => c.id !== cardId)
+      }));
+      
+      setColumns(newColumns);
+    } catch (err) {
+      console.error('Erro ao deletar card:', err);
+      setError('Erro ao deletar card');
+    }
+  }, [columns, activityLog]);
+
+  const addComment = useCallback(async (cardId: string, content: string) => {
+    try {
+      const response = await kanbanApi.comments.create({
         cardId,
-        movedCard.title,
-        sourceColumn.title,
-        destinationColumn.title
-      );
+        content
+      });
+      
+      if (response.success && response.data) {
+        const newColumns = columns.map(column => ({
+          ...column,
+          cards: column.cards.map(card =>
+            card.id === cardId
+              ? { ...card, comments: [...(card.comments || []), response.data!] }
+              : card
+          )
+        }));
+        
+        setColumns(newColumns);
+        
+        const card = columns
+          .flatMap(col => col.cards)
+          .find(c => c.id === cardId);
+        
+        if (card) {
+          activityLog.logCardComment(cardId, card.title);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao adicionar comentário:', err);
+      setError('Erro ao adicionar comentário');
     }
   }, [columns, activityLog]);
 
-  const addColumn = useCallback(() => {
-    const newColumn: KanbanColumn = {
-      id: `col${Date.now()}`,
-      title: `Nova Coluna ${columns.length + 1}`,
-      order: columns.length + 1,
-      cards: []
-    };
-    
-    const newColumns = [...columns, newColumn];
-    setColumns(newColumns);
-    activityLog.logColumnCreate(newColumn);
-  }, [columns, activityLog]);
+  const applyFilters = useCallback((filters: KanbanFilterOptions) => {
+    let filtered = [...columns];
 
-  const updateColumn = useCallback((columnId: string, updates: Partial<KanbanColumn>) => {
-    const newColumns = columns.map(col => 
-      col.id === columnId ? { ...col, ...updates } : col
-    );
-    setColumns(newColumns);
-    
-    const column = columns.find(col => col.id === columnId);
-    if (column) {
-      activityLog.logColumnUpdate(columnId, column.title, updates);
+    if (filters.status && filters.status.length > 0) {
+      filtered = filtered.map(column => ({
+        ...column,
+        cards: column.cards.filter(card => filters.status!.includes(card.status))
+      }));
     }
-  }, [columns, activityLog]);
 
-  const deleteColumn = useCallback((columnId: string) => {
-    const column = columns.find(col => col.id === columnId);
-    if (column) {
-      activityLog.logColumnDelete(column);
+    if (filters.priority && filters.priority.length > 0) {
+      filtered = filtered.map(column => ({
+        ...column,
+        cards: column.cards.filter(card => filters.priority!.includes(card.priority))
+      }));
     }
-    
-    setColumns(columns.filter(col => col.id !== columnId));
-  }, [columns, activityLog]);
 
-  const addCard = useCallback((columnId: string) => {
-    const columnIndex = columns.findIndex(col => col.id === columnId);
-    if (columnIndex === -1) return;
-    
-    const newCard: KanbanCard = {
-      id: `card${Date.now()}`,
-      title: 'Novo Card',
-      description: 'Descrição do novo card',
-      priority: 'media',
-      status: 'pendente',
-      dueDate: new Date().toISOString().split('T')[0],
-      assignedTo: [],
-      tags: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      createdBy: currentUser,
-      comments: []
-    };
-    
-    const newColumns = [...columns];
-    newColumns[columnIndex].cards.push(newCard);
-    setColumns(newColumns);
-    
-    const column = columns[columnIndex];
-    activityLog.logCardCreate(newCard, column.title);
-    
-    // Open card for editing
-    setSelectedCard(newCard);
-  }, [columns, currentUser, activityLog]);
-
-  const updateCard = useCallback((cardId: string, updates: Partial<KanbanCard>) => {
-    const newColumns = columns.map(column => ({
-      ...column,
-      cards: column.cards.map(card =>
-        card.id === cardId
-          ? { ...card, ...updates, updatedAt: new Date().toISOString() }
-          : card
-      )
-    }));
-    
-    setColumns(newColumns);
-    
-    // Find the card to get its title for logging
-    const card = columns
-      .flatMap(col => col.cards)
-      .find(card => card.id === cardId);
-    
-    if (card) {
-      activityLog.logCardUpdate(cardId, card.title, updates);
-    }
-  }, [columns, activityLog]);
-
-  const addComment = useCallback((cardId: string, content: string) => {
-    const newComment: Comment = {
-      id: `comment${Date.now()}`,
-      cardId,
-      userId: currentUser.id,
-      user: currentUser,
-      content,
-      createdAt: new Date().toISOString()
-    };
-
-    const newColumns = columns.map(column => ({
-      ...column,
-      cards: column.cards.map(card =>
-        card.id === cardId
-          ? {
-              ...card,
-              comments: [...(card.comments || []), newComment],
-              updatedAt: new Date().toISOString()
-            }
-          : card
-      )
-    }));
-
-    setColumns(newColumns);
-    
-    const card = columns
-      .flatMap(col => col.cards)
-      .find(card => card.id === cardId);
-    
-    if (card) {
-      activityLog.logComment(cardId, card.title, content);
-    }
-  }, [columns, currentUser, activityLog]);
-
-  const updateComment = useCallback((commentId: string, content: string) => {
-    const newColumns = columns.map(column => ({
-      ...column,
-      cards: column.cards.map(card => ({
-        ...card,
-        comments: card.comments?.map(comment =>
-          comment.id === commentId
-            ? { ...comment, content, updatedAt: new Date().toISOString() }
-            : comment
+    if (filters.assignedTo && filters.assignedTo.length > 0) {
+      filtered = filtered.map(column => ({
+        ...column,
+        cards: column.cards.filter(card =>
+          card.assignedTo?.some(user => filters.assignedTo!.includes(user.id))
         )
-      }))
-    }));
+      }));
+    }
 
-    setColumns(newColumns);
+    if (filters.tags && filters.tags.length > 0) {
+      filtered = filtered.map(column => ({
+        ...column,
+        cards: column.cards.filter(card =>
+          card.tags?.some(tag => filters.tags!.includes(tag))
+        )
+      }));
+    }
+
+    if (filters.dateRange) {
+      filtered = filtered.map(column => ({
+        ...column,
+        cards: column.cards.filter(card => {
+          if (!card.dueDate) return false;
+          const dueDate = new Date(card.dueDate);
+          const start = new Date(filters.dateRange!.start);
+          const end = new Date(filters.dateRange!.end);
+          return dueDate >= start && dueDate <= end;
+        })
+      }));
+    }
+
+    setFilteredColumns(filtered);
   }, [columns]);
 
-  const deleteComment = useCallback((commentId: string) => {
-    const newColumns = columns.map(column => ({
-      ...column,
-      cards: column.cards.map(card => ({
-        ...card,
-        comments: card.comments?.filter(comment => comment.id !== commentId)
-      }))
-    }));
-
-    setColumns(newColumns);
-  }, [columns]);
-
-  const handleCardClick = useCallback((cardId: string) => {
-    const card = columns
-      .flatMap(col => col.cards)
-      .find(card => card.id === cardId);
-    
-    if (card) {
-      setSelectedCard(card);
-    }
-    
-    if (onCardClick) {
-      onCardClick(cardId);
-    }
-  }, [columns, onCardClick]);
-
-  const applyFilters = useCallback((options: KanbanFilterOptions) => {
-    setShowFilter(false);
-    console.log('Filtros aplicados:', options);
-    // Implementar lógica de filtros aqui
-  }, []);
-
-  // Mostrar loading enquanto carrega usuários
-  if (loading.list) {
+  if (loading && columns.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center bg-gray-50">
+      <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando sistema Kanban...</p>
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p>Carregando quadro Kanban...</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="h-full flex flex-col bg-gray-50">
-      {/* Header fixo - dentro da área de conteúdo */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-900">Kanban Board</h1>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setShowActivityLog(!showActivityLog)}
-                className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                <Activity size={16} />
-                <span>Atividades</span>
-              </button>
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
-                <Bell size={16} />
-                <span>3</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <UserIcon size={16} />
-              <span>{currentUser.nome}</span>
-              <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
-                {currentUser.role === 'admin' ? 'Admin' : currentUser.role === 'gerente' ? 'Gerente' : 'Usuário'}
-              </span>
-            </div>
-            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-              <Settings size={20} />
-            </button>
-          </div>
-        </div>
-
-        {/* Controles */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center space-x-4">
-            {/* Search */}
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar cards..."
-                className="pl-9 pr-4 py-2 w-64 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Filter Button */}
-            <button
-              onClick={() => setShowFilter(!showFilter)}
-              className="flex items-center rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              <Filter size={16} className="mr-2" />
-              Filtros
-              {showFilter ? <ChevronUp size={16} className="ml-2" /> : <ChevronDown size={16} className="ml-2" />}
-            </button>
-          </div>
-
-          {/* Add Column Button */}
+  if (error && columns.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center text-red-600">
+          <p className="mb-4">{error}</p>
           <button
-            onClick={addColumn}
-            className="flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600 transition-colors"
+            onClick={loadBoard}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
-            <Plus size={16} className="mr-2" />
-            Nova Coluna
+            Tentar Novamente
           </button>
         </div>
-
-        {/* Filter Panel */}
-        {showFilter && (
-          <div className="mt-4">
-            <KanbanFilter
-              onFilterChange={applyFilters}
-              responsaveis={users.map(u => ({ id: u.id, nome: u.nome }))}
-            />
-          </div>
-        )}
       </div>
+    );
+  }
 
-      {/* Main Content Area - Apenas as colunas fazem scroll */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Kanban Board */}
-        <div className="flex-1 overflow-hidden">
-          <DndProvider backend={HTML5Backend}>
-            {/* Container com scroll horizontal apenas para as colunas */}
-            <div className="h-full overflow-x-auto overflow-y-hidden">
-              <div className="flex h-full space-x-6 p-6 min-w-max">
-                {filteredColumns.map((column, index) => (
-                  <KanbanColumnComponent
-                    key={column.id}
-                    column={column}
-                    index={index}
-                    currentUser={currentUser}
-                    users={users}
-                    onMoveCard={moveCard}
-                    onAddCard={() => addCard(column.id)}
-                    onCardClick={handleCardClick}
-                    onUpdateColumn={updateColumn}
-                    onDeleteColumn={deleteColumn}
-                  />
-                ))}
-              </div>
+  const displayColumns = searchTerm || showFilter ? filteredColumns : columns;
+
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <div className="h-screen flex flex-col bg-gray-50">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-bold text-gray-900">Quadro Kanban</h1>
+              <button
+                onClick={loadBoard}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Recarregar"
+              >
+                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+              </button>
             </div>
-          </DndProvider>
+
+            <div className="flex items-center space-x-3">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar tarefas..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Filter Button */}
+              <button
+                onClick={() => setShowFilter(!showFilter)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  showFilter
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Filter className="w-4 h-4" />
+                <span>Filtros</span>
+                {showFilter ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+
+              {/* Activity Log Button */}
+              <button
+                onClick={() => setShowActivityLog(!showActivityLog)}
+                className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Activity className="w-4 h-4" />
+                <span>Atividades</span>
+              </button>
+
+              {/* Add Column Button */}
+              <button
+                onClick={addColumn}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Nova Coluna</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Filter Panel */}
+          {showFilter && (
+            <div className="mt-4">
+              <KanbanFilter
+                users={users}
+                onApplyFilters={applyFilters}
+                onClearFilters={() => setFilteredColumns(columns)}
+              />
+            </div>
+          )}
         </div>
 
-        {/* Activity Log Sidebar */}
-        {showActivityLog && (
-          <div className="w-96 border-l border-gray-200 bg-white overflow-y-auto">
-            <ActivityLogPanel
-              logs={activityLog.getRecentLogs(50)}
-              users={users}
-              isLoading={activityLog.isLoading}
-              className="h-full"
-            />
+        {/* Main Content */}
+        <div className="flex-1 overflow-x-auto overflow-y-hidden">
+          <div className="h-full flex space-x-4 p-6">
+            {displayColumns.map((column) => (
+              <KanbanColumnComponent
+                key={column.id}
+                column={column}
+                onAddCard={addCard}
+                onUpdateColumn={updateColumn}
+                onDeleteColumn={deleteColumn}
+                onMoveCard={moveCard}
+                onCardClick={(card) => setSelectedCard(card)}
+                onUpdateCard={updateCard}
+                onDeleteCard={deleteCard}
+              />
+            ))}
           </div>
+        </div>
+
+        {/* Card Edit Modal */}
+        {selectedCard && (
+          <CardEditModal
+            card={selectedCard}
+            users={users}
+            onClose={() => setSelectedCard(null)}
+            onSave={(updates) => {
+              updateCard(selectedCard.id, updates);
+              setSelectedCard(null);
+            }}
+            onDelete={() => {
+              deleteCard(selectedCard.id);
+              setSelectedCard(null);
+            }}
+            onAddComment={(content) => addComment(selectedCard.id, content)}
+          />
+        )}
+
+        {/* Activity Log Panel */}
+        {showActivityLog && (
+          <ActivityLogPanel
+            logs={activityLog.logs}
+            onClose={() => setShowActivityLog(false)}
+          />
         )}
       </div>
-
-      {/* Card Edit Modal */}
-      {selectedCard && (
-        <CardEditModal
-          card={selectedCard}
-          users={users}
-          currentUser={currentUser}
-          isOpen={!!selectedCard}
-          onClose={() => setSelectedCard(null)}
-          onSave={(updates) => {
-            updateCard(selectedCard.id, updates);
-            setSelectedCard(null);
-          }}
-          onAddComment={(content) => addComment(selectedCard.id, content)}
-          onUpdateComment={updateComment}
-          onDeleteComment={deleteComment}
-        />
-      )}
-    </div>
+    </DndProvider>
   );
 }
+
