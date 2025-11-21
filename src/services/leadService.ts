@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Lead, LeadFilter, LeadSortOptions, LeadPaginationOptions, LeadSource, LeadSettingsResponse } from '../components/leads/types/lead';
 
 // Configuração da API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://crm.apoio19.com.br/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 // Interface para resposta da API (estrutura real)
 interface ApiResponse<T> {

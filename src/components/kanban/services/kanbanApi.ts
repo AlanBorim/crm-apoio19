@@ -1,7 +1,7 @@
-import { 
-  KanbanColumn, 
-  KanbanCard, 
-  Comment, 
+import {
+  KanbanColumn,
+  KanbanCard,
+  Comment,
   ActivityLog,
   ApiResponse,
   PaginatedResponse,
@@ -14,15 +14,15 @@ import {
   UpdateCommentRequest
 } from '../types/kanban';
 
-const API_BASE = 'https://crm.apoio19.com.br/api';
+const API_BASE = '/api';
 
 // Função auxiliar para fazer requisições autenticadas
 async function apiRequest<T>(
-  endpoint: string, 
+  endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
   const token = localStorage.getItem('token');
-  
+
   const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
@@ -35,11 +35,11 @@ async function apiRequest<T>(
   try {
     const response = await fetch(`${API_BASE}${endpoint}`, config);
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.error || data.message || 'Erro na requisição');
     }
-    
+
     return { success: true, data: data.data || data };
   } catch (error) {
     console.error('API Error:', error);
@@ -74,7 +74,7 @@ function transformTarefaToCard(tarefa: any): KanbanCard {
 // Transformador: Frontend -> Backend
 function transformCardToTarefa(card: CreateCardRequest | UpdateCardRequest): any {
   const data: any = {};
-  
+
   if ('title' in card) data.titulo = card.title;
   if ('description' in card) data.descricao = card.description;
   if ('columnId' in card) data.kanban_coluna_id = parseInt(card.columnId);
@@ -82,7 +82,7 @@ function transformCardToTarefa(card: CreateCardRequest | UpdateCardRequest): any
   if ('dueDate' in card) data.data_vencimento = card.dueDate;
   if ('tags' in card) data.tags = card.tags;
   if ('assignedTo' in card) data.responsaveis = card.assignedTo?.map(id => parseInt(id));
-  
+
   return data;
 }
 
@@ -146,10 +146,10 @@ export const boardApi = {
     const queryParams = filters ? new URLSearchParams(filters).toString() : '';
     const endpoint = queryParams ? `/kanban/board?${queryParams}` : '/kanban/board';
     const response = await apiRequest<any>(endpoint);
-    
+
     // Transformar dados do backend para frontend
     const columns = response.data.map((col: any) => transformColunaToColumn(col));
-    
+
     return { success: true, data: columns };
   }
 };
@@ -165,12 +165,12 @@ export const columnsApi = {
       limite_cards: data.limit,
       ordem: data.order
     };
-    
+
     const response = await apiRequest<any>('/kanban/columns', {
       method: 'POST',
       body: JSON.stringify(backendData),
     });
-    
+
     const column = transformColunaToColumn(response.data.coluna);
     return { success: true, data: column };
   },
@@ -182,12 +182,12 @@ export const columnsApi = {
     if (data.color) backendData.cor = data.color;
     if (data.limit) backendData.limite_cards = data.limit;
     if (data.order !== undefined) backendData.ordem = data.order;
-    
+
     const response = await apiRequest<any>(`/kanban/columns/${id}`, {
       method: 'PUT',
       body: JSON.stringify(backendData),
     });
-    
+
     const column = transformColunaToColumn(response.data.coluna);
     return { success: true, data: column };
   },
@@ -208,7 +208,7 @@ export const cardsApi = {
     const queryParams = filters ? new URLSearchParams(filters).toString() : '';
     const endpoint = queryParams ? `/kanban/tasks?${queryParams}` : '/kanban/tasks';
     const response = await apiRequest<any>(endpoint);
-    
+
     const cards = response.data.map((t: any) => transformTarefaToCard(t));
     return { success: true, data: cards };
   },
@@ -227,7 +227,7 @@ export const cardsApi = {
       method: 'POST',
       body: JSON.stringify(backendData),
     });
-    
+
     const card = transformTarefaToCard(response.data.tarefa || response.data);
     return { success: true, data: card };
   },
@@ -239,7 +239,7 @@ export const cardsApi = {
       method: 'PUT',
       body: JSON.stringify(backendData),
     });
-    
+
     const card = transformTarefaToCard(response.data.tarefa || response.data);
     return { success: true, data: card };
   },
@@ -272,12 +272,12 @@ export const commentsApi = {
   async create(data: CreateCommentRequest): Promise<ApiResponse<Comment>> {
     const response = await apiRequest<any>(`/kanban/tasks/${data.cardId}/comments`, {
       method: 'POST',
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         comentario: data.content,
-        conteudo: data.content 
+        conteudo: data.content
       }),
     });
-    
+
     // Se o backend retornar apenas o ID, buscar o comentário completo
     if (response.data.comment_id) {
       // Buscar todos os comentários da tarefa e encontrar o novo
@@ -287,7 +287,7 @@ export const commentsApi = {
         return { success: true, data: transformComentarioToComment(newComment) };
       }
     }
-    
+
     return { success: true, data: transformComentarioToComment(response.data) };
   },
 
@@ -297,7 +297,7 @@ export const commentsApi = {
       method: 'PUT',
       body: JSON.stringify({ conteudo: data.content }),
     });
-    
+
     return { success: true, data: transformComentarioToComment(response.data) };
   },
 
@@ -328,19 +328,19 @@ export const logsApi = {
     if (filters?.action) params.acao = filters.action;
     if (filters?.page) params.page = filters.page;
     if (filters?.limit) params.limit = filters.limit;
-    
+
     const queryParams = new URLSearchParams(
       Object.entries(params).reduce((acc, [key, value]) => {
         if (value !== undefined) acc[key] = value.toString();
         return acc;
       }, {} as Record<string, string>)
     ).toString();
-    
+
     const endpoint = queryParams ? `/kanban/logs?${queryParams}` : '/kanban/logs';
     const response = await apiRequest<any>(endpoint);
-    
+
     const logs = response.data.map((log: any) => transformLogToActivityLog(log));
-    
+
     return {
       success: true,
       data: {

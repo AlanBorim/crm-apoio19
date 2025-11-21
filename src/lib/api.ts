@@ -1,8 +1,8 @@
 // src/lib/api.ts
 // Serviço para comunicação com a API do backend
 
-// Configuração da URL da API - ajustada para o ambiente de produção com diretórios separados
-const API_URL = 'http://localhost/api';
+// Configuração da URL da API - ajustada para o ambiente de desenvolvimento com proxy
+const API_URL = '/api';
 
 interface LoginCredentials {
   email: string;
@@ -52,7 +52,7 @@ export const authService = {
 
       const data = await response.json();
       console.log('Dados da resposta:', data);
-      
+
       // Armazenar o token no localStorage para uso em requisições futuras
       if (data.token) {
         localStorage.setItem('auth_token', data.token);
@@ -62,11 +62,11 @@ export const authService = {
     } catch (error) {
       console.error('Erro na requisição de login:', error);
       let errorMessage = 'Erro de conexão com o servidor. Tente novamente mais tarde.';
-      
+
       if (error instanceof TypeError && error.message.includes('fetch')) {
         errorMessage = 'Erro de conexão com o servidor. Verifique sua conexão com a internet.';
       }
-      
+
       return { error: errorMessage };
     }
   },
@@ -90,7 +90,7 @@ export const authService = {
 // Função auxiliar para fazer requisições autenticadas
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
   const token = authService.getToken();
-  
+
   const headers = {
     ...options.headers,
     'Authorization': `Bearer ${token}`,
@@ -110,5 +110,39 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
   }
 
   return response;
+}
+
+// Função genérica para requisições à API
+export async function apiRequest(endpoint: string, options: RequestInit = {}) {
+  const token = authService.getToken();
+
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    ...(options.headers || {}),
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
+  // Se receber 401 Unauthorized, fazer logout
+  if (response.status === 401) {
+    authService.logout();
+    window.location.href = '/login';
+    throw new Error('Sessão expirada. Por favor, faça login novamente.');
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new Error(errorData.error || errorData.message || `Erro HTTP ${response.status}`);
+  }
+
+  return response.json();
 }
 

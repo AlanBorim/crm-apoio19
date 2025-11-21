@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 // Configuração da API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://crm.apoio19.com.br/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 // Interface para resposta da API (estrutura real)
 interface ApiResponse<T> {
@@ -286,7 +286,7 @@ export function useNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fetchNotificationsRef = useRef<() => Promise<void>>(async () => {});
+  const fetchNotificationsRef = useRef<() => Promise<void>>(async () => { });
   const fetchNotifications = useCallback(async (filters: NotificationFilter = {}) => {
     // Evitar múltiplas chamadas simultâneas
     if (loading) return;

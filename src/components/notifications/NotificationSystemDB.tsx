@@ -1,20 +1,20 @@
 // src/components/notifications/NotificationSystemDB.tsx - Versão com Sintaxe Corrigida
 
-import React, { 
-  createContext, 
-  useContext, 
-  useState, 
-  useEffect, 
-  ReactNode, 
-  useCallback, 
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
   useRef,
   useMemo
 } from 'react';
-import { 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
-  Info, 
+import {
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Info,
   X
 } from 'lucide-react';
 
@@ -54,7 +54,7 @@ export interface ToastNotification {
 interface NotificationContextType {
   // Toast notifications
   showToast: (notification: Omit<ToastNotification, 'id'>) => void;
-  
+
   // Persistent notifications
   notifications: Notification[];
   unreadCount: number;
@@ -66,7 +66,7 @@ interface NotificationContextType {
   deleteNotification: (id: number) => Promise<void>;
   clearAllNotifications: () => Promise<void>;
   refreshNotifications: () => Promise<void>;
-  
+
   // Estado de conectividade
   isServiceAvailable: boolean;
 }
@@ -124,9 +124,9 @@ const isValidDate = (dateString: string): boolean => {
 };
 
 // Componente Toast com melhor acessibilidade
-const Toast: React.FC<{ 
-  notification: ToastNotification; 
-  onClose: () => void; 
+const Toast: React.FC<{
+  notification: ToastNotification;
+  onClose: () => void;
 }> = ({ notification, onClose }) => {
   const { type, title, message, duration = 5000, autoClose = true } = notification;
 
@@ -184,7 +184,7 @@ const Toast: React.FC<{
   };
 
   return (
-    <div 
+    <div
       className={`${getBackgroundColor()} border rounded-lg p-4 shadow-lg max-w-sm w-full transition-all duration-300 transform translate-x-0`}
       role="alert"
       aria-live={type === 'error' ? 'assertive' : 'polite'}
@@ -209,15 +209,15 @@ const Toast: React.FC<{
 };
 
 // Container de Toasts com melhor acessibilidade
-const ToastContainer: React.FC<{ 
-  toasts: ToastNotification[]; 
-  onRemove: (id: string) => void 
+const ToastContainer: React.FC<{
+  toasts: ToastNotification[];
+  onRemove: (id: string) => void
 }> = ({ toasts, onRemove }) => {
   // ✅ CORREÇÃO: Garantir que toasts seja sempre um array
   const safeToasts = ensureToastArray(toasts);
 
   return (
-    <div 
+    <div
       className="fixed top-4 right-4 z-50 space-y-2"
       aria-live="polite"
       aria-label="Notificações toast"
@@ -245,21 +245,21 @@ const apiService = {
         throw new Error('Token de autenticação não encontrado');
       }
 
-      const response = await fetch('https://crm.apoio19.com.br/api/notifications', {
+      const response = await fetch('/api/notifications', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`Erro ao buscar notificações: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log('Notificações recebidas:', data);
-      
+
       // Extrair o array de notificações do campo 'data'
       let notifications = [];
       if (data && typeof data === 'object') {
@@ -277,11 +277,11 @@ const apiService = {
           notifications = data;
         }
       }
-      
+
       console.log('Array de notificações extraído:', notifications);
       return notifications;
-      
-      
+
+
     } catch (error) {
       console.error('Erro ao buscar notificações:', error);
       return []; // ✅ Sempre retornar array, nunca undefined
@@ -297,7 +297,7 @@ const apiService = {
         throw new Error('Token de autenticação não encontrado');
       }
 
-      const response = await fetch('https://crm.apoio19.com.br/api/notifications', {
+      const response = await fetch('/api/notifications', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -305,14 +305,14 @@ const apiService = {
         },
         body: JSON.stringify(notification)
       });
-      
+
       if (!response.ok) {
         throw new Error(`Erro ao criar notificação: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log('Notificação criada:', data);
-      
+
       // Extrair a notificação criada do campo 'data' se necessário
       if (data && typeof data === 'object') {
         if (data.success && data.data) {
@@ -322,7 +322,7 @@ const apiService = {
           return data;
         }
       }
-      
+
       return data;
     } catch (error) {
       console.error('Erro ao criar notificação:', error);
@@ -339,18 +339,18 @@ const apiService = {
         throw new Error('Token de autenticação não encontrado');
       }
 
-      const response = await fetch(`https://crm.apoio19.com.br/api/notifications/${id}/read`, {
+      const response = await fetch(`/api/notifications/${id}/read`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`Erro ao marcar como lida: ${response.status} ${response.statusText}`);
       }
-      
+
       console.log(`Notificação ${id} marcada como lida`);
     } catch (error) {
       console.error('Erro ao marcar como lida:', error);
@@ -367,18 +367,18 @@ const apiService = {
         throw new Error('Token de autenticação não encontrado');
       }
 
-      const response = await fetch('https://crm.apoio19.com.br/api/notifications/mark-all-read', {
+      const response = await fetch('/api/notifications/mark-all-read', {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`Erro ao marcar todas como lidas: ${response.status} ${response.statusText}`);
       }
-      
+
       console.log('Todas as notificações marcadas como lidas');
     } catch (error) {
       console.error('Erro ao marcar todas como lidas:', error);
@@ -395,18 +395,18 @@ const apiService = {
         throw new Error('Token de autenticação não encontrado');
       }
 
-      const response = await fetch(`https://crm.apoio19.com.br/api/notifications/${id}`, {
+      const response = await fetch(`/api/notifications/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`Erro ao excluir notificação: ${response.status} ${response.statusText}`);
       }
-      
+
       console.log(`Notificação ${id} excluída`);
     } catch (error) {
       console.error('Erro ao excluir notificação:', error);
@@ -423,18 +423,18 @@ const apiService = {
         throw new Error('Token de autenticação não encontrado');
       }
 
-      const response = await fetch('https://crm.apoio19.com.br/api/notifications', {
+      const response = await fetch('/api/notifications', {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`Erro ao excluir todas as notificações: ${response.status} ${response.statusText}`);
       }
-      
+
       console.log('Todas as notificações excluídas');
     } catch (error) {
       console.error('Erro ao excluir todas as notificações:', error);
@@ -476,13 +476,13 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
 
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const newToast: ToastNotification = { 
-      ...notification, 
+    const newToast: ToastNotification = {
+      ...notification,
       id,
       duration: notification.duration || 5000,
       autoClose: notification.autoClose !== false
     };
-    
+
     setToasts(prev => {
       const safePrev = ensureToastArray(prev); // ✅ Garantir que prev seja array
       return [...safePrev, newToast];
@@ -507,15 +507,15 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       const safeData = ensureNotificationArray(data); // ✅ Garantir que data seja array
       const validNotifications = safeData.filter(validateNotification);
       setNotifications(validNotifications);
-      
+
       // Log de sucesso
       console.log(`✅ ${validNotifications.length} notificações carregadas com sucesso`);
     } catch (error) {
       let errorMessage = 'Erro desconhecido';
-      
+
       if (error instanceof Error) {
         errorMessage = error.message;
-        
+
         // Mensagens mais específicas baseadas no tipo de erro
         if (errorMessage.includes('Token de autenticação não encontrado')) {
           errorMessage = 'Você precisa fazer login para ver as notificações';
@@ -531,7 +531,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
           errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente';
         }
       }
-      
+
       setError(errorMessage);
       console.error('❌ Erro ao buscar notificações:', error);
       setNotifications([]); // ✅ Sempre definir como array vazio em caso de erro
@@ -557,13 +557,13 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       }
 
       const newNotification = await apiService.createNotification(notification);
-      
+
       // ✅ CORREÇÃO: Adicionar à lista com verificação de array
       setNotifications(prev => {
         const safePrev = ensureNotificationArray(prev); // ✅ Garantir que prev seja array
         return [newNotification, ...safePrev];
       });
-      
+
       // Mostrar toast de sucesso
       showToast({
         type: 'success',
@@ -574,7 +574,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao criar notificação:', error);
-      
+
       // Mostrar toast de erro
       showToast({
         type: 'error',
@@ -582,7 +582,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         message: errorMessage,
         duration: 5000
       });
-      
+
       throw error;
     }
   }, [showToast]);
@@ -591,12 +591,12 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const markAsRead = useCallback(async (id: number) => {
     try {
       await apiService.markAsRead(id);
-      
+
       // ✅ CORREÇÃO: Atualizar estado com verificação de array
       setNotifications(prev => {
         const safePrev = ensureNotificationArray(prev); // ✅ Garantir que prev seja array
-        return safePrev.map(notification => 
-          notification.id === id 
+        return safePrev.map(notification =>
+          notification.id === id
             ? { ...notification, is_read: !notification.is_read }
             : notification
         );
@@ -604,7 +604,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao marcar como lida:', error);
-      
+
       showToast({
         type: 'error',
         title: 'Erro',
@@ -618,13 +618,13 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const markAllAsRead = useCallback(async () => {
     try {
       await apiService.markAllAsRead();
-      
+
       // ✅ CORREÇÃO: Atualizar estado com verificação de array
       setNotifications(prev => {
         const safePrev = ensureNotificationArray(prev); // ✅ Garantir que prev seja array
         return safePrev.map(notification => ({ ...notification, is_read: true }));
       });
-      
+
       showToast({
         type: 'success',
         title: 'Sucesso',
@@ -634,7 +634,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao marcar todas como lidas:', error);
-      
+
       showToast({
         type: 'error',
         title: 'Erro',
@@ -648,13 +648,13 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const deleteNotification = useCallback(async (id: number) => {
     try {
       await apiService.deleteNotification(id);
-      
+
       // ✅ CORREÇÃO: Remover do estado com verificação de array
       setNotifications(prev => {
         const safePrev = ensureNotificationArray(prev); // ✅ Garantir que prev seja array
         return safePrev.filter(notification => notification.id !== id);
       });
-      
+
       showToast({
         type: 'success',
         title: 'Sucesso',
@@ -664,7 +664,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao excluir notificação:', error);
-      
+
       showToast({
         type: 'error',
         title: 'Erro',
@@ -679,10 +679,10 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     try {
       if (window.confirm('Tem certeza que deseja excluir todas as notificações?')) {
         await apiService.deleteAllNotifications();
-        
+
         // ✅ CORREÇÃO: Limpar estado sempre com array
         setNotifications([]);
-        
+
         showToast({
           type: 'success',
           title: 'Sucesso',
@@ -693,7 +693,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao limpar notificações:', error);
-      
+
       showToast({
         type: 'error',
         title: 'Erro',
@@ -710,7 +710,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao atualizar notificações:', error);
-      
+
       showToast({
         type: 'error',
         title: 'Erro',

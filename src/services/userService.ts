@@ -1,7 +1,7 @@
 import { User } from '../components/configuracoes/types/config';
 
 // Configuração base da API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://crm.apoio19.com.br/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 // Tipos para requisições
 export interface CreateUserRequest {

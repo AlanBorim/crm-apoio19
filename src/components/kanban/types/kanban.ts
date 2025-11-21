@@ -90,6 +90,12 @@ export interface ApiResponse<T> {
   data?: T;
   message?: string;
   errors?: string[];
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }
 
 export interface PaginatedResponse<T> {
@@ -118,6 +124,7 @@ export interface UpdateCardRequest {
   dueDate?: string;
   assignedTo?: string[];
   tags?: string[];
+  columnId?: string; // Adicionado para suportar mudança de coluna
 }
 
 export interface MoveCardRequest {

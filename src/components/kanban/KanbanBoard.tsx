@@ -105,6 +105,7 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
       setLoading(true);
       setError(null);
       const response = await kanbanApi.board.getBoard();
+      console.log(response);
       if (response.success && response.data) {
         setColumns(response.data);
       }
@@ -299,7 +300,13 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
 
   const updateCard = useCallback(async (cardId: string, updates: Partial<KanbanCard>) => {
     try {
-      const response = await kanbanApi.cards.update(cardId, updates);
+      // Converter assignedTo de User[] para string[] para a API
+      const apiUpdates: any = { ...updates };
+      if (updates.assignedTo) {
+        apiUpdates.assignedTo = updates.assignedTo.map(user => user.id);
+      }
+      
+      const response = await kanbanApi.cards.update(cardId, apiUpdates);
       
       if (response.success && response.data) {
         const newColumns = columns.map(column => ({
@@ -333,10 +340,14 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
     
     if (!card) return;
     
+    // Encontrar a coluna do card
+    const column = columns.find(col => col.cards.some(c => c.id === cardId));
+    const columnTitle = column?.title || 'Desconhecida';
+    
     try {
       await kanbanApi.cards.delete(cardId);
       
-      activityLog.logCardDelete(card);
+      activityLog.logCardDelete(card, columnTitle);
       
       const newColumns = columns.map(column => ({
         ...column,
@@ -374,7 +385,7 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
           .find(c => c.id === cardId);
         
         if (card) {
-          activityLog.logCardComment(cardId, card.title);
+          activityLog.logComment(cardId, card.title, content);
         }
       }
     } catch (err) {
@@ -531,9 +542,8 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
           {showFilter && (
             <div className="mt-4">
               <KanbanFilter
-                users={users}
-                onApplyFilters={applyFilters}
-                onClearFilters={() => setFilteredColumns(columns)}
+                responsaveis={users.map(u => ({ id: u.id, nome: u.nome }))}
+                onFilterChange={applyFilters}
               />
             </div>
           )}
@@ -542,17 +552,21 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
         {/* Main Content */}
         <div className="flex-1 overflow-x-auto overflow-y-hidden">
           <div className="h-full flex space-x-4 p-6">
-            {displayColumns.map((column) => (
+            {displayColumns.map((column, index) => (
               <KanbanColumnComponent
                 key={column.id}
                 column={column}
-                onAddCard={addCard}
+                index={index}
+                currentUser={currentUser}
+                users={users}
+                onAddCard={() => addCard(column.id)}
                 onUpdateColumn={updateColumn}
                 onDeleteColumn={deleteColumn}
                 onMoveCard={moveCard}
-                onCardClick={(card) => setSelectedCard(card)}
-                onUpdateCard={updateCard}
-                onDeleteCard={deleteCard}
+                onCardClick={(cardId) => {
+                  const card = columns.flatMap(col => col.cards).find(c => c.id === cardId);
+                  if (card) setSelectedCard(card);
+                }}
               />
             ))}
           </div>
@@ -563,24 +577,31 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
           <CardEditModal
             card={selectedCard}
             users={users}
+            currentUser={currentUser}
+            isOpen={true}
             onClose={() => setSelectedCard(null)}
             onSave={(updates) => {
               updateCard(selectedCard.id, updates);
               setSelectedCard(null);
             }}
-            onDelete={() => {
-              deleteCard(selectedCard.id);
-              setSelectedCard(null);
-            }}
             onAddComment={(content) => addComment(selectedCard.id, content)}
+            onUpdateComment={(commentId, content) => {
+              // TODO: Implementar atualização de comentário
+              console.log('Update comment:', commentId, content);
+            }}
+            onDeleteComment={(commentId) => {
+              // TODO: Implementar exclusão de comentário
+              console.log('Delete comment:', commentId);
+            }}
           />
         )}
 
         {/* Activity Log Panel */}
         {showActivityLog && (
           <ActivityLogPanel
-            logs={activityLog.logs}
-            onClose={() => setShowActivityLog(false)}
+            logs={activityLog.activityLogs}
+            users={users}
+            isLoading={activityLog.isLoading}
           />
         )}
       </div>
