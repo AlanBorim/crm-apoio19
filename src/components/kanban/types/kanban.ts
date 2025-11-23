@@ -43,6 +43,9 @@ export interface KanbanCard {
   tags?: string[];
   comments?: Comment[];
   attachments?: string[];
+  leadId?: string;
+  contactId?: string;
+  proposalId?: string;
   createdAt: string;
   updatedAt: string;
   createdBy: User;
@@ -115,6 +118,9 @@ export interface CreateCardRequest {
   dueDate?: string;
   assignedTo?: string[];
   tags?: string[];
+  leadId?: string;
+  contactId?: string;
+  proposalId?: string;
 }
 
 export interface UpdateCardRequest {
@@ -125,6 +131,9 @@ export interface UpdateCardRequest {
   assignedTo?: string[];
   tags?: string[];
   columnId?: string; // Adicionado para suportar mudança de coluna
+  leadId?: string;
+  contactId?: string;
+  proposalId?: string;
 }
 
 export interface MoveCardRequest {

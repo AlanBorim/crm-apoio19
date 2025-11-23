@@ -46,7 +46,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   };
   
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-x-hidden">
       {/* Sidebar para mobile */}
       <div className={`fixed inset-0 z-40 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
@@ -141,7 +141,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       </div>
       
       {/* Conteúdo principal */}
-      <div className="flex flex-1 flex-col lg:pl-64">
+      <div className="flex flex-1 flex-col lg:pl-64 overflow-x-hidden">
         {/* Cabeçalho - ÚNICO LOCAL COM NOTIFICAÇÕES */}
         <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 border-b border-gray-200 bg-white">
           <button
@@ -187,7 +187,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         </div>
         
         {/* Conteúdo da página */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-6">
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-6 overflow-x-hidden">
           {children}
         </main>
       </div>

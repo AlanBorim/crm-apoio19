@@ -60,6 +60,9 @@ function transformTarefaToCard(tarefa: any): KanbanCard {
     tags: tarefa.tags_array || [],
     comments: (tarefa.comentarios || []).map((c: any) => transformComentarioToComment(c)),
     attachments: [],
+    leadId: tarefa.lead_id ? String(tarefa.lead_id) : undefined,
+    contactId: tarefa.contato_id ? String(tarefa.contato_id) : undefined,
+    proposalId: tarefa.proposta_id ? String(tarefa.proposta_id) : undefined,
     createdAt: tarefa.criado_em,
     updatedAt: tarefa.atualizado_em,
     createdBy: {
@@ -82,6 +85,9 @@ function transformCardToTarefa(card: CreateCardRequest | UpdateCardRequest): any
   if ('dueDate' in card) data.data_vencimento = card.dueDate;
   if ('tags' in card) data.tags = card.tags;
   if ('assignedTo' in card) data.responsaveis = card.assignedTo?.map(id => parseInt(id));
+  if ('leadId' in card) data.lead_id = card.leadId ? parseInt(card.leadId) : null;
+  if ('contactId' in card) data.contato_id = card.contactId ? parseInt(card.contactId) : null;
+  if ('proposalId' in card) data.proposta_id = card.proposalId ? parseInt(card.proposalId) : null;
 
   return data;
 }
@@ -92,8 +98,8 @@ function transformColunaToColumn(coluna: any): KanbanColumn {
     id: String(coluna.id),
     title: coluna.nome,
     order: coluna.ordem,
-    color: coluna.cor,
-    limit: coluna.limite_cards,
+    color: coluna.cor || undefined,
+    limit: coluna.limite_cards || undefined,
     cards: (coluna.tarefas || []).map((t: any) => transformTarefaToCard(t)),
     isEditable: true
   };
@@ -142,16 +148,27 @@ function transformLogToActivityLog(log: any): ActivityLog {
 
 export const boardApi = {
   // Obter quadro completo
-  async getBoard(filters?: Record<string, any>): Promise<ApiResponse<KanbanColumn[]>> {
-    const queryParams = filters ? new URLSearchParams(filters).toString() : '';
-    const endpoint = queryParams ? `/kanban/board?${queryParams}` : '/kanban/board';
-    const response = await apiRequest<any>(endpoint);
+  async getBoard(): Promise<ApiResponse<KanbanColumn[]>> {
+    const response = await apiRequest<any[]>('/kanban/board');
+    if (response.success && response.data) {
+      const columns = response.data.map((col: any) => transformColunaToColumn(col));
+      return { success: true, data: columns };
+    }
+    return { success: false };
+  },
 
-    // Transformar dados do backend para frontend
-    const columns = response.data.map((col: any) => transformColunaToColumn(col));
-
-    return { success: true, data: columns };
-  }
+  // Criar nova coluna
+  async createColumn(data: { nome: string; ordem?: number; cor?: string; limite_cards?: number }): Promise<ApiResponse<KanbanColumn>> {
+    const response = await apiRequest<any>('/kanban/columns', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    if (response.success && response.data?.coluna) {
+      const column = transformColunaToColumn(response.data.coluna);
+      return { success: true, data: column };
+    }
+    return { success: false };
+  },
 };
 
 // ===== COLUMNS API =====
@@ -223,12 +240,19 @@ export const cardsApi = {
   // Criar novo card
   async create(data: CreateCardRequest): Promise<ApiResponse<KanbanCard>> {
     const backendData = transformCardToTarefa(data);
-    const response = await apiRequest<any>('/kanban/tasks', {
+    const response = await apiRequest<any>('/kanban', {
       method: 'POST',
       body: JSON.stringify(backendData),
     });
 
-    const card = transformTarefaToCard(response.data.tarefa || response.data);
+    console.log('Create Card Response:', response); // Debug log
+
+    const cardData = response.data.tarefa || response.data;
+    console.log('Card Data to Transform:', cardData); // Debug log
+
+    const card = transformTarefaToCard(cardData);
+    console.log('Transformed Card:', card); // Debug log
+
     return { success: true, data: card };
   },
 
@@ -282,7 +306,8 @@ export const commentsApi = {
     if (response.data.comment_id) {
       // Buscar todos os comentários da tarefa e encontrar o novo
       const commentsResponse = await apiRequest<any>(`/kanban/tasks/${data.cardId}/comments`);
-      const newComment = commentsResponse.data.find((c: any) => c.id === response.data.comment_id);
+      const comentarios = commentsResponse.data.comentarios || commentsResponse.data || [];
+      const newComment = comentarios.find((c: any) => c.id === response.data.comment_id);
       if (newComment) {
         return { success: true, data: transformComentarioToComment(newComment) };
       }

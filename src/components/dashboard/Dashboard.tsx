@@ -124,11 +124,11 @@ export function Dashboard() {
     const fetchStats = async () => {
       try {
         const response = await leadService.getLeadStats();
-        
+
         // Verificar se a resposta foi bem-sucedida e tem dados
         if (response.success && response.data) {
           const stats = response.data;
-          
+
           // Usar as propriedades disponíveis ou valores padrão
           setTotalLeads(stats.total || 0);
           setLeadsToday(stats.today || 0);

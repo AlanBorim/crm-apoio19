@@ -3,7 +3,8 @@ import { useDrop } from 'react-dnd';
 import { KanbanCardComponent } from './KanbanCard';
 import { KanbanColumn as KanbanColumnType, DragItem, KanbanCard, User } from './types/kanban';
 import { EditableTitle } from './components/EditableTitle';
-import { Plus, MoreVertical, Trash2, Palette } from 'lucide-react';
+import { Plus, MoreVertical, Trash2, Palette, Edit } from 'lucide-react';
+import { ColumnSettingsModal } from './components/ColumnSettingsModal';
 
 interface KanbanColumnProps {
   column: KanbanColumnType;
@@ -14,15 +15,15 @@ interface KanbanColumnProps {
   onAddCard: () => void;
   onCardClick?: (cardId: string) => void;
   onUpdateColumn: (columnId: string, updates: Partial<KanbanColumnType>) => void;
-  onDeleteColumn: (columnId: string) => void;
+  onDeleteColumn: (columnId: string, options?: { cascade?: boolean; skipConfirm?: boolean }) => void;
 }
 
-export function KanbanColumnComponent({ 
-  column, 
-  currentUser, 
+export function KanbanColumnComponent({
+  column,
+  currentUser,
   users,
-  onMoveCard, 
-  onAddCard, 
+  onMoveCard,
+  onAddCard,
   onCardClick,
   onUpdateColumn,
   onDeleteColumn
@@ -30,9 +31,10 @@ export function KanbanColumnComponent({
   const ref = useRef<HTMLDivElement>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
-  
-  const canEdit = currentUser.role === 'admin' || currentUser.role === 'gerente';
-  
+  const [showSettings, setShowSettings] = useState(false);
+
+  const canEdit = column.isEditable !== false;
+
   // Configurar drop
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: 'CARD',
@@ -54,23 +56,19 @@ export function KanbanColumnComponent({
       canDrop: monitor.canDrop()
     })
   });
-  
+
   // Aplicar o ref de drop
   drop(ref);
-  
-  // Determinar a cor de fundo quando hover
-  const getBackgroundColor = () => {
-    if (isOver && canDrop) {
-      return 'bg-orange-50';
-    }
-    return column.color ? `bg-${column.color}-50` : 'bg-gray-50';
-  };
 
-  const getBorderColor = () => {
-    if (isOver && canDrop) {
-      return 'border-orange-300';
-    }
-    return column.color ? `border-${column.color}-200` : 'border-gray-200';
+  const colorHexMap: Record<string, string> = {
+    gray: '#9CA3AF',
+    blue: '#3B82F6',
+    green: '#10B981',
+    yellow: '#F59E0B',
+    red: '#EF4444',
+    purple: '#8B5CF6',
+    pink: '#EC4899',
+    orange: '#F97316',
   };
 
   const handleTitleSave = (newTitle: string) => {
@@ -85,7 +83,7 @@ export function KanbanColumnComponent({
 
   const handleDeleteColumn = () => {
     if (window.confirm(`Tem certeza que deseja excluir a coluna "${column.title}"? Todos os cards serão perdidos.`)) {
-      onDeleteColumn(column.id);
+      onDeleteColumn(column.id, { cascade: true });
     }
     setShowMenu(false);
   };
@@ -99,14 +97,48 @@ export function KanbanColumnComponent({
     { name: 'Roxo', value: 'purple' },
     { name: 'Rosa', value: 'pink' },
     { name: 'Laranja', value: 'orange' }
-  ];
+  ]
+    ;
+
+  // Suportar cores hex personalizadas ou cores nomeadas
+  const getColumnStyle = () => {
+    if (!column.color) return {};
+
+    if (column.color.startsWith('#')) {
+      return {
+        borderLeftWidth: '4px',
+        borderLeftColor: column.color,
+        backgroundColor: `${column.color}14`,
+      };
+    }
+
+    const base = colorHexMap[column.color];
+    if (base) {
+      return {
+        borderLeftWidth: '4px',
+        borderLeftColor: base,
+        backgroundColor: `${base}14`,
+      };
+    }
+    return {};
+  };
+
+  const getColumnBorderClass = () => {
+    return isOver && canDrop ? 'border-orange-300' : 'border-gray-200';
+  };
+
+  const getColumnBgClass = () => {
+    return isOver && canDrop ? 'bg-orange-50' : 'bg-white';
+  };
 
   const isAtLimit = column.limit && column.cards.length >= column.limit;
-  
+  const isNearLimit = column.limit && column.cards.length >= column.limit * 0.8;
+
   return (
     <div
       ref={ref}
-      className={`flex flex-col w-72 shrink-0 rounded-lg ${getBackgroundColor()} border ${getBorderColor()} transition-colors duration-200`}
+      style={getColumnStyle()}
+      className={`flex flex-col w-72 shrink-0 rounded-lg ${getColumnBgClass()} border ${getColumnBorderClass()} transition-all duration-200 hover:shadow-md`}
     >
       <div className="p-3 border-b border-gray-200 flex justify-between items-center">
         <div className="flex-1 mr-2">
@@ -118,23 +150,42 @@ export function KanbanColumnComponent({
             placeholder="Nome da coluna"
           />
         </div>
-        
+
         <div className="flex items-center space-x-2">
-          <span className={`text-xs px-2 py-0.5 rounded-full ${
-            isAtLimit ? 'bg-red-100 text-red-800' : 'bg-gray-200 text-gray-600'
-          }`}>
-            {column.cards.length}{column.limit ? `/${column.limit}` : ''}
-          </span>
-          
+          {/* Card count badge with WIP limit indicator */}
+          <div className="relative">
+            <span className={`text-xs px-2 py-1 rounded-full font-medium transition-colors ${isAtLimit
+              ? 'bg-red-100 text-red-800 ring-2 ring-red-300 animate-pulse'
+              : isNearLimit
+                ? 'bg-yellow-100 text-yellow-800 ring-1 ring-yellow-300'
+                : 'bg-gray-100 text-gray-600'
+              }`}>
+              {column.cards.length}{column.limit ? `/${column.limit}` : ''}
+            </span>
+            {isAtLimit && (
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              </span>
+            )}
+          </div>
+
           {canEdit && (
             <div className="relative">
+              <button
+                onClick={() => setShowSettings(true)}
+                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                title="Editar coluna"
+              >
+                <Edit size={16} />
+              </button>
               <button
                 onClick={() => setShowMenu(!showMenu)}
                 className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <MoreVertical size={16} />
               </button>
-              
+
               {showMenu && (
                 <div className="absolute right-0 top-8 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
                   <div className="py-1">
@@ -153,20 +204,23 @@ export function KanbanColumnComponent({
                       Excluir Coluna
                     </button>
                   </div>
-                  
+
                   {showColorPicker && (
                     <div className="border-t border-gray-200 p-3">
                       <div className="grid grid-cols-4 gap-2">
-                        {colors.map((color) => (
-                          <button
-                            key={color.value}
-                            onClick={() => handleColorChange(color.value)}
-                            className={`w-8 h-8 rounded-full bg-${color.value}-200 hover:bg-${color.value}-300 border-2 ${
-                              column.color === color.value ? 'border-gray-800' : 'border-gray-300'
-                            } transition-colors`}
-                            title={color.name}
-                          />
-                        ))}
+                        {colors.map((color) => {
+                          const base = colorHexMap[color.value] || '#9CA3AF';
+                          const isSelected = column.color === color.value;
+                          return (
+                            <button
+                              key={color.value}
+                              onClick={() => handleColorChange(color.value)}
+                              className={`w-8 h-8 rounded-full border-2 ${isSelected ? 'border-gray-800' : 'border-gray-300'}`}
+                              style={{ backgroundColor: `${base}33`, borderColor: isSelected ? '#1F2937' : base }}
+                              title={color.name}
+                            />
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -176,7 +230,7 @@ export function KanbanColumnComponent({
           )}
         </div>
       </div>
-      
+
       <div className="flex-1 min-h-[200px] p-2 overflow-y-auto space-y-2">
         {column.cards.map((card: KanbanCard, cardIndex: number) => (
           <KanbanCardComponent
@@ -190,7 +244,7 @@ export function KanbanColumnComponent({
             onCardClick={onCardClick}
           />
         ))}
-        
+
         {/* Área de drop quando a coluna está vazia */}
         {column.cards.length === 0 && (
           <div className="h-full min-h-[100px] flex items-center justify-center border-2 border-dashed border-gray-200 rounded-md p-4">
@@ -198,22 +252,33 @@ export function KanbanColumnComponent({
           </div>
         )}
       </div>
-      
+
       <div className="p-2 border-t border-gray-200">
         <button
           onClick={onAddCard}
           disabled={isAtLimit}
-          className={`w-full flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-            isAtLimit 
-              ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
+          className={`w-full flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors ${isAtLimit
+              ? 'border-gray-200 text-gray-400 cursor-not-allowed'
               : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-          }`}
+            }`}
           title={isAtLimit ? `Limite de ${column.limit} cards atingido` : 'Adicionar novo card'}
         >
           <Plus size={16} className="mr-2" />
           Adicionar Card
         </button>
       </div>
+
+      {showSettings && (
+        <ColumnSettingsModal
+          isOpen={showSettings}
+          column={column}
+          onClose={() => setShowSettings(false)}
+          onSave={(updates) => onUpdateColumn(column.id, updates)}
+          onDelete={async () => {
+            onDeleteColumn(column.id, { cascade: true, skipConfirm: true });
+          }}
+        />
+      )}
     </div>
   );
 }
