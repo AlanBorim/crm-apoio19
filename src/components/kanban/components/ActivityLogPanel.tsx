@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { ActivityLog, User } from '../types/kanban';
-import { 
-  Clock, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  ArrowRight, 
-  MessageSquare, 
+import {
+  Clock,
+  Plus,
+  Edit,
+  Trash2,
+  ArrowRight,
+  MessageSquare,
   UserPlus,
   Filter,
   ChevronDown,
@@ -107,7 +107,7 @@ export function ActivityLogPanel({ logs, users, className = '', isLoading = fals
     return true;
   });
 
-  const displayLogs = isExpanded ? filteredLogs : filteredLogs.slice(0, 5);
+  const displayLogs = isExpanded ? filteredLogs : filteredLogs.slice(0, 2);
 
   if (isLoading) {
     return (
@@ -199,13 +199,20 @@ export function ActivityLogPanel({ logs, users, className = '', isLoading = fals
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div
+            className="space-y-3 overflow-y-auto pr-2"
+            style={{
+              maxHeight: '280px', // Aproximadamente 2 itens (cada item ~120px + gaps)
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#CBD5E0 #F7FAFC'
+            }}
+          >
             {displayLogs.map((log) => (
               <div key={log.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
                 <div className="flex-shrink-0 mt-0.5">
                   {getActionIcon(log.action)}
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getActionColor(log.action)}`}>
@@ -218,11 +225,11 @@ export function ActivityLogPanel({ logs, users, className = '', isLoading = fals
                       {formatDate(log.createdAt)}
                     </span>
                   </div>
-                  
+
                   <p className="text-sm text-gray-700">
                     {log.description}
                   </p>
-                  
+
                   {(log.oldValue || log.newValue) && (
                     <div className="mt-2 text-xs text-gray-500">
                       {log.oldValue && (
@@ -243,14 +250,14 @@ export function ActivityLogPanel({ logs, users, className = '', isLoading = fals
           </div>
         )}
 
-        {filteredLogs.length > 5 && (
+        {filteredLogs.length > 2 && (
           <div className="mt-4 text-center">
             <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="inline-flex items-center space-x-2 px-4 py-2 text-sm text-orange-600 hover:text-orange-800 border border-orange-300 rounded-md hover:bg-orange-50 transition-colors"
             >
               <span>
-                {isExpanded ? 'Mostrar menos' : `Ver todas (${filteredLogs.length - 5} restantes)`}
+                {isExpanded ? 'Mostrar menos' : `Ver todas (${filteredLogs.length - 2} restantes)`}
               </span>
               {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>

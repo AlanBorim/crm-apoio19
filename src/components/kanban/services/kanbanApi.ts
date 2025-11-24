@@ -125,6 +125,17 @@ function transformComentarioToComment(comentario: any): Comment {
 
 // Transformador: Log Backend -> Frontend
 function transformLogToActivityLog(log: any): ActivityLog {
+  // Safe JSON parse helper
+  const safeJsonParse = (value: any) => {
+    if (!value) return undefined;
+    if (typeof value === 'object') return value; // Already parsed
+    try {
+      return JSON.parse(value);
+    } catch {
+      return undefined;
+    }
+  };
+
   return {
     id: String(log.id),
     cardId: log.tarefa_id ? String(log.tarefa_id) : undefined,
@@ -138,8 +149,8 @@ function transformLogToActivityLog(log: any): ActivityLog {
     },
     action: log.acao as any,
     description: log.descricao,
-    oldValue: log.valor_antigo ? JSON.parse(log.valor_antigo) : undefined,
-    newValue: log.valor_novo ? JSON.parse(log.valor_novo) : undefined,
+    oldValue: safeJsonParse(log.valor_antigo),
+    newValue: safeJsonParse(log.valor_novo),
     createdAt: log.criado_em
   };
 }
@@ -364,19 +375,49 @@ export const logsApi = {
     const endpoint = queryParams ? `/kanban/logs?${queryParams}` : '/kanban/logs';
     const response = await apiRequest<any>(endpoint);
 
-    const logs = response.data.map((log: any) => transformLogToActivityLog(log));
+    // Backend returns: { success: true, data: { data: [...], pagination: {...} } }
+    const logsData = response.data?.data || response.data || [];
+    const paginationData = response.data?.pagination || {};
+
+    const logs = Array.isArray(logsData)
+      ? logsData.map((log: any) => transformLogToActivityLog(log))
+      : [];
 
     return {
       success: true,
       data: {
         data: logs,
-        total: response.pagination?.total || logs.length,
-        page: response.pagination?.page || 1,
-        limit: response.pagination?.limit || 50,
-        totalPages: response.pagination?.totalPages || 1
+        total: paginationData.total || logs.length,
+        page: paginationData.page || 1,
+        limit: paginationData.limit || 50,
+        totalPages: paginationData.totalPages || 1
       }
     };
   },
+
+  // Criar novo log de atividade
+  async create(log: {
+    cardId?: string;
+    columnId?: string;
+    action: string;
+    description: string;
+    oldValue?: any;
+    newValue?: any;
+  }): Promise<ApiResponse<{ log_id: number }>> {
+    const backendData = {
+      tarefa_id: log.cardId ? parseInt(log.cardId) : null,
+      coluna_id: log.columnId ? parseInt(log.columnId) : null,
+      acao: log.action,
+      descricao: log.description,
+      valor_antigo: log.oldValue,
+      valor_novo: log.newValue
+    };
+
+    return await apiRequest<{ log_id: number }>('/kanban/logs', {
+      method: 'POST',
+      body: JSON.stringify(backendData)
+    });
+  }
 };
 
 // ===== USERS API =====

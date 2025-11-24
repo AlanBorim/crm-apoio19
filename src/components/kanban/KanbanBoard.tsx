@@ -123,7 +123,10 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
   // Carregar quadro ao montar o componente
   useEffect(() => {
     loadBoard();
-  }, [loadBoard]);
+    // Carregar logs de atividade do banco de dados
+    activityLog.fetchLogs({ limit: 50 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadBoard]); // activityLog omitido para evitar loop infinito
 
   // Filter columns based on search term
   // Adicionar nova coluna
@@ -231,7 +234,9 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
 
       if (response.success && response.data) {
         const newColumns = columns.map(col =>
-          col.id === columnId ? response.data! : col
+          col.id === columnId
+            ? { ...col, ...response.data, cards: col.cards }
+            : col
         );
         setColumns(newColumns);
 
@@ -575,7 +580,7 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
 
         {/* Main Content */}
         <div className="flex-1 overflow-x-auto overflow-y-hidden">
-          <div className="h-full flex space-x-4 p-6">
+          <div className="h-full min-h-0 flex space-x-4 p-6">
             {displayColumns.map((column, index) => (
               <KanbanColumnComponent
                 key={column.id}

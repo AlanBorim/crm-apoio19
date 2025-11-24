@@ -53,11 +53,22 @@ export function useActivityLog({ currentUser }: UseActivityLogProps) {
       createdAt: new Date().toISOString()
     };
 
+    // Optimistic UI update - add to state immediately
     setActivityLogs(prev => [newLog, ...prev]);
-    
-    // Aqui você pode adicionar a lógica para enviar o log para a API
-    console.log('Activity Log:', newLog);
-    
+
+    // Persist to backend asynchronously
+    logsApi.create({
+      cardId,
+      columnId,
+      action,
+      description,
+      oldValue,
+      newValue
+    }).catch((error) => {
+      console.error('Erro ao persist log:', error);
+      // Optionally: show error to user or retry
+    });
+
     return newLog;
   }, [currentUser]);
 
@@ -73,8 +84,8 @@ export function useActivityLog({ currentUser }: UseActivityLogProps) {
   }, [addLog]);
 
   const logCardUpdate = useCallback((
-    cardId: string, 
-    cardTitle: string, 
+    cardId: string,
+    cardTitle: string,
     changes: Record<string, any>
   ) => {
     const changeDescriptions = Object.entries(changes).map(([key, value]) => {

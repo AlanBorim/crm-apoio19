@@ -1,38 +1,35 @@
 import { useState } from 'react';
-import { 
-  Save, 
-  X, 
-  Plus, 
-  Trash2, 
+import {
+  Save,
+  X,
+  Plus,
+  Trash2,
   Eye,
   FileText,
   Send
 } from 'lucide-react';
-import { Proposal, ProposalItem, ProposalStatus, ProposalTemplate } from './types/proposal';
+import { Proposal as ApiProposal } from './services/proposalsApi';
+import { ProposalStatus, ProposalTemplate } from './types/proposal';
+import type { ProposalItem } from './types/proposal';
 
 interface ProposalFormProps {
-  proposal?: Proposal;
-  onSave: (proposal: Partial<Proposal>) => void;
+  proposal?: ApiProposal | null;
+  onSave: (proposal: any) => void;
   onCancel: () => void;
 }
 
 export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) {
-  const [formData, setFormData] = useState<Partial<Proposal>>({
+  const [formData, setFormData] = useState<any>({
     titulo: proposal?.titulo || '',
-    cliente: proposal?.cliente || {
-      id: '',
-      nome: '',
-      empresa: '',
-      email: '',
-      telefone: ''
-    },
-    valor: proposal?.valor || 0,
-    status: proposal?.status || ProposalStatus.RASCUNHO,
-    dataVencimento: proposal?.dataVencimento || '',
-    templateId: proposal?.templateId || '',
-    itens: proposal?.itens || [],
-    observacoes: proposal?.observacoes || ''
+    lead_id: proposal?.lead_id || null,
+    responsavel_id: proposal?.responsavel_id || null,
+    valor_total: proposal?.valor_total || 0,
+    status: proposal?.status || 'rascunho',
+    data_validade: proposal?.data_validade || '',
+    observacoes: proposal?.observacoes || '',
+    itens: []
   });
+
 
   const [showPreview, setShowPreview] = useState(false);
 
@@ -119,7 +116,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
             {proposal ? 'Editar Proposta' : 'Nova Proposta'}
           </h2>
           <p className="text-gray-600">
-            {proposal ? `Editando proposta ${proposal.numero}` : 'Criar nova proposta comercial'}
+            {proposal ? `Editando proposta #${proposal.id}` : 'Criar nova proposta comercial'}
           </p>
         </div>
         <div className="flex gap-2">
@@ -160,7 +157,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
           {/* Informações Básicas */}
           <div className="rounded-lg border border-gray-200 bg-white p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Informações Básicas</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -210,7 +207,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
           {/* Informações do Cliente */}
           <div className="rounded-lg border border-gray-200 bg-white p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Informações do Cliente</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -290,7 +287,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                 Adicionar Item
               </button>
             </div>
-            
+
             <div className="space-y-4">
               {formData.itens?.map((item, index) => (
                 <div key={item.id} className="border border-gray-200 rounded-lg p-4">
@@ -303,7 +300,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                       <Trash2 size={14} />
                     </button>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div className="md:col-span-2">
                       <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -317,7 +314,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                         placeholder="Descrição do item"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
                         Quantidade
@@ -331,7 +328,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                         step="0.01"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
                         Valor Unitário
@@ -346,7 +343,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                       />
                     </div>
                   </div>
-                  
+
                   <div className="mt-3 text-right">
                     <span className="text-sm font-medium text-gray-700">
                       Total: R$ {item.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -354,7 +351,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                   </div>
                 </div>
               ))}
-              
+
               {(!formData.itens || formData.itens.length === 0) && (
                 <div className="text-center py-8 text-gray-500">
                   <FileText size={32} className="mx-auto mb-2 text-gray-400" />
@@ -363,7 +360,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                 </div>
               )}
             </div>
-            
+
             {formData.itens && formData.itens.length > 0 && (
               <div className="mt-6 pt-4 border-t border-gray-200">
                 <div className="flex justify-between items-center">
@@ -398,14 +395,14 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                 <h1 className="text-2xl font-bold text-gray-900">{formData.titulo || 'Título da Proposta'}</h1>
                 <p className="text-gray-600">Proposta Comercial</p>
               </div>
-              
+
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Cliente:</h4>
                 <p className="text-gray-700">{formData.cliente?.nome || 'Nome do Cliente'}</p>
                 <p className="text-gray-700">{formData.cliente?.empresa || 'Empresa'}</p>
                 <p className="text-gray-700">{formData.cliente?.email || 'email@exemplo.com'}</p>
               </div>
-              
+
               {formData.itens && formData.itens.length > 0 && (
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Itens:</h4>
@@ -425,7 +422,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                   </div>
                 </div>
               )}
-              
+
               {formData.observacoes && (
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Observações:</h4>

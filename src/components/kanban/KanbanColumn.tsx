@@ -81,10 +81,9 @@ export function KanbanColumnComponent({
     setShowMenu(false);
   };
 
+
   const handleDeleteColumn = () => {
-    if (window.confirm(`Tem certeza que deseja excluir a coluna "${column.title}"? Todos os cards serão perdidos.`)) {
-      onDeleteColumn(column.id, { cascade: true });
-    }
+    onDeleteColumn(column.id, { cascade: true });
     setShowMenu(false);
   };
 
@@ -138,7 +137,7 @@ export function KanbanColumnComponent({
     <div
       ref={ref}
       style={getColumnStyle()}
-      className={`flex flex-col w-72 shrink-0 rounded-lg ${getColumnBgClass()} border ${getColumnBorderClass()} transition-all duration-200 hover:shadow-md`}
+      className={`h-full min-h-0 flex flex-col w-72 shrink-0 rounded-lg ${getColumnBgClass()} border ${getColumnBorderClass()} transition-all duration-200 hover:shadow-md`}
     >
       <div className="p-3 border-b border-gray-200 flex justify-between items-center">
         <div className="flex-1 mr-2">
@@ -190,6 +189,21 @@ export function KanbanColumnComponent({
                 <div className="absolute right-0 top-8 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
                   <div className="py-1">
                     <button
+                      onClick={() => {
+                        onAddCard();
+                        setShowMenu(false);
+                      }}
+                      disabled={isAtLimit}
+                      className={`flex items-center w-full px-4 py-2 text-sm ${isAtLimit
+                        ? 'text-gray-400 cursor-not-allowed'
+                        : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      title={isAtLimit ? `Limite de ${column.limit} cards atingido` : 'Adicionar novo card'}
+                    >
+                      <Plus size={16} className="mr-2" />
+                      Adicionar Card
+                    </button>
+                    <button
                       onClick={() => setShowColorPicker(!showColorPicker)}
                       className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
@@ -231,7 +245,7 @@ export function KanbanColumnComponent({
         </div>
       </div>
 
-      <div className="flex-1 min-h-[200px] p-2 overflow-y-auto space-y-2">
+      <div className="flex-1 min-h-0 p-2 overflow-y-auto space-y-2">
         {column.cards.map((card: KanbanCard, cardIndex: number) => (
           <KanbanCardComponent
             key={card.id}
@@ -247,25 +261,10 @@ export function KanbanColumnComponent({
 
         {/* Área de drop quando a coluna está vazia */}
         {column.cards.length === 0 && (
-          <div className="h-full min-h-[100px] flex items-center justify-center border-2 border-dashed border-gray-200 rounded-md p-4">
+          <div className="min-h-[100px] flex items-center justify-center border-2 border-dashed border-gray-200 rounded-md p-4">
             <p className="text-sm text-gray-400">Arraste um card para aqui</p>
           </div>
         )}
-      </div>
-
-      <div className="p-2 border-t border-gray-200">
-        <button
-          onClick={onAddCard}
-          disabled={isAtLimit}
-          className={`w-full flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors ${isAtLimit
-              ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-              : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
-          title={isAtLimit ? `Limite de ${column.limit} cards atingido` : 'Adicionar novo card'}
-        >
-          <Plus size={16} className="mr-2" />
-          Adicionar Card
-        </button>
       </div>
 
       {showSettings && (
