@@ -1,38 +1,51 @@
-import { useState } from 'react';
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
-  Settings, 
+import { Link, useLocation } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  Settings,
   LogOut,
-  Menu,
-  X,
   Search,
   Grid,
   ChevronDown,
-  MessageSquare
+  MessageSquare,
+  PanelLeftClose,
+  PanelLeft
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { NotificationBell } from './NotificationBell';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  useSidebar,
+} from '@/components/ui/sidebar';
 
 interface MainLayoutProps {
   children: React.ReactNode;
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const { logout, user } = useAuth();
-  
+
   // Itens do menu principal
   const menuItems = [
-    { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
-    { name: 'Leads', icon: <Users size={20} />, path: '/leads' },
-    { name: 'Kanban', icon: <Grid size={20} />, path: '/kanban' },
-    { name: 'Propostas', icon: <FileText size={20} />, path: '/propostas' },
-    { name: 'WhatsApp', icon: <MessageSquare size={20} />, path: '/whatsapp' },
-    { name: 'Configurações', icon: <Settings size={20} />, path: '/configuracoes' },
+    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { name: 'Leads', icon: Users, path: '/leads' },
+    { name: 'Kanban', icon: Grid, path: '/kanban' },
+    { name: 'Propostas', icon: FileText, path: '/propostas' },
+    { name: 'WhatsApp', icon: MessageSquare, path: '/whatsapp' },
+    { name: 'Configurações', icon: Settings, path: '/configuracoes' },
   ];
 
   // Função para obter as iniciais do usuário
@@ -44,115 +57,102 @@ export function MainLayout({ children }: MainLayoutProps) {
       .toUpperCase()
       .slice(0, 2);
   };
-  
+
   return (
-    <div className="flex h-screen bg-gray-50 overflow-x-hidden">
-      {/* Sidebar para mobile */}
-      <div className={`fixed inset-0 z-40 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
-        <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
-          {/* Cabeçalho da sidebar mobile - APENAS LOGO */}
-          <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
-            <div className="flex items-center">
-              <img src="/logo.png" alt="CRM Apoio19" className="h-8 w-auto" />
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex h-screen w-full bg-gray-50">
+        {/* Sidebar */}
+        <Sidebar collapsible="icon" className="border-r border-gray-200 bg-white">
+          {/* Header do Sidebar */}
+          <SidebarHeader className="border-b border-gray-200 h-16 flex items-center justify-center">
+            <div className="flex items-center justify-center w-full">
+              <img
+                src="/logo.png"
+                alt="CRM Apoio19"
+                className="h-8 w-auto group-data-[collapsible=icon]:hidden"
+              />
+              <img
+                src="/logoAP19.png"
+                alt="Apoio19"
+                className="h-8 w-8 hidden group-data-[collapsible=icon]:block object-contain"
+              />
             </div>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-600"
-            >
-              <X size={20} />
-            </button>
-          </div>
-          <div className="flex flex-1 flex-col overflow-y-auto">
-            <nav className="flex-1 space-y-1 px-2 py-4">
-              {menuItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`group flex items-center rounded-md px-3 py-2 text-sm font-medium ${
-                    location.pathname === item.path
-                      ? 'bg-orange-50 text-orange-600'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                  onClick={() => setSidebarOpen(false)}
+          </SidebarHeader>
+
+          {/* Conteúdo do Sidebar */}
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {menuItems.map((item) => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <SidebarMenuItem key={item.name}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          tooltip={item.name}
+                          className={
+                            isActive
+                              ? 'bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700'
+                              : 'text-gray-700 hover:bg-gray-100'
+                          }
+                        >
+                          <Link to={item.path}>
+                            <item.icon
+                              className={
+                                isActive
+                                  ? 'text-orange-500'
+                                  : 'text-gray-400 group-hover:text-gray-500'
+                              }
+                            />
+                            <span>{item.name}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+
+          {/* Footer do Sidebar */}
+          <SidebarFooter className="border-t border-gray-200">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Alternar Menu"
+                  className="text-gray-700 hover:bg-gray-100"
                 >
-                  <div className={`mr-3 ${
-                    location.pathname === item.path ? 'text-orange-500' : 'text-gray-400 group-hover:text-gray-500'
-                  }`}>
-                    {item.icon}
-                  </div>
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
-            <div className="border-t border-gray-200 p-4">
-              <button
-                onClick={logout}
-                className="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-              >
-                <LogOut size={20} className="mr-3 text-gray-400" />
-                Sair
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Sidebar para desktop */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
-        <div className="flex flex-col flex-grow border-r border-gray-200 bg-white">
-          {/* Cabeçalho da sidebar desktop - APENAS LOGO */}
-          <div className="flex h-16 items-center justify-center border-b border-gray-200">
-            <img src="/logo.png" alt="CRM Apoio19" className="h-8 w-auto" />
-            {/* ❌ REMOVIDO: Qualquer sino de notificação aqui */}
-          </div>
-          <div className="flex flex-1 flex-col overflow-y-auto">
-            <nav className="flex-1 space-y-1 px-2 py-4">
-              {menuItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`group flex items-center rounded-md px-3 py-2 text-sm font-medium ${
-                    location.pathname === item.path
-                      ? 'bg-orange-50 text-orange-600'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  <ToggleButton />
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={logout}
+                  tooltip="Sair"
+                  className="text-gray-700 hover:bg-gray-100"
                 >
-                  <div className={`mr-3 ${
-                    location.pathname === item.path ? 'text-orange-500' : 'text-gray-400 group-hover:text-gray-500'
-                  }`}>
-                    {item.icon}
-                  </div>
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
-            <div className="border-t border-gray-200 p-4">
-              <button
-                onClick={logout}
-                className="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-              >
-                <LogOut size={20} className="mr-3 text-gray-400" />
-                Sair
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Conteúdo principal */}
-      <div className="flex flex-1 flex-col lg:pl-64 overflow-x-hidden">
-        {/* Cabeçalho - ÚNICO LOCAL COM NOTIFICAÇÕES */}
-        <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 border-b border-gray-200 bg-white">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-orange-500 lg:hidden"
-          >
-            <Menu size={20} />
-          </button>
-          <div className="flex flex-1 justify-between px-4">
-            <div className="flex flex-1">
-              <div className="flex w-full items-center md:ml-0">
+                  <LogOut className="text-gray-400" />
+                  <span>Sair</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarFooter>
+
+          {/* Rail para permitir arrastar e redimensionar */}
+          <SidebarRail />
+        </Sidebar>
+
+        {/* Conteúdo principal */}
+        <SidebarInset className="flex flex-1 flex-col">
+          {/* Cabeçalho */}
+          <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 border-b border-gray-200 bg-white">
+            <div className="flex flex-1 items-center px-4">
+              {/* Barra de busca */}
+              <div className="flex flex-1">
                 <div className="relative w-full max-w-md">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                     <Search size={16} className="text-gray-400" />
@@ -164,34 +164,53 @@ export function MainLayout({ children }: MainLayoutProps) {
                   />
                 </div>
               </div>
-            </div>
-            <div className="ml-4 flex items-center md:ml-6">
-              {/* ✅ ÚNICO SINO DE NOTIFICAÇÃO - NO CABEÇALHO */}
-              <NotificationBell />
-              
-              {/* Perfil */}
-              <div className="relative ml-3">
-                <div className="flex items-center">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-sm font-medium text-orange-600">
-                    {user ? getUserInitials(user.nome) : 'U'}
+
+              {/* Área direita do header */}
+              <div className="ml-4 flex items-center md:ml-6">
+                {/* Notificações */}
+                <NotificationBell />
+
+                {/* Perfil */}
+                <div className="relative ml-3">
+                  <div className="flex items-center">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-sm font-medium text-orange-600">
+                      {user ? getUserInitials(user.nome) : 'U'}
+                    </div>
+                    <div className="ml-2 hidden md:block">
+                      <div className="text-sm font-medium text-gray-700">{user?.nome || 'Usuário'}</div>
+                      <div className="text-xs text-gray-500">{user?.funcao || 'Função'}</div>
+                    </div>
+                    <ChevronDown size={16} className="ml-1 hidden text-gray-400 md:block" />
                   </div>
-                  <div className="ml-2 hidden md:block">
-                    <div className="text-sm font-medium text-gray-700">{user?.nome || 'Usuário'}</div>
-                    <div className="text-xs text-gray-500">{user?.funcao || 'Função'}</div>
-                  </div>
-                  <ChevronDown size={16} className="ml-1 hidden text-gray-400 md:block" />
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        
-        {/* Conteúdo da página */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-6 overflow-x-hidden">
-          {children}
-        </main>
+
+          {/* Conteúdo da página */}
+          <main className="flex-1 overflow-y-auto bg-gray-50 p-6">
+            {children}
+          </main>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
 
+// Componente customizado para o botão de toggle
+function ToggleButton() {
+  const { toggleSidebar, state } = useSidebar();
+
+  return (
+    <button
+      onClick={toggleSidebar}
+      className="flex w-full items-center justify-center"
+    >
+      {state === 'expanded' ? (
+        <PanelLeftClose className="text-gray-400" />
+      ) : (
+        <PanelLeft className="text-gray-400" />
+      )}
+    </button>
+  );
+}

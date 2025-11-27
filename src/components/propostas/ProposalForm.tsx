@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Save,
   X,
@@ -8,7 +8,7 @@ import {
   FileText,
   Send
 } from 'lucide-react';
-import { Proposal as ApiProposal } from './services/proposalsApi';
+import { Proposal as ApiProposal, leadsApi } from './services/proposalsApi';
 import { ProposalStatus, ProposalTemplate } from './types/proposal';
 import type { ProposalItem } from './types/proposal';
 
@@ -32,6 +32,9 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
 
 
   const [showPreview, setShowPreview] = useState(false);
+  const [leads, setLeads] = useState<any[]>([]);
+  const [leadInfo, setLeadInfo] = useState<any>(null);
+  const [loadingLeads, setLoadingLeads] = useState(false);
 
   // Templates mockados para demonstração
   const mockTemplates: ProposalTemplate[] = [
@@ -52,6 +55,23 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
       ativo: true
     }
   ];
+
+  // Fetch leads on component mount
+  useEffect(() => {
+    const fetchLeads = async () => {
+      try {
+        setLoadingLeads(true);
+        const leadsData = await leadsApi.getAll();
+        setLeads(leadsData);
+      } catch (error) {
+        console.error('Erro ao carregar leads:', error);
+      } finally {
+        setLoadingLeads(false);
+      }
+    };
+
+    fetchLeads();
+  }, []);
 
   const handleAddItem = () => {
     const newItem: ProposalItem = {
@@ -208,6 +228,81 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
           <div className="rounded-lg border border-gray-200 bg-white p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Informações do Cliente</h3>
 
+            {/* Lead Selection Dropdown */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Selecionar Lead
+              </label>
+              <select
+                value={formData.lead_id || ''}
+                onChange={(e) => {
+                  const leadId = e.target.value;
+                  if (leadId) {
+                    const selectedLead = leads.find(lead => String(lead.id) === leadId);
+                    if (selectedLead) {
+                      // Preencher lead_id e também os campos do cliente
+                      setFormData(prev => ({
+                        ...prev,
+                        lead_id: Number(leadId),
+                        cliente: {
+                          id: selectedLead.id,
+                          nome: selectedLead.name,
+                          empresa: selectedLead.company || '',
+                          email: selectedLead.email,
+                          telefone: selectedLead.phone || ''
+                        }
+                      }));
+                      // Também atualizar leadInfo para mostrar no card
+                      setLeadInfo({
+                        nome: selectedLead.name,
+                        empresa: selectedLead.company || 'N/A',
+                        email: selectedLead.email,
+                        telefone: selectedLead.phone || 'N/A'
+                      });
+                    }
+                  } else {
+                    // Limpar tanto o lead_id quanto os campos do cliente
+                    setFormData(prev => ({
+                      ...prev,
+                      lead_id: null,
+                      cliente: {
+                        id: '',
+                        nome: '',
+                        empresa: '',
+                        email: '',
+                        telefone: ''
+                      }
+                    }));
+                    setLeadInfo(null);
+                  }
+                }}
+                className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                disabled={loadingLeads}
+              >
+                <option value="">
+                  {loadingLeads ? 'Carregando leads...' : 'Selecione um lead'}
+                </option>
+                {leads.map((lead) => (
+                  <option key={lead.id} value={lead.id}>
+                    {lead.name} {lead.company ? `- ${lead.company}` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Lead Info Display */}
+            {leadInfo && (
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+                <h4 className="text-sm font-medium text-blue-900 mb-2">Lead Selecionado:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                  <div><span className="font-medium">Nome:</span> {leadInfo.nome}</div>
+                  <div><span className="font-medium">Empresa:</span> {leadInfo.empresa}</div>
+                  <div><span className="font-medium">E-mail:</span> {leadInfo.email}</div>
+                  <div><span className="font-medium">Telefone:</span> {leadInfo.telefone}</div>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -322,10 +417,10 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                       <input
                         type="number"
                         value={item.quantidade}
-                        onChange={(e) => handleItemChange(item.id, 'quantidade', parseFloat(e.target.value) || 0)}
+                        onChange={(e) => handleItemChange(item.id, 'quantidade', parseInt(e.target.value) || 0)}
                         className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
                         min="0"
-                        step="0.01"
+                        step="1"
                       />
                     </div>
 
@@ -336,10 +431,10 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                       <input
                         type="number"
                         value={item.valorUnitario}
-                        onChange={(e) => handleItemChange(item.id, 'valorUnitario', parseFloat(e.target.value) || 0)}
+                        onChange={(e) => handleItemChange(item.id, 'valorUnitario', parseInt(e.target.value) || 0)}
                         className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
                         min="0"
-                        step="0.01"
+                        step="1"
                       />
                     </div>
                   </div>

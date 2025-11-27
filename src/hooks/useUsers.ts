@@ -1,14 +1,15 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { User } from '../components/configuracoes/types/config';
-import { 
-  userService, 
-  UserFilters, 
-  CreateUserRequest, 
+import {
+  userService,
+  UserFilters,
+  CreateUserRequest,
   UpdateUserRequest,
   BulkActionRequest,
   handleApiError,
   validateUserData
 } from '../services/userService';
+import { toast } from 'sonner';
 
 // Estados de loading
 interface LoadingStates {
@@ -49,39 +50,39 @@ export interface UseUsersReturn {
   error: string | null;
   selectedUsers: string[];
   filters: UserFilters;
-  
+
   // Ações de listagem
   loadUsers: (filters?: UserFilters) => Promise<void>;
   refreshUsers: () => Promise<void>;
   setFilters: (filters: Partial<UserFilters>) => void;
   clearFilters: () => void;
-  
+
   // Ações de CRUD
   createUser: (userData: CreateUserRequest) => Promise<User | null>;
   updateUser: (userData: UpdateUserRequest) => Promise<User | null>;
   deleteUser: (id: string) => Promise<boolean>;
   getUserById: (id: string) => Promise<User | null>;
-  
+
   // Ações de status
   activateUser: (id: string) => Promise<boolean>;
   deactivateUser: (id: string) => Promise<boolean>;
-  
+
   // Ações em lote
   bulkAction: (action: 'activate' | 'deactivate' | 'delete') => Promise<boolean>;
   selectUser: (id: string) => void;
   selectAllUsers: () => void;
   clearSelection: () => void;
-  
+
   // Utilitários
   clearError: () => void;
   isUserSelected: (id: string) => boolean;
   hasSelectedUsers: boolean;
-  
+
   // Paginação
   goToPage: (page: number) => void;
   nextPage: () => void;
   previousPage: () => void;
-  
+
   // Validação
   validateUser: (userData: CreateUserRequest | UpdateUserRequest) => string[];
 }
@@ -138,7 +139,7 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
 
     const filtersToUse = newFilters || state.filters;
     const filtersString = JSON.stringify(filtersToUse);
-    
+
     // Evitar recarregar com os mesmos filtros
     if (filtersString === lastFiltersRef.current && !newFilters) {
       console.log('🔄 Filtros iguais, ignorando recarregamento...');
@@ -147,17 +148,17 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
 
     isLoadingRef.current = true;
     lastFiltersRef.current = filtersString;
-    
+
     setLoading('list', true);
     setError(null);
-    
+
     try {
       console.log('📡 Carregando usuários com filtros:', filtersToUse);
       const response = await userService.getUsers(filtersToUse);
-      
+
       // Garantir que users seja sempre um array
       const users = Array.isArray(response.users) ? response.users : [];
-      
+
       setState(prev => ({
         ...prev,
         users,
@@ -189,12 +190,12 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
   const setFilters = useCallback((newFilters: Partial<UserFilters>) => {
     setState(prev => {
       const updatedFilters = { ...prev.filters, ...newFilters, page: 1 };
-      
+
       // Carregar com os novos filtros
       setTimeout(() => {
         loadUsers(updatedFilters);
       }, 0);
-      
+
       return { ...prev, filters: updatedFilters };
     });
   }, [loadUsers]);
@@ -240,17 +241,17 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
   const createUser = useCallback(async (userData: CreateUserRequest): Promise<User | null> => {
     setLoading('create', true);
     setError(null);
-    
+
     try {
       const newUser = await userService.createUser(userData);
-      
+
       // Atualizar lista local
       setState(prev => ({
         ...prev,
         users: [newUser, ...prev.users],
         total: prev.total + 1,
       }));
-      
+
       return newUser;
     } catch (error) {
       console.error('Erro ao criar usuário:', error);
@@ -265,18 +266,18 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
   const updateUser = useCallback(async (userData: UpdateUserRequest): Promise<User | null> => {
     setLoading('update', true);
     setError(null);
-    
+
     try {
       const updatedUser = await userService.updateUser(userData);
-      
+
       // Atualizar lista local
       setState(prev => ({
         ...prev,
-        users: prev.users.map(user => 
+        users: prev.users.map(user =>
           user.id === userData.id ? updatedUser : user
         ),
       }));
-      
+
       return updatedUser;
     } catch (error) {
       console.error('Erro ao atualizar usuário:', error);
@@ -291,10 +292,10 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
   const deleteUser = useCallback(async (id: string): Promise<boolean> => {
     setLoading('delete', true);
     setError(null);
-    
+
     try {
       await userService.deleteUser(id);
-      
+
       // Remover da lista local
       setState(prev => ({
         ...prev,
@@ -302,7 +303,7 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
         total: prev.total - 1,
         selectedUsers: prev.selectedUsers.filter(userId => userId !== id),
       }));
-      
+
       return true;
     } catch (error) {
       console.error('Erro ao excluir usuário:', error);
@@ -328,19 +329,23 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
   const activateUser = useCallback(async (id: string): Promise<boolean> => {
     try {
       const updatedUser = await userService.activateUser(id);
-      
+
       // Atualizar lista local
       setState(prev => ({
         ...prev,
-        users: prev.users.map(user => 
+        users: prev.users.map(user =>
           user.id === id ? updatedUser : user
         ),
       }));
-      
+
+      toast.success("Usuário ativado com sucesso");
+
       return true;
     } catch (error) {
       console.error('Erro ao ativar usuário:', error);
-      setError(handleApiError(error));
+      const errorMessage = handleApiError(error);
+      setError(errorMessage);
+      toast.error(`Erro ao ativar usuário: ${errorMessage}`);
       return false;
     }
   }, [setError]);
@@ -349,19 +354,22 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
   const deactivateUser = useCallback(async (id: string): Promise<boolean> => {
     try {
       const updatedUser = await userService.deactivateUser(id);
-      
+
       // Atualizar lista local
       setState(prev => ({
         ...prev,
-        users: prev.users.map(user => 
+        users: prev.users.map(user =>
           user.id === id ? updatedUser : user
         ),
       }));
-      
+
+      toast.success("Usuário desativado com sucesso");
       return true;
     } catch (error) {
       console.error('Erro ao desativar usuário:', error);
-      setError(handleApiError(error));
+      const errorMessage = handleApiError(error);
+      setError(errorMessage);
+      toast.error(`Erro ao desativar usuário: ${errorMessage}`);
       return false;
     }
   }, [setError]);
@@ -374,20 +382,20 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
 
     setLoading('bulk', true);
     setError(null);
-    
+
     try {
       const request: BulkActionRequest = {
         userIds: state.selectedUsers,
         action,
       };
-      
+
       const result = await userService.bulkAction(request);
-      
+
       if (result.successCount > 0) {
         // Recarregar lista para refletir mudanças
         await refreshUsers();
       }
-      
+
       return result.successCount === state.selectedUsers.length;
     } catch (error) {
       console.error('Erro na ação em lote:', error);
@@ -459,39 +467,39 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     error: state.error,
     selectedUsers: state.selectedUsers || [], // Garantir que sempre retorne um array
     filters: state.filters,
-    
+
     // Ações de listagem
     loadUsers,
     refreshUsers,
     setFilters,
     clearFilters,
-    
+
     // Ações de CRUD
     createUser,
     updateUser,
     deleteUser,
     getUserById,
-    
+
     // Ações de status
     activateUser,
     deactivateUser,
-    
+
     // Ações em lote
     bulkAction,
     selectUser,
     selectAllUsers,
     clearSelection,
-    
+
     // Utilitários
     clearError,
     isUserSelected,
     hasSelectedUsers,
-    
+
     // Paginação
     goToPage,
     nextPage,
     previousPage,
-    
+
     // Validação
     validateUser,
   };
