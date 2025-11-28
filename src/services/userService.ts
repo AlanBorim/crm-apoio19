@@ -156,8 +156,10 @@ async function apiRequest<T>(
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
+            // Tentar extrair a mensagem de erro de diferentes campos possíveis
+            const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
             throw new ApiError(
-                errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+                errorMessage,
                 response.status,
                 errorData.code
             );
@@ -455,6 +457,13 @@ export const userService = {
 
             return response.data;
         } catch (error) {
+            // Se for um erro de validação (4xx), propagar o erro ao invés de usar mock
+            if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+                console.error('❌ Erro de validação ao ativar usuário:', error.message);
+                throw error;
+            }
+
+            // Apenas erros de rede ou 5xx usam fallback mock
             console.warn('⚠️ Erro na API, usando dados mock:', error);
             useMockData = true;
 
@@ -502,6 +511,13 @@ export const userService = {
 
             return response.data;
         } catch (error) {
+            // Se for um erro de validação (4xx), propagar o erro ao invés de usar mock
+            if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+                console.error('❌ Erro de validação ao desativar usuário:', error.message);
+                throw error;
+            }
+
+            // Apenas erros de rede ou 5xx usam fallback mock
             console.warn('⚠️ Erro na API, usando dados mock:', error);
             useMockData = true;
 
@@ -518,6 +534,7 @@ export const userService = {
 
             return MOCK_USERS[index];
         }
+
     },
 
     // Ações em lote
@@ -603,9 +620,15 @@ export const userService = {
 // Função para tratar erros da API
 export function handleApiError(error: unknown): string {
     if (error instanceof ApiError) {
+        // Priorizar a mensagem do servidor se disponível e específica
+        if (error.message && !error.message.startsWith('HTTP ')) {
+            return error.message;
+        }
+
+        // Mensagens genéricas baseadas no código de status como fallback
         switch (error.status) {
             case 400:
-                return 'Dados inválidos fornecidos.';
+                return error.message || 'Dados inválidos fornecidos.';
             case 401:
                 return 'Você não tem permissão para realizar esta ação.';
             case 403:

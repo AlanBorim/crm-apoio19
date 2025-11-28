@@ -270,13 +270,15 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     try {
       const updatedUser = await userService.updateUser(userData);
 
-      // Atualizar lista local
-      setState(prev => ({
-        ...prev,
-        users: prev.users.map(user =>
-          user.id === userData.id ? updatedUser : user
-        ),
-      }));
+      // Apenas atualizar estado se não houver erro
+      if (updatedUser) {
+        setState(prev => ({
+          ...prev,
+          users: prev.users.map(user =>
+            user.id === userData.id ? updatedUser : user
+          ),
+        }));
+      }
 
       return updatedUser;
     } catch (error) {
@@ -330,22 +332,24 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     try {
       const updatedUser = await userService.activateUser(id);
 
-      // Atualizar lista local
-      setState(prev => ({
-        ...prev,
-        users: prev.users.map(user =>
-          user.id === id ? updatedUser : user
-        ),
-      }));
-
-      toast.success("Usuário ativado com sucesso");
+      // Apenas atualizar estado se não houver erro
+      if (updatedUser) {
+        setState(prev => ({
+          ...prev,
+          users: prev.users.map(user =>
+            user.id === id ? updatedUser : user
+          ),
+        }));
+        toast.success("Usuário ativado com sucesso");
+      }
 
       return true;
     } catch (error) {
+      // Em caso de erro, NÃO atualizar o estado - mantém o usuário na lista
       console.error('Erro ao ativar usuário:', error);
       const errorMessage = handleApiError(error);
       setError(errorMessage);
-      toast.error(`Erro ao ativar usuário: ${errorMessage}`);
+      toast.error(`Erro: ${errorMessage}`);
       return false;
     }
   }, [setError]);
@@ -355,21 +359,24 @@ export function useUsers(options: UseUsersOptions = {}): UseUsersReturn {
     try {
       const updatedUser = await userService.deactivateUser(id);
 
-      // Atualizar lista local
-      setState(prev => ({
-        ...prev,
-        users: prev.users.map(user =>
-          user.id === id ? updatedUser : user
-        ),
-      }));
+      // Apenas atualizar estado se não houver erro
+      if (updatedUser) {
+        setState(prev => ({
+          ...prev,
+          users: prev.users.map(user =>
+            user.id === id ? updatedUser : user
+          ),
+        }));
+        toast.success("Usuário desativado com sucesso");
+      }
 
-      toast.success("Usuário desativado com sucesso");
       return true;
     } catch (error) {
+      // Em caso de erro, NÃO atualizar o estado - mantém o usuário na lista
       console.error('Erro ao desativar usuário:', error);
       const errorMessage = handleApiError(error);
       setError(errorMessage);
-      toast.error(`Erro ao desativar usuário: ${errorMessage}`);
+      toast.error(`Erro: ${errorMessage}`);
       return false;
     }
   }, [setError]);

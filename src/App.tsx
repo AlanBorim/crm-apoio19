@@ -13,11 +13,13 @@ import { KanbanBoard } from './components/kanban/KanbanBoard';
 import { ProposalsModule } from './components/propostas/ProposalsModule';
 import { ConfigurationsModule } from './components/configuracoes/ConfigurationsModule';
 import { WhatsAppModule } from './components/whatsapp/WhatsAppModule';
+import { TasksModule } from './components/tarefas/TasksModule';
 import { setupActivityListeners } from './utils/activityTracker';
 import { isUserInactive } from './utils/activityTracker';
 import { isTokenExpired, refreshToken } from './utils/auth';
 import { NotificationProvider } from './components/notifications/NotificationSystemDB';
 import { UserProvider } from './hooks/useCurrentUser';
+import { Toaster } from './components/ui/sonner';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -77,7 +79,7 @@ function App() {
           <Route path="/password-reset-sent" element={<PasswordResetSent />} />
           <Route path="/reset-password" element={<ResetPasswordForm />} />
           <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
-          
+
           {/* Todas as rotas protegidas envolvidas pelo NotificationProvider */}
           <Route path="/*" element={
             isAuthenticated ? (
@@ -112,6 +114,11 @@ function App() {
                     <WhatsAppModule />
                   </ProtectedRoute>
                 } />
+                <Route path="/tarefas" element={
+                  <ProtectedRoute>
+                    <TasksModule />
+                  </ProtectedRoute>
+                } />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             ) : (
@@ -119,6 +126,7 @@ function App() {
             )
           } />
         </Routes>
+        <Toaster />
       </div>
     </Router>
   );

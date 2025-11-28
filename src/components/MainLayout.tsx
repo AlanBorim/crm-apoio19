@@ -10,7 +10,8 @@ import {
   ChevronDown,
   MessageSquare,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  CheckSquare
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { NotificationBell } from './NotificationBell';
@@ -43,6 +44,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { name: 'Leads', icon: Users, path: '/leads' },
     { name: 'Kanban', icon: Grid, path: '/kanban' },
+    { name: 'Tarefas', icon: CheckSquare, path: '/tarefas' },
     { name: 'Propostas', icon: FileText, path: '/propostas' },
     { name: 'WhatsApp', icon: MessageSquare, path: '/whatsapp' },
     { name: 'Configurações', icon: Settings, path: '/configuracoes' },

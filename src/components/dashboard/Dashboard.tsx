@@ -7,6 +7,9 @@ import { RecentActivities } from './RecentActivities';
 import { PendingTasks } from './PendingTasks';
 import { Users, FileText, CheckSquare, DollarSign } from 'lucide-react';
 import leadService from '../../services/leadService';
+import { tasksApi, Task } from '../../services/tasksApi';
+import { toast } from 'sonner';
+import { useNotifications } from '../notifications/NotificationSystemDB';
 
 // Dados mockados para o dashboard
 const mockPerformanceData = [
@@ -26,116 +29,34 @@ const mockFunnelData = [
   { name: 'Fechados', value: 15, color: '#6E6E6E' },
 ];
 
-const mockActivities = [
-  {
-    id: '1',
-    type: 'lead' as const,
-    title: 'Novo Lead Cadastrado',
-    description: 'Empresa ABC Ltda foi adicionada como novo lead',
-    timestamp: 'Hoje, 14:30',
-    user: {
-      name: 'Carlos Silva',
-    },
-  },
-  {
-    id: '2',
-    type: 'proposal' as const,
-    title: 'Proposta Enviada',
-    description: 'Proposta #2023-45 enviada para Empresa XYZ',
-    timestamp: 'Hoje, 11:20',
-    user: {
-      name: 'Ana Oliveira',
-    },
-  },
-  {
-    id: '3',
-    type: 'task' as const,
-    title: 'Tarefa Concluída',
-    description: 'Ligação de follow-up para cliente Empresa 123',
-    timestamp: 'Ontem, 16:45',
-    user: {
-      name: 'Roberto Santos',
-    },
-  },
-  {
-    id: '4',
-    type: 'message' as const,
-    title: 'Nova Mensagem',
-    description: 'João da Empresa ABC respondeu sobre a proposta',
-    timestamp: 'Ontem, 10:15',
-    user: {
-      name: 'Maria Costa',
-    },
-  },
-];
-
-const mockTasks = [
-  {
-    id: '1',
-    title: 'Ligar para cliente ABC Ltda',
-    dueDate: 'Hoje, 17:00',
-    status: 'pending' as const,
-    priority: 'high' as const,
-    assignedTo: {
-      name: 'Você',
-    },
-  },
-  {
-    id: '2',
-    title: 'Enviar proposta atualizada para XYZ S.A.',
-    dueDate: 'Amanhã, 12:00',
-    status: 'pending' as const,
-    priority: 'medium' as const,
-    assignedTo: {
-      name: 'Você',
-    },
-  },
-  {
-    id: '3',
-    title: 'Reunião de follow-up com cliente 123 Inc',
-    dueDate: 'Ontem, 15:00',
-    status: 'overdue' as const,
-    priority: 'high' as const,
-    assignedTo: {
-      name: 'Carlos Silva',
-    },
-  },
-  {
-    id: '4',
-    title: 'Preparar apresentação para novo cliente',
-    dueDate: '06/06, 09:00',
-    status: 'pending' as const,
-    priority: 'low' as const,
-    assignedTo: {
-      name: 'Você',
-    },
-  },
-];
-
 export function Dashboard() {
-
   const [totalLeads, setTotalLeads] = useState(0);
   const [leadsToday, setLeadsToday] = useState(0);
   const [growth, setGrowth] = useState(0);
   const [growthPercent, setGrowthPercent] = useState(0);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const navigate = useNavigate();
+
+  const {
+    notifications,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    clearAllNotifications
+  } = useNotifications();
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const response = await leadService.getLeadStats();
 
-        // Verificar se a resposta foi bem-sucedida e tem dados
         if (response.success && response.data) {
           const stats = response.data;
-
-          // Usar as propriedades disponíveis ou valores padrão
           setTotalLeads(stats.total || 0);
           setLeadsToday(stats.today || 0);
           setGrowth(stats.growth || 0);
           setGrowthPercent(stats.growthPercent || 0);
         } else {
-          // Usar valores padrão se não houver dados
           console.warn('Não foi possível carregar estatísticas, usando valores padrão');
           setTotalLeads(0);
           setLeadsToday(0);
@@ -144,7 +65,6 @@ export function Dashboard() {
         }
       } catch (err) {
         console.error('Erro ao carregar estatísticas de leads:', err);
-        // Usar valores padrão em caso de erro
         setTotalLeads(0);
         setLeadsToday(0);
         setGrowth(0);
@@ -153,7 +73,30 @@ export function Dashboard() {
     };
 
     fetchStats();
+    loadTasks();
   }, []);
+
+  const loadTasks = async () => {
+    try {
+      const data = await tasksApi.getAll({ mine: true });
+      // Filter for pending or in-progress tasks
+      const activeTasks = data.filter(t => t.status !== 'concluida');
+      setTasks(activeTasks);
+    } catch (error) {
+      console.error('Erro ao carregar tarefas:', error);
+    }
+  };
+
+  const handleCompleteTask = async (task: Task) => {
+    try {
+      await tasksApi.update(task.id, { status: 'concluida' });
+      toast.success('Tarefa concluída com sucesso!');
+      loadTasks(); // Reload to remove from list
+    } catch (error) {
+      console.error('Erro ao concluir tarefa:', error);
+      toast.error('Erro ao concluir tarefa');
+    }
+  };
 
   return (
     <>
@@ -184,12 +127,12 @@ export function Dashboard() {
         />
         <SummaryCard
           title="Tarefas Pendentes"
-          value="18"
-          subtitle="3 atrasadas"
+          value={tasks.length}
+          subtitle="Tarefas ativas"
           icon={<CheckSquare size={24} />}
           trend={{ value: 2, isPositive: false }}
           color="green"
-          onClick={() => console.log('Tarefas clicked')}
+          onClick={() => navigate('/tarefas')}
         />
         <SummaryCard
           title="Faturamento do Mês"
@@ -210,10 +153,20 @@ export function Dashboard() {
 
       {/* Atividades e Tarefas */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <RecentActivities activities={mockActivities} title="Atividades Recentes" />
-        <PendingTasks tasks={mockTasks} title="Tarefas Pendentes" />
+        <RecentActivities
+          notifications={notifications}
+          title="Atividades Recentes"
+          onMarkAsRead={markAsRead}
+          onMarkAllAsRead={markAllAsRead}
+          onDelete={deleteNotification}
+          onDeleteAll={clearAllNotifications}
+        />
+        <PendingTasks
+          tasks={tasks}
+          title="Minhas Tarefas Pendentes"
+          onComplete={handleCompleteTask}
+        />
       </div>
     </>
   );
 }
-

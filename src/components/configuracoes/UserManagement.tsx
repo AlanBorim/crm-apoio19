@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  Eye, 
+import {
+  Users,
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Eye,
   EyeOff,
   Shield,
   Calendar,
@@ -24,6 +24,7 @@ import { DebugPanel } from '../DebugPanel';
 import { ApiTestPanel } from '../ApiTestPanel';
 import { UserFormModal } from './users/UserFormModal';
 import { CreateUserRequest, UpdateUserRequest } from '../../services/userService';
+import { useCurrentUser } from '../../hooks/useCurrentUser';
 
 interface UserManagementProps {
   // Props opcionais para compatibilidade, mas sempre usa modal interno
@@ -33,22 +34,23 @@ interface UserManagementProps {
   useInternalModal?: boolean;
 }
 
-export function UserManagement({ 
-  onCreateUser, 
-  onEditUser, 
-  useInternalModal = true 
+export function UserManagement({
+  onCreateUser,
+  onEditUser,
+  useInternalModal = true
 }: UserManagementProps = {}) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showDebug, setShowDebug] = useState(process.env.NODE_ENV === 'development');
   const [apiStatus, setApiStatus] = useState<boolean | null>(null);
-  
+
   // Estados do modal - SEMPRE disponíveis
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  
+
   // Ref para controlar debounce
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
-  
+  const { user: currentUser } = useCurrentUser();
+
   // Hook para gerenciamento de usuários
   const {
     users,
@@ -122,7 +124,7 @@ export function UserManagement({
 
   const getFuncaoColor = (funcao: User['funcao']) => {
     switch (funcao) {
-      
+
       case 'admin':
         return 'bg-red-100 text-red-800';
       case 'gerente':
@@ -132,9 +134,9 @@ export function UserManagement({
       case 'suporte':
         return 'bg-yellow-100 text-yellow-800';
       case 'comercial':
-              return 'bg-darkyellow-100 text-darkyellow-800';
+        return 'bg-darkyellow-100 text-darkyellow-800';
       case 'financeiro':
-              return 'bg-lightyellow-100 text-lightyellow-800';
+        return 'bg-lightyellow-100 text-lightyellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -154,11 +156,11 @@ export function UserManagement({
     if (!permissoes || !Array.isArray(permissoes)) {
       return '0 permissões';
     }
-    
+
     if (permissoes.includes('all')) {
       return 'Todas';
     }
-    
+
     return `${permissoes.length} permissões`;
   };
 
@@ -169,7 +171,7 @@ export function UserManagement({
       hasExternalOnCreateUser: !!onCreateUser,
       currentModalState: isModalOpen
     });
-    
+
     if (useInternalModal) {
       console.log('🔧 Usando modal interno (forçado)');
       setEditingUser(null);
@@ -191,7 +193,7 @@ export function UserManagement({
       hasExternalOnEditUser: !!onEditUser,
       currentModalState: isModalOpen
     });
-    
+
     if (useInternalModal) {
       console.log('🔧 Usando modal interno para edição (forçado)');
       setEditingUser(user);
@@ -217,7 +219,7 @@ export function UserManagement({
       isEditing: !!editingUser,
       userData: userData.nome
     });
-    
+
     try {
       if (editingUser) {
         // Editando usuário existente
@@ -312,9 +314,9 @@ export function UserManagement({
   const formatTime = (dateString: string | null | undefined) => {
     if (!dateString) return '';
     try {
-      return new Date(dateString).toLocaleTimeString('pt-BR', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      return new Date(dateString).toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit'
       });
     } catch {
       return '';
@@ -324,14 +326,16 @@ export function UserManagement({
   const handleApiStatusChange = (isOnline: boolean) => {
     setApiStatus(isOnline);
     console.log('📡 Status da API atualizado:', isOnline ? 'Online' : 'Offline');
-    
+
     if (isOnline && users.length === 0) {
       refreshUsers();
     }
   };
 
-  // Garantir que users seja sempre um array
-  const safeUsers = Array.isArray(users) ? users : [];
+  // Garantir que users seja sempre um array válido e sem elementos undefined/null
+  const safeUsers = Array.isArray(users)
+    ? users.filter(user => user && user.id) // Remove undefined, null e objetos sem id
+    : [];
   const safeSelectedUsers = Array.isArray(selectedUsers) ? selectedUsers : [];
 
   return (
@@ -339,8 +343,8 @@ export function UserManagement({
       {/* Debug info - apenas em desenvolvimento */}
       {process.env.NODE_ENV === 'development' && (
         <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-xs">
-          <strong>Debug Modal:</strong> isOpen={isModalOpen.toString()}, 
-          useInternalModal={useInternalModal.toString()}, 
+          <strong>Debug Modal:</strong> isOpen={isModalOpen.toString()},
+          useInternalModal={useInternalModal.toString()},
           editingUser={editingUser?.nome || 'null'},
           hasExternalProps={(onCreateUser || onEditUser) ? 'true' : 'false'}
         </div>
@@ -358,11 +362,10 @@ export function UserManagement({
               </span>
             )}
             {apiStatus !== null && (
-              <span className={`ml-2 text-xs px-2 py-1 rounded ${
-                apiStatus 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-orange-100 text-orange-800'
-              }`}>
+              <span className={`ml-2 text-xs px-2 py-1 rounded ${apiStatus
+                ? 'bg-green-100 text-green-800'
+                : 'bg-orange-100 text-orange-800'
+                }`}>
                 {apiStatus ? 'API Online' : 'Modo Mock'}
               </span>
             )}
@@ -466,7 +469,7 @@ export function UserManagement({
               {safeSelectedUsers.length} usuário(s) selecionado(s)
             </span>
             <div className="flex gap-2">
-              <button 
+              <button
                 onClick={handleBulkActivate}
                 disabled={loading.bulk}
                 className="inline-flex items-center rounded-md bg-green-500 px-3 py-1 text-sm font-medium text-white hover:bg-green-600 disabled:opacity-50"
@@ -474,7 +477,7 @@ export function UserManagement({
                 <Power size={14} className="mr-1" />
                 Ativar
               </button>
-              <button 
+              <button
                 onClick={handleBulkDeactivate}
                 disabled={loading.bulk}
                 className="inline-flex items-center rounded-md bg-yellow-500 px-3 py-1 text-sm font-medium text-white hover:bg-yellow-600 disabled:opacity-50"
@@ -482,7 +485,7 @@ export function UserManagement({
                 <PowerOff size={14} className="mr-1" />
                 Desativar
               </button>
-              <button 
+              <button
                 onClick={handleBulkDelete}
                 disabled={loading.bulk}
                 className="inline-flex items-center rounded-md bg-red-500 px-3 py-1 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-50"
@@ -544,8 +547,8 @@ export function UserManagement({
                         {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
                       </p>
                       <p className="text-sm text-gray-500 mb-4">
-                        {searchTerm 
-                          ? 'Tente ajustar os filtros de busca.' 
+                        {searchTerm
+                          ? 'Tente ajustar os filtros de busca.'
                           : apiStatus === false
                             ? 'Configure a API para ver usuários reais ou use os dados de exemplo.'
                             : 'Comece criando o primeiro usuário do sistema.'
@@ -602,12 +605,18 @@ export function UserManagement({
                     <td className="px-6 py-4">
                       <button
                         onClick={() => handleToggleUserStatus(user)}
-                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold hover:opacity-80 transition-colors ${
-                          user.ativo 
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                            : 'bg-red-100 text-red-800 hover:bg-red-200'
-                        }`}
-                        title={user.ativo ? 'Clique para desativar' : 'Clique para ativar'}
+                        disabled={String(currentUser?.id) === String(user.id)}
+                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold transition-colors ${String(currentUser?.id) === String(user.id)
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : user.ativo
+                              ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                              : 'bg-red-100 text-red-800 hover:bg-red-200'
+                          }`}
+                        title={
+                          String(currentUser?.id) === String(user.id)
+                            ? 'Você não pode desativar seu próprio usuário'
+                            : user.ativo ? 'Clique para desativar' : 'Clique para ativar'
+                        }
                       >
                         {user.ativo ? (
                           <>
@@ -733,24 +742,23 @@ export function UserManagement({
                     <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
                   </svg>
                 </button>
-                
+
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   const page = i + 1;
                   return (
                     <button
                       key={page}
                       onClick={() => goToPage(page)}
-                      className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
-                        page === currentPage
-                          ? 'z-10 bg-orange-600 text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600'
-                          : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
-                      }`}
+                      className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${page === currentPage
+                        ? 'z-10 bg-orange-600 text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600'
+                        : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
+                        }`}
                     >
                       {page}
                     </button>
                   );
                 })}
-                
+
                 <button
                   onClick={nextPage}
                   disabled={currentPage === totalPages}
