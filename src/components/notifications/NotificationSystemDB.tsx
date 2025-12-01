@@ -1,5 +1,4 @@
-// src/components/notifications/NotificationSystemDB.tsx - Versão com Sintaxe Corrigida
-
+// src/components/notifications/NotificationSystemDB.tsx - Versão com Sonner
 import React, {
   createContext,
   useContext,
@@ -10,13 +9,7 @@ import React, {
   useRef,
   useMemo
 } from 'react';
-import {
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Info,
-  X
-} from 'lucide-react';
+import { toast } from 'sonner';
 
 // Tipos de notificação
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';
@@ -38,11 +31,12 @@ export interface CreateNotificationRequest {
   message: string;
   type: NotificationType;
   user_id: number;
+  showToast?: boolean; // Added optional parameter to control toast display
 }
 
-// Interface para toast
+// Interface para toast (mantida para compatibilidade, mas mapeada para sonner)
 export interface ToastNotification {
-  id: string;
+  id?: string;
   type: NotificationType;
   title: string;
   message: string;
@@ -96,11 +90,6 @@ const ensureNotificationArray = (value: Notification[] | undefined | null): Noti
   return Array.isArray(value) ? value : [];
 };
 
-// ✅ ALTERNATIVA: Função específica para toasts
-const ensureToastArray = (value: ToastNotification[] | undefined | null): ToastNotification[] => {
-  return Array.isArray(value) ? value : [];
-};
-
 // Função para validar dados de notificação com verificação de undefined
 const validateNotification = (notification: any): notification is Notification => {
   return (
@@ -113,123 +102,6 @@ const validateNotification = (notification: any): notification is Notification =
     typeof notification.is_read === 'boolean' &&
     typeof notification.created_at === 'string' &&
     typeof notification.user_id === 'number'
-  );
-};
-
-// Função para validar data
-const isValidDate = (dateString: string): boolean => {
-  if (!dateString || typeof dateString !== 'string') return false;
-  const date = new Date(dateString);
-  return !isNaN(date.getTime()) && dateString !== '';
-};
-
-// Componente Toast com melhor acessibilidade
-const Toast: React.FC<{
-  notification: ToastNotification;
-  onClose: () => void;
-}> = ({ notification, onClose }) => {
-  const { type, title, message, duration = 5000, autoClose = true } = notification;
-
-  useEffect(() => {
-    if (autoClose) {
-      const timer = setTimeout(onClose, duration);
-      return () => clearTimeout(timer);
-    }
-  }, [autoClose, duration, onClose]);
-
-  // Função para lidar com tecla Escape
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
-
-  const getIcon = () => {
-    switch (type) {
-      case 'success':
-        return <CheckCircle className="text-green-500" size={20} aria-hidden="true" />;
-      case 'error':
-        return <XCircle className="text-red-500" size={20} aria-hidden="true" />;
-      case 'warning':
-        return <AlertCircle className="text-yellow-500" size={20} aria-hidden="true" />;
-      case 'info':
-        return <Info className="text-blue-500" size={20} aria-hidden="true" />;
-      default:
-        return <Info className="text-gray-500" size={20} aria-hidden="true" />;
-    }
-  };
-
-  const getBackgroundColor = () => {
-    switch (type) {
-      case 'success':
-        return 'bg-green-50 border-green-200';
-      case 'error':
-        return 'bg-red-50 border-red-200';
-      case 'warning':
-        return 'bg-yellow-50 border-yellow-200';
-      case 'info':
-        return 'bg-blue-50 border-blue-200';
-      default:
-        return 'bg-gray-50 border-gray-200';
-    }
-  };
-
-  const getAriaLabel = () => {
-    return `${type === 'error' ? 'Erro' : type === 'success' ? 'Sucesso' : type === 'warning' ? 'Aviso' : 'Informação'}: ${title}`;
-  };
-
-  return (
-    <div
-      className={`${getBackgroundColor()} border rounded-lg p-4 shadow-lg max-w-sm w-full transition-all duration-300 transform translate-x-0`}
-      role="alert"
-      aria-live={type === 'error' ? 'assertive' : 'polite'}
-      aria-label={getAriaLabel()}
-    >
-      <div className="flex items-start gap-3">
-        {getIcon()}
-        <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-semibold text-gray-900">{title}</h4>
-          <p className="text-sm text-gray-700 mt-1">{message}</p>
-        </div>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 rounded transition-colors"
-          aria-label="Fechar notificação"
-        >
-          <X size={16} />
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// Container de Toasts com melhor acessibilidade
-const ToastContainer: React.FC<{
-  toasts: ToastNotification[];
-  onRemove: (id: string) => void
-}> = ({ toasts, onRemove }) => {
-  // ✅ CORREÇÃO: Garantir que toasts seja sempre um array
-  const safeToasts = ensureToastArray(toasts);
-
-  return (
-    <div
-      className="fixed top-4 right-4 z-50 space-y-2"
-      aria-live="polite"
-      aria-label="Notificações toast"
-    >
-      {safeToasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          notification={toast}
-          onClose={() => onRemove(toast.id)}
-        />
-      ))}
-    </div>
   );
 };
 
@@ -446,7 +318,6 @@ const apiService = {
 // Provider sem hooks condicionais
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // ✅ SEMPRE chamar hooks na mesma ordem, nunca condicionalmente
-  const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -462,7 +333,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   }, []); // ✅ Dependências fixas, sem condições
 
-  // Função para mostrar toast com validação
+  // Função para mostrar toast usando sonner
   const showToast = useCallback((notification: Omit<ToastNotification, 'id'>) => {
     // Validar dados do toast
     if (!notification.title || !notification.message) {
@@ -470,31 +341,28 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       return;
     }
 
-    if (!['success', 'error', 'warning', 'info'].includes(notification.type)) {
-      console.warn('Tipo de toast inválido:', notification.type);
-      return;
-    }
-
-    const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const newToast: ToastNotification = {
-      ...notification,
-      id,
-      duration: notification.duration || 5000,
-      autoClose: notification.autoClose !== false
+    const { type, title, message, duration } = notification;
+    const options = {
+      description: message,
+      duration: duration || 5000,
     };
 
-    setToasts(prev => {
-      const safePrev = ensureToastArray(prev); // ✅ Garantir que prev seja array
-      return [...safePrev, newToast];
-    });
-  }, []);
-
-  // Função para remover toast
-  const removeToast = useCallback((id: string) => {
-    setToasts(prev => {
-      const safePrev = ensureToastArray(prev); // ✅ Garantir que prev seja array
-      return safePrev.filter(toast => toast.id !== id);
-    });
+    switch (type) {
+      case 'success':
+        toast.success(title, options);
+        break;
+      case 'error':
+        toast.error(title, options);
+        break;
+      case 'warning':
+        toast.warning(title, options);
+        break;
+      case 'info':
+        toast.info(title, options);
+        break;
+      default:
+        toast(title, options);
+    }
   }, []);
 
   // Função para buscar notificações
@@ -564,13 +432,15 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         return [newNotification, ...safePrev];
       });
 
-      // Mostrar toast de sucesso
-      showToast({
-        type: 'success',
-        title: 'Sucesso',
-        message: 'Notificação criada com sucesso',
-        duration: 3000
-      });
+      // Mostrar toast de sucesso apenas se não for suprimido
+      if (notification.showToast !== false) {
+        showToast({
+          type: 'success',
+          title: 'Sucesso',
+          message: 'Notificação criada com sucesso',
+          duration: 3000
+        });
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao criar notificação:', error);
@@ -757,10 +627,8 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   return (
     <NotificationContext.Provider value={contextValue}>
       {children}
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </NotificationContext.Provider>
   );
 };
 
 export default NotificationProvider;
-

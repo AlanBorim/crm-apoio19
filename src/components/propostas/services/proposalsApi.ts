@@ -16,6 +16,17 @@ export interface ProposalItem {
     valor_total: number;
 }
 
+export interface ProposalTemplate {
+    id: number;
+    nome: string;
+    descricao?: string;
+    conteudo_padrao?: string;
+    condicoes_padrao?: string;
+    observacoes?: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Proposal {
     id: number;
     titulo: string;
@@ -28,6 +39,7 @@ export interface Proposal {
     data_validade?: string;
     pdf_path?: string;
     observacoes?: string;
+    condicoes?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -41,9 +53,6 @@ export interface PaginatedResponse<T> {
 }
 
 export const proposalsApi = {
-    /**
-     * Get all proposals with optional filters.
-     */
     async getAll(filters?: {
         status?: string;
         responsavel_id?: number;
@@ -65,23 +74,20 @@ export const proposalsApi = {
         return response;
     },
 
-    /**
-     * Get proposal by ID.
-     */
     async getById(id: number): Promise<{ proposta: Proposal; itens: ProposalItem[]; historico: any[] }> {
         const response = await apiRequest(`/proposals/${id}`);
         return response.data;
     },
 
-    /**
-     * Create new proposal.
-     */
     async create(data: {
         titulo: string;
         lead_id?: number;
         responsavel_id?: number;
         data_validade?: string;
         observacoes?: string;
+        modelo_id?: number;
+        descricao?: string;
+        condicoes?: string;
         itens: ProposalItem[];
     }): Promise<Proposal> {
         const response = await apiRequest('/proposals', {
@@ -91,9 +97,6 @@ export const proposalsApi = {
         return response.data;
     },
 
-    /**
-     * Update proposal.
-     */
     async update(id: number, data: Partial<Proposal> & { itens?: ProposalItem[] }): Promise<Proposal> {
         const response = await apiRequest(`/proposals/${id}`, {
             method: 'PUT',
@@ -102,18 +105,12 @@ export const proposalsApi = {
         return response.data;
     },
 
-    /**
-     * Delete proposal.
-     */
     async delete(id: number): Promise<void> {
         await apiRequest(`/proposals/${id}`, {
             method: 'DELETE'
         });
     },
 
-    /**
-     * Generate PDF for proposal.
-     */
     async generatePdf(id: number): Promise<{ pdf_path: string }> {
         const response = await apiRequest(`/proposals/${id}/pdf`, {
             method: 'POST'
@@ -121,9 +118,6 @@ export const proposalsApi = {
         return response;
     },
 
-    /**
-     * Send proposal via email.
-     */
     async sendProposal(id: number): Promise<{ sent_to: string; cc?: string }> {
         const response = await apiRequest(`/proposals/${id}/send`, {
             method: 'POST'
@@ -132,16 +126,21 @@ export const proposalsApi = {
     }
 };
 
-/**
- * Leads API for proposal dropdown.
- */
+export const templatesApi = {
+    async getAll(): Promise<ProposalTemplate[]> {
+        const response = await apiRequest('/proposal-templates');
+        return response.data || [];
+    },
+
+    async getById(id: number): Promise<ProposalTemplate> {
+        const response = await apiRequest(`/proposal-templates/${id}`);
+        return response.data;
+    }
+};
+
 export const leadsApi = {
-    /**
-     * Get all leads.
-     */
     async getAll(): Promise<Lead[]> {
         const response = await apiRequest('/leads');
-        // Handle different response structures
         const data = response.data?.data || response.data || [];
         return Array.isArray(data) ? data.map((lead: any) => ({
             id: String(lead.id),

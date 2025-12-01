@@ -28,6 +28,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarRail,
+  SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
 
@@ -153,9 +154,14 @@ export function MainLayout({ children }: MainLayoutProps) {
           {/* Cabeçalho */}
           <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 border-b border-gray-200 bg-white">
             <div className="flex flex-1 items-center px-4">
+              {/* Trigger do Sidebar (Mobile) */}
+              <div className="md:hidden mr-2">
+                <SidebarTrigger />
+              </div>
+
               {/* Barra de busca */}
               <div className="flex flex-1">
-                <div className="relative w-full max-w-md">
+                <div className="relative w-full max-w-md hidden sm:block">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                     <Search size={16} className="text-gray-400" />
                   </div>
@@ -190,7 +196,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
 
           {/* Conteúdo da página */}
-          <main className="flex-1 overflow-y-auto bg-gray-50 p-6">
+          <main className="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-6">
             {children}
           </main>
         </SidebarInset>

@@ -8,8 +8,8 @@ import {
   FileText,
   Send
 } from 'lucide-react';
-import { Proposal as ApiProposal, leadsApi } from './services/proposalsApi';
-import { ProposalStatus, ProposalTemplate } from './types/proposal';
+import { Proposal as ApiProposal, leadsApi, templatesApi, ProposalTemplate } from './services/proposalsApi';
+import { ProposalStatus } from './types/proposal';
 import type { ProposalItem } from './types/proposal';
 
 interface ProposalFormProps {
@@ -27,6 +27,9 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
     status: proposal?.status || 'rascunho',
     data_validade: proposal?.data_validade || '',
     observacoes: proposal?.observacoes || '',
+    modelo_id: null,
+    descricao: '',
+    condicoes: proposal?.condicoes || '',
     itens: []
   });
 
@@ -35,26 +38,25 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
   const [leads, setLeads] = useState<any[]>([]);
   const [leadInfo, setLeadInfo] = useState<any>(null);
   const [loadingLeads, setLoadingLeads] = useState(false);
+  const [templates, setTemplates] = useState<ProposalTemplate[]>([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
 
-  // Templates mockados para demonstração
-  const mockTemplates: ProposalTemplate[] = [
-    {
-      id: 'template_1',
-      nome: 'Template Desenvolvimento',
-      descricao: 'Template para propostas de desenvolvimento de software',
-      conteudo: 'Template padrão para desenvolvimento...',
-      dataCriacao: new Date().toISOString(),
-      ativo: true
-    },
-    {
-      id: 'template_2',
-      nome: 'Template Consultoria',
-      descricao: 'Template para propostas de consultoria',
-      conteudo: 'Template padrão para consultoria...',
-      dataCriacao: new Date().toISOString(),
-      ativo: true
-    }
-  ];
+  // Fetch templates on component mount
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        setLoadingTemplates(true);
+        const templatesData = await templatesApi.getAll();
+        setTemplates(templatesData);
+      } catch (error) {
+        console.error('Erro ao carregar templates:', error);
+      } finally {
+        setLoadingTemplates(false);
+      }
+    };
+
+    fetchTemplates();
+  }, []);
 
   // Fetch leads on component mount
   useEffect(() => {
@@ -88,42 +90,71 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
   };
 
   const handleRemoveItem = (itemId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      itens: prev.itens?.filter(item => item.id !== itemId) || []
-    }));
-    updateTotal();
+    setFormData((prev: any) => {
+      const newItems = prev.itens?.filter((item: any) => item.id !== itemId) || [];
+      const newTotal = newItems.reduce((sum: number, item: any) => sum + item.valorTotal, 0);
+
+      return {
+        ...prev,
+        itens: newItems,
+        valor_total: newTotal
+      };
+    });
   };
 
   const handleItemChange = (itemId: string, field: keyof ProposalItem, value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      itens: prev.itens?.map(item => {
+    setFormData((prev: any) => {
+      const newItems = prev.itens?.map((item: any) => {
         if (item.id === itemId) {
           const updatedItem = { ...item, [field]: value };
           if (field === 'quantidade' || field === 'valorUnitario') {
-            updatedItem.valorTotal = updatedItem.quantidade * updatedItem.valorUnitario;
+            updatedItem.valorTotal = (Number(updatedItem.quantidade) || 0) * (Number(updatedItem.valorUnitario) || 0);
           }
           return updatedItem;
         }
         return item;
-      }) || []
-    }));
-    updateTotal();
+      }) || [];
+
+      const newTotal = newItems.reduce((sum: number, item: any) => sum + item.valorTotal, 0);
+
+      return {
+        ...prev,
+        itens: newItems,
+        valor_total: newTotal
+      };
+    });
   };
 
-  const updateTotal = () => {
-    const total = formData.itens?.reduce((sum, item) => sum + item.valorTotal, 0) || 0;
-    setFormData(prev => ({ ...prev, valor: total }));
-  };
+
 
   const handleSave = () => {
-    onSave(formData);
+    // Transformar itens de camelCase para snake_case
+    const transformedData = {
+      ...formData,
+      itens: formData.itens?.map((item: any) => ({
+        descricao: item.descricao,
+        quantidade: item.quantidade,
+        valor_unitario: item.valorUnitario || 0,
+        // O backend calculará valor_total_item automaticamente
+      })) || []
+    };
+
+    onSave(transformedData);
   };
 
   const handleSend = () => {
-    const proposalToSend = { ...formData, status: ProposalStatus.PENDENTE as const };
-    onSave(proposalToSend);
+    // Transformar itens de camelCase para snake_case
+    const transformedData = {
+      ...formData,
+      status: ProposalStatus.PENDENTE as const,
+      itens: formData.itens?.map((item: any) => ({
+        descricao: item.descricao,
+        quantidade: item.quantidade,
+        valor_unitario: item.valorUnitario || 0,
+      })) || []
+    };
+
+    onSave(transformedData);
   };
 
   return (
@@ -197,12 +228,13 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                   Template
                 </label>
                 <select
-                  value={formData.templateId}
-                  onChange={(e) => setFormData(prev => ({ ...prev, templateId: e.target.value }))}
+                  value={formData.modelo_id || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, modelo_id: e.target.value ? Number(e.target.value) : null }))}
                   className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  disabled={loadingTemplates}
                 >
-                  <option value="">Selecione um template</option>
-                  {mockTemplates.map(template => (
+                  <option value="">{loadingTemplates ? 'Carregando templates...' : 'Selecione um template (opcional)'}</option>
+                  {templates.map(template => (
                     <option key={template.id} value={template.id}>
                       {template.nome}
                     </option>
@@ -417,10 +449,10 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                       <input
                         type="number"
                         value={item.quantidade}
-                        onChange={(e) => handleItemChange(item.id, 'quantidade', parseInt(e.target.value) || 0)}
+                        onChange={(e) => handleItemChange(item.id, 'quantidade', parseFloat(e.target.value) || 0)}
                         className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
                         min="0"
-                        step="1"
+                        step="0.01"
                       />
                     </div>
 
@@ -431,10 +463,10 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                       <input
                         type="number"
                         value={item.valorUnitario}
-                        onChange={(e) => handleItemChange(item.id, 'valorUnitario', parseInt(e.target.value) || 0)}
+                        onChange={(e) => handleItemChange(item.id, 'valorUnitario', parseFloat(e.target.value) || 0)}
                         className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
                         min="0"
-                        step="1"
+                        step="0.01"
                       />
                     </div>
                   </div>
@@ -461,22 +493,22 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-medium text-gray-900">Valor Total:</span>
                   <span className="text-xl font-bold text-orange-600">
-                    R$ {formData.valor?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    R$ {formData.valor_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Observações */}
+          {/* Condições da Proposta */}
           <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Observações</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Condições da Proposta</h3>
             <textarea
-              value={formData.observacoes}
-              onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
+              value={formData.condicoes}
+              onChange={(e) => setFormData(prev => ({ ...prev, condicoes: e.target.value }))}
               rows={4}
               className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              placeholder="Observações adicionais sobre a proposta..."
+              placeholder="Condições de pagamento, prazos, etc..."
             />
           </div>
         </div>
@@ -512,16 +544,16 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                   <div className="border-t border-gray-300 mt-4 pt-2">
                     <div className="flex justify-between font-medium">
                       <span>Total:</span>
-                      <span>R$ {formData.valor?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                      <span>R$ {formData.valor_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                     </div>
                   </div>
                 </div>
               )}
 
-              {formData.observacoes && (
+              {formData.condicoes && (
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Observações:</h4>
-                  <p className="text-gray-700 text-sm">{formData.observacoes}</p>
+                  <h4 className="font-medium text-gray-900 mb-2">Condições:</h4>
+                  <p className="text-gray-700 text-sm">{formData.condicoes}</p>
                 </div>
               )}
             </div>

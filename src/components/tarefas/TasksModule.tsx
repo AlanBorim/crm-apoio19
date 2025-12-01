@@ -73,7 +73,7 @@ export function TasksModule() {
     };
 
     return (
-        <div className="p-6">
+        <div>
             <div className="mb-6 flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -84,21 +84,21 @@ export function TasksModule() {
                         Gerencie suas tarefas pessoais e vinculadas a leads.
                     </p>
                 </div>
-                <div className="flex space-x-3">
+                <div className="flex flex-wrap gap-2">
                     <button
                         onClick={loadTasks}
                         className="flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                         title="Atualizar lista"
                     >
-                        <RefreshCw size={16} className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                        Atualizar
+                        <RefreshCw size={16} className={`sm:mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                        <span className="hidden sm:inline">Atualizar</span>
                     </button>
                     <button
                         onClick={handleCreateTask}
                         className="flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
                     >
-                        <Plus size={16} className="mr-2" />
-                        Nova Tarefa
+                        <Plus size={16} className="sm:mr-2" />
+                        <span className="hidden sm:inline">Nova Tarefa</span>
                     </button>
                 </div>
             </div>

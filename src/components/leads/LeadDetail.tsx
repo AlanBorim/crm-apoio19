@@ -106,7 +106,7 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
       if (response.data && response.data.lead) {
         const leadData = response.data.lead;
         setLead(leadData);
-        
+
         // Carregar valores de campos extras se existirem
         if (leadData.source_extra) {
           try {
@@ -181,15 +181,7 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
   };
 
   const handleDelete = async () => {
-    if (window.confirm('Tem certeza que deseja excluir este lead?')) {
-      try {
-        await leadService.deleteLead(leadId);
-        onDelete(leadId);
-      } catch (error: any) {
-        console.error('Erro ao excluir lead:', error);
-        alert(error.response?.data?.message || 'Erro ao excluir lead');
-      }
-    }
+    onDelete(leadId);
   };
 
   const handleAddInteraction = async () => {
@@ -234,7 +226,7 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
   // Função para renderizar campos dinâmicos
   const renderDynamicFieldValue = (field: ExtraField) => {
     const value = dynamicFieldValues[field.id];
-    
+
     if (!value && value !== false && value !== 0) {
       return null;
     }
@@ -242,30 +234,29 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
     switch (field.type) {
       case 'checkbox':
         return (
-          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-            value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}>
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
             {value ? 'Sim' : 'Não'}
           </span>
         );
-      
+
       case 'email':
         return (
           <a href={`mailto:${value}`} className="text-blue-600 hover:text-blue-800">
             {value}
           </a>
         );
-      
+
       case 'tel':
         return (
           <a href={`tel:${value}`} className="text-blue-600 hover:text-blue-800">
             {value}
           </a>
         );
-      
+
       case 'textarea':
         return <span className="whitespace-pre-wrap">{value}</span>;
-      
+
       default:
         return <span>{value}</span>;
     }
@@ -291,10 +282,10 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
     // Campos extras múltiplos
     if (sourceConfig.meta_config.extra_fields) {
       sourceConfig.meta_config.extra_fields.forEach(field => {
-        const hasValue = dynamicFieldValues[field.id] !== undefined && 
-                         dynamicFieldValues[field.id] !== null && 
-                         dynamicFieldValues[field.id] !== '';
-        
+        const hasValue = dynamicFieldValues[field.id] !== undefined &&
+          dynamicFieldValues[field.id] !== null &&
+          dynamicFieldValues[field.id] !== '';
+
         if (hasValue || field.type === 'checkbox') {
           extraInfo.push({
             label: field.label,
@@ -535,14 +526,14 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
                 Interesse/Observações
               </h2>
-              
+
               {/* Interesse/Observações principais */}
               {(lead.interest || lead.observacoes) && (
                 <div className="text-gray-700 whitespace-pre-wrap">
                   {lead.interest || lead.observacoes}
                 </div>
               )}
-              
+
               {/* Informações extras dos campos dinâmicos */}
               {renderExtraFieldsInfo()}
             </div>

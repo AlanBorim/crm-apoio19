@@ -19,6 +19,7 @@ import {
 import leadService, { useLeads } from '../../services/leadService';
 import { Lead, LeadFilter, LeadStage, LeadTemperature } from './types/lead';
 import LeadImportCSV from './LeadImportCSV';
+import { MobileLeadCard } from './MobileLeadCard';
 
 type LeadListProps = {
   onSelectLeads: (leadIds: string[]) => void;
@@ -92,21 +93,16 @@ const LeadList: React.FC<LeadListProps> = ({
   };
 
   const handleDelete = async (leadId: string) => {
-    try {
-        await deleteLead(leadId);
-        if (onDelete) {
-          onDelete(leadId);
-        }
-      } catch (error) {
-        console.error('Erro ao excluir lead:', error);
-      }
+    if (onDelete) {
+      onDelete(leadId);
+    }
   };
 
   const handleImportComplete = (summary: any) => {
     setShowImportModal(false);
     // Atualizar lista de leads após importação
     fetchLeads(filters);
-    
+
     // Mostrar notificação de sucesso
     alert(`Importação concluída! ${summary.valid} leads importados com sucesso.`);
   };
@@ -176,13 +172,13 @@ const LeadList: React.FC<LeadListProps> = ({
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2"
           >
             <Filter size={20} />
-            Filtros
+            <span className="hidden sm:inline">Filtros</span>
           </button>
 
           <button
@@ -190,7 +186,7 @@ const LeadList: React.FC<LeadListProps> = ({
             className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 flex items-center gap-2"
           >
             <Upload size={20} />
-            Importar CSV
+            <span className="hidden sm:inline">Importar CSV</span>
           </button>
 
           <button
@@ -198,7 +194,7 @@ const LeadList: React.FC<LeadListProps> = ({
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
           >
             <Plus size={20} />
-            Novo Lead
+            <span className="hidden sm:inline">Novo Lead</span>
           </button>
         </div>
       </div>
@@ -355,8 +351,39 @@ const LeadList: React.FC<LeadListProps> = ({
         </div>
       </div>
 
-      {/* Tabela de leads */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      {/* Lista de leads (Mobile) */}
+      <div className="md:hidden space-y-4">
+        {loading ? (
+          <div className="text-center py-8">
+            <RefreshCw className="animate-spin mx-auto mb-2" size={24} />
+            <p className="text-gray-500">Carregando leads...</p>
+          </div>
+        ) : safeLeads.length === 0 ? (
+          <div className="text-center py-8 text-gray-500 bg-white rounded-lg border">
+            Nenhum lead encontrado
+          </div>
+        ) : (
+          safeLeads.map((lead) => (
+            <MobileLeadCard
+              key={lead.id}
+              lead={lead}
+              selected={selectedLeads.includes(lead.id)}
+              onSelect={handleSelectLead}
+              onEdit={onEditLead}
+              onView={onViewDetail}
+              onDelete={handleDelete}
+              getStageColor={getStageColor}
+              getTemperatureColor={getTemperatureColor}
+              getTemperatureIcon={getTemperatureIcon}
+              formatCurrency={formatCurrency}
+              formatDate={formatDate}
+            />
+          ))
+        )}
+      </div>
+
+      {/* Tabela de leads (Desktop) */}
+      <div className="hidden md:block bg-white rounded-lg border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
