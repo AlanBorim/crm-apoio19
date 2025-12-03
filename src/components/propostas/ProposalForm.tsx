@@ -30,7 +30,16 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
     modelo_id: null,
     descricao: '',
     condicoes: proposal?.condicoes || '',
-    itens: []
+    itens: [],
+    // Campos de lead para criação automática
+    lead_name: '',
+    lead_email: '',
+    lead_phone: '',
+    lead_company: '',
+    lead_cep: '',
+    lead_city: '',
+    lead_state: '',
+    lead_address: ''
   });
 
 
@@ -74,6 +83,44 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
 
     fetchLeads();
   }, []);
+
+  // Carregar dados do lead quando selecionado
+  useEffect(() => {
+    const loadLeadData = async () => {
+      if (!formData.lead_id) {
+        // Limpar campos de lead quando lead_id for removido
+        setFormData(prev => ({
+          ...prev,
+          lead_name: '',
+          lead_email: '',
+          lead_phone: '',
+          lead_company: '',
+          lead_cep: '',
+          lead_city: '',
+          lead_state: '',
+          lead_address: ''
+        }));
+        return;
+      }
+
+      const selectedLead = leads.find(l => l.id === formData.lead_id);
+      if (selectedLead) {
+        setFormData(prev => ({
+          ...prev,
+          lead_name: selectedLead.name || '',
+          lead_email: selectedLead.email || '',
+          lead_phone: selectedLead.phone || '',
+          lead_company: selectedLead.company || '',
+          lead_cep: selectedLead.cep || '',
+          lead_city: selectedLead.city || '',
+          lead_state: selectedLead.state || '',
+          lead_address: selectedLead.address || ''
+        }));
+      }
+    };
+
+    loadLeadData();
+  }, [formData.lead_id, leads]);
 
   const handleAddItem = () => {
     const newItem: ProposalItem = {
@@ -272,19 +319,20 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                   if (leadId) {
                     const selectedLead = leads.find(lead => String(lead.id) === leadId);
                     if (selectedLead) {
-                      // Preencher lead_id e também os campos do cliente
+                      // Preencher lead_id e os campos do cliente (flat fields)
                       setFormData(prev => ({
                         ...prev,
                         lead_id: Number(leadId),
-                        cliente: {
-                          id: selectedLead.id,
-                          nome: selectedLead.name,
-                          empresa: selectedLead.company || '',
-                          email: selectedLead.email,
-                          telefone: selectedLead.phone || ''
-                        }
+                        lead_name: selectedLead.name,
+                        lead_company: selectedLead.company || '',
+                        lead_email: selectedLead.email || '',
+                        lead_phone: selectedLead.phone || '',
+                        lead_cep: selectedLead.cep || '',
+                        lead_city: selectedLead.city || '',
+                        lead_state: selectedLead.state || '',
+                        lead_address: selectedLead.address || ''
                       }));
-                      // Também atualizar leadInfo para mostrar no card
+                      // Também atualizar leadInfo para mostrar no card (redundant but keeping for safety if used elsewhere)
                       setLeadInfo({
                         nome: selectedLead.name,
                         empresa: selectedLead.company || 'N/A',
@@ -297,13 +345,14 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                     setFormData(prev => ({
                       ...prev,
                       lead_id: null,
-                      cliente: {
-                        id: '',
-                        nome: '',
-                        empresa: '',
-                        email: '',
-                        telefone: ''
-                      }
+                      lead_name: '',
+                      lead_company: '',
+                      lead_email: '',
+                      lead_phone: '',
+                      lead_cep: '',
+                      lead_city: '',
+                      lead_state: '',
+                      lead_address: ''
                     }));
                     setLeadInfo(null);
                   }
@@ -322,244 +371,338 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
               </select>
             </div>
 
-            {/* Lead Info Display */}
-            {leadInfo && (
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
-                <h4 className="text-sm font-medium text-blue-900 mb-2">Lead Selecionado:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                  <div><span className="font-medium">Nome:</span> {leadInfo.nome}</div>
-                  <div><span className="font-medium">Empresa:</span> {leadInfo.empresa}</div>
-                  <div><span className="font-medium">E-mail:</span> {leadInfo.email}</div>
-                  <div><span className="font-medium">Telefone:</span> {leadInfo.telefone}</div>
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nome do Cliente
-                </label>
-                <input
-                  type="text"
-                  value={formData.cliente?.nome || ''}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    cliente: { ...prev.cliente!, nome: e.target.value }
-                  }))}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                  placeholder="Nome do cliente"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Empresa
-                </label>
-                <input
-                  type="text"
-                  value={formData.cliente?.empresa || ''}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    cliente: { ...prev.cliente!, empresa: e.target.value }
-                  }))}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                  placeholder="Nome da empresa"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  E-mail
-                </label>
-                <input
-                  type="email"
-                  value={formData.cliente?.email || ''}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    cliente: { ...prev.cliente!, email: e.target.value }
-                  }))}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                  placeholder="email@exemplo.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Telefone
-                </label>
-                <input
-                  type="tel"
-                  value={formData.cliente?.telefone || ''}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    cliente: { ...prev.cliente!, telefone: e.target.value }
-                  }))}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                  placeholder="(11) 99999-9999"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Itens da Proposta */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Itens da Proposta</h3>
-              <button
-                onClick={handleAddItem}
-                className="inline-flex items-center rounded-md bg-orange-500 px-3 py-1 text-sm font-medium text-white hover:bg-orange-600"
-              >
-                <Plus size={14} className="mr-1" />
-                Adicionar Item
-              </button>
-            </div>
-
+            {/* Campos de Dados do Lead */}
             <div className="space-y-4">
-              {formData.itens?.map((item, index) => (
-                <div key={item.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-gray-700">Item {index + 1}</span>
+              <p className="text-sm text-gray-600">
+                {formData.lead_id ? 'Dados do lead selecionado:' : 'Preencha os dados do cliente:'}
+              </p>
+
+              {formData.lead_id ? (
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="block text-xs font-medium text-gray-500">Nome</span>
+                      <span className="block text-sm text-gray-900 font-medium">{formData.lead_name || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs font-medium text-gray-500">Empresa</span>
+                      <span className="block text-sm text-gray-900">{formData.lead_company || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs font-medium text-gray-500">E-mail</span>
+                      <span className="block text-sm text-gray-900">{formData.lead_email || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs font-medium text-gray-500">Telefone</span>
+                      <span className="block text-sm text-gray-900">{formData.lead_phone || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs font-medium text-gray-500">Endereço</span>
+                      <span className="block text-sm text-gray-900">
+                        {[
+                          formData.lead_address,
+                          formData.lead_city,
+                          formData.lead_state,
+                          formData.lead_cep
+                        ].filter(Boolean).join(', ') || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex justify-end">
                     <button
-                      onClick={() => handleRemoveItem(item.id)}
-                      className="text-red-500 hover:text-red-600"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          lead_id: null,
+                          lead_name: '',
+                          lead_email: '',
+                          lead_phone: '',
+                          lead_company: '',
+                          lead_cep: '',
+                          lead_city: '',
+                          lead_state: '',
+                          lead_address: ''
+                        }));
+                        setLeadInfo(null);
+                      }}
+                      className="text-xs text-orange-600 hover:text-orange-800 font-medium"
                     >
-                      <Trash2 size={14} />
+                      Limpar seleção e criar novo lead
                     </button>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Descrição
-                      </label>
-                      <input
-                        type="text"
-                        value={item.descricao}
-                        onChange={(e) => handleItemChange(item.id, 'descricao', e.target.value)}
-                        className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                        placeholder="Descrição do item"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Quantidade
-                      </label>
-                      <input
-                        type="number"
-                        value={item.quantidade}
-                        onChange={(e) => handleItemChange(item.id, 'quantidade', parseFloat(e.target.value) || 0)}
-                        className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Valor Unitário
-                      </label>
-                      <input
-                        type="number"
-                        value={item.valorUnitario}
-                        onChange={(e) => handleItemChange(item.id, 'valorUnitario', parseFloat(e.target.value) || 0)}
-                        className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-3 text-right">
-                    <span className="text-sm font-medium text-gray-700">
-                      Total: R$ {item.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
                 </div>
-              ))}
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nome *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.lead_name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, lead_name: e.target.value }))}
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      placeholder="Nome do cliente"
+                      required
+                    />
+                  </div>
 
-              {(!formData.itens || formData.itens.length === 0) && (
-                <div className="text-center py-8 text-gray-500">
-                  <FileText size={32} className="mx-auto mb-2 text-gray-400" />
-                  <p>Nenhum item adicionado</p>
-                  <p className="text-sm">Clique em "Adicionar Item" para começar</p>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Empresa *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.lead_company}
+                      onChange={(e) => setFormData(prev => ({ ...prev, lead_company: e.target.value }))}
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      placeholder="Nome da empresa"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      E-mail
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.lead_email}
+                      onChange={(e) => setFormData(prev => ({ ...prev, lead_email: e.target.value }))}
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      placeholder="email@exemplo.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Telefone
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.lead_phone}
+                      onChange={(e) => setFormData(prev => ({ ...prev, lead_phone: e.target.value }))}
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      placeholder="(11) 99999-9999"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      CEP
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.lead_cep}
+                      onChange={(e) => setFormData(prev => ({ ...prev, lead_cep: e.target.value }))}
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      placeholder="00000-000"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cidade
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.lead_city}
+                      onChange={(e) => setFormData(prev => ({ ...prev, lead_city: e.target.value }))}
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      placeholder="Cidade"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Estado
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.lead_state}
+                      onChange={(e) => setFormData(prev => ({ ...prev, lead_state: e.target.value }))}
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      placeholder="SP"
+                      maxLength={2}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Endereço
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.lead_address}
+                      onChange={(e) => setFormData(prev => ({ ...prev, lead_address: e.target.value }))}
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      placeholder="Endereço completo"
+                    />
+                  </div>
                 </div>
               )}
             </div>
 
-            {formData.itens && formData.itens.length > 0 && (
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-medium text-gray-900">Valor Total:</span>
-                  <span className="text-xl font-bold text-orange-600">
-                    R$ {formData.valor_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Condições da Proposta */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Condições da Proposta</h3>
-            <textarea
-              value={formData.condicoes}
-              onChange={(e) => setFormData(prev => ({ ...prev, condicoes: e.target.value }))}
-              rows={4}
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              placeholder="Condições de pagamento, prazos, etc..."
-            />
           </div>
         </div>
 
-        {/* Preview */}
-        {showPreview && (
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Preview da Proposta</h3>
-            <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-              <div className="text-center border-b border-gray-200 pb-4">
-                <h1 className="text-2xl font-bold text-gray-900">{formData.titulo || 'Título da Proposta'}</h1>
-                <p className="text-gray-600">Proposta Comercial</p>
-              </div>
-
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Cliente:</h4>
-                <p className="text-gray-700">{formData.cliente?.nome || 'Nome do Cliente'}</p>
-                <p className="text-gray-700">{formData.cliente?.empresa || 'Empresa'}</p>
-                <p className="text-gray-700">{formData.cliente?.email || 'email@exemplo.com'}</p>
-              </div>
-
-              {formData.itens && formData.itens.length > 0 && (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Itens:</h4>
-                  <div className="space-y-2">
-                    {formData.itens.map((item, index) => (
-                      <div key={item.id} className="flex justify-between text-sm">
-                        <span>{index + 1}. {item.descricao || 'Descrição do item'}</span>
-                        <span>R$ {item.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="border-t border-gray-300 mt-4 pt-2">
-                    <div className="flex justify-between font-medium">
-                      <span>Total:</span>
-                      <span>R$ {formData.valor_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {formData.condicoes && (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Condições:</h4>
-                  <p className="text-gray-700 text-sm">{formData.condicoes}</p>
-                </div>
-              )}
-            </div>
+        {/* Itens da Proposta */}
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Itens da Proposta</h3>
+            <button
+              onClick={handleAddItem}
+              className="inline-flex items-center rounded-md bg-orange-500 px-3 py-1 text-sm font-medium text-white hover:bg-orange-600"
+            >
+              <Plus size={14} className="mr-1" />
+              Adicionar Item
+            </button>
           </div>
-        )}
+
+          <div className="space-y-4">
+            {formData.itens?.map((item, index) => (
+              <div key={item.id} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-gray-700">Item {index + 1}</span>
+                  <button
+                    onClick={() => handleRemoveItem(item.id)}
+                    className="text-red-500 hover:text-red-600"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Descrição
+                    </label>
+                    <input
+                      type="text"
+                      value={item.descricao}
+                      onChange={(e) => handleItemChange(item.id, 'descricao', e.target.value)}
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      placeholder="Descrição do item"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Quantidade
+                    </label>
+                    <input
+                      type="number"
+                      value={item.quantidade}
+                      onChange={(e) => handleItemChange(item.id, 'quantidade', parseFloat(e.target.value) || 0)}
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Valor Unitário
+                    </label>
+                    <input
+                      type="number"
+                      value={item.valorUnitario}
+                      onChange={(e) => handleItemChange(item.id, 'valorUnitario', parseFloat(e.target.value) || 0)}
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-3 text-right">
+                  <span className="text-sm font-medium text-gray-700">
+                    Total: R$ {item.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+            ))}
+
+            {(!formData.itens || formData.itens.length === 0) && (
+              <div className="text-center py-8 text-gray-500">
+                <FileText size={32} className="mx-auto mb-2 text-gray-400" />
+                <p>Nenhum item adicionado</p>
+                <p className="text-sm">Clique em "Adicionar Item" para começar</p>
+              </div>
+            )}
+          </div>
+
+          {formData.itens && formData.itens.length > 0 && (
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-medium text-gray-900">Valor Total:</span>
+                <span className="text-xl font-bold text-orange-600">
+                  R$ {formData.valor_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Condições da Proposta */}
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Condições da Proposta</h3>
+          <textarea
+            value={formData.condicoes}
+            onChange={(e) => setFormData(prev => ({ ...prev, condicoes: e.target.value }))}
+            rows={4}
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            placeholder="Condições de pagamento, prazos, etc..."
+          />
+        </div>
       </div>
+
+      {/* Preview */}
+      {showPreview && (
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Preview da Proposta</h3>
+          <div className="bg-gray-50 rounded-lg p-6 space-y-4">
+            <div className="text-center border-b border-gray-200 pb-4">
+              <h1 className="text-2xl font-bold text-gray-900">{formData.titulo || 'Título da Proposta'}</h1>
+              <p className="text-gray-600">Proposta Comercial</p>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-gray-900 mb-2">Cliente:</h4>
+              <p className="text-gray-700">{formData.cliente?.nome || 'Nome do Cliente'}</p>
+              <p className="text-gray-700">{formData.cliente?.empresa || 'Empresa'}</p>
+              <p className="text-gray-700">{formData.cliente?.email || 'email@exemplo.com'}</p>
+            </div>
+
+            {formData.itens && formData.itens.length > 0 && (
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">Itens:</h4>
+                <div className="space-y-2">
+                  {formData.itens.map((item, index) => (
+                    <div key={item.id} className="flex justify-between text-sm">
+                      <span>{index + 1}. {item.descricao || 'Descrição do item'}</span>
+                      <span>R$ {item.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-gray-300 mt-4 pt-2">
+                  <div className="flex justify-between font-medium">
+                    <span>Total:</span>
+                    <span>R$ {formData.valor_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {formData.condicoes && (
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">Condições:</h4>
+                <p className="text-gray-700 text-sm">{formData.condicoes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { ProposalList } from './ProposalList';
 import { ProposalForm } from './ProposalForm';
+import { ProposalPreviewModal } from './ProposalPreviewModal';
+import { ProposalStatusModal } from './ProposalStatusModal';
 import { proposalsApi } from './services/proposalsApi';
-import type { Proposal as ApiProposal } from './services/proposalsApi';
+import type { Proposal as ApiProposal, ProposalItem } from './services/proposalsApi';
 
 export function ProposalsModule() {
   const [activeView, setActiveView] = useState<'list' | 'form'>('list');
@@ -12,6 +14,18 @@ export function ProposalsModule() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // State for Preview Modal
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewProposal, setPreviewProposal] = useState<ApiProposal | null>(null);
+  const [previewItems, setPreviewItems] = useState<ProposalItem[]>([]);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+
+
+  // State for Status Modal
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [statusModalType, setStatusModalType] = useState<'approve' | 'reject'>('approve');
+  const [statusProposal, setStatusProposal] = useState<ApiProposal | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   // Fetch proposals from API
   useEffect(() => {
@@ -79,6 +93,63 @@ export function ProposalsModule() {
     }
   };
 
+  const handleViewProposal = async (proposal: ApiProposal) => {
+    setPreviewProposal(proposal);
+    setPreviewModalOpen(true);
+    setLoadingPreview(true);
+    try {
+      // Fetch full details including items
+      const details = await proposalsApi.getById(proposal.id);
+      setPreviewProposal(details.proposta);
+      setPreviewItems(details.itens || []);
+    } catch (err) {
+      console.error('Erro ao carregar detalhes da proposta:', err);
+      alert('Erro ao carregar detalhes da proposta.');
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  const handleApprove = (proposal: ApiProposal) => {
+    setStatusProposal(proposal);
+    setStatusModalType('approve');
+    setStatusModalOpen(true);
+  };
+
+  const handleReject = (proposal: ApiProposal) => {
+    setStatusProposal(proposal);
+    setStatusModalType('reject');
+    setStatusModalOpen(true);
+  };
+
+  const handleStatusConfirm = async (observation: string) => {
+    if (!statusProposal) return;
+
+    setUpdatingStatus(true);
+    try {
+      const newStatus = statusModalType === 'approve' ? 'aceita' : 'rejeitada';
+      // Append observation to existing ones or create new
+      const currentObs = statusProposal.observacoes || '';
+      const timestamp = new Date().toLocaleString('pt-BR');
+      const actionText = statusModalType === 'approve' ? 'APROVADA' : 'REJEITADA';
+      const newObs = `${currentObs}\n\n[${timestamp}] ${actionText}: ${observation}`.trim();
+
+      await proposalsApi.update(statusProposal.id, {
+        status: newStatus,
+        observacoes: newObs
+      });
+
+      await loadProposals();
+      setStatusModalOpen(false);
+      setStatusProposal(null);
+    } catch (err: any) {
+      console.error('Erro ao atualizar status:', err);
+      alert('Erro ao atualizar status: ' + (err.message || 'Erro desconhecido'));
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
@@ -102,8 +173,11 @@ export function ProposalsModule() {
           proposals={proposals}
           loading={loading}
           error={error}
+          onView={handleViewProposal}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onApprove={handleApprove}
+          onReject={handleReject}
           onRefresh={loadProposals}
         />
       ) : (
@@ -111,6 +185,27 @@ export function ProposalsModule() {
           proposal={selectedProposal}
           onSave={handleSave}
           onCancel={handleCancel}
+        />
+      )}
+
+      {/* Preview Modal */}
+      <ProposalPreviewModal
+        isOpen={previewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
+        proposal={previewProposal}
+        items={previewItems}
+        loading={loadingPreview}
+      />
+
+      {/* Status Modal */}
+      {statusModalOpen && (
+        <ProposalStatusModal
+          isOpen={statusModalOpen}
+          onClose={() => setStatusModalOpen(false)}
+          onConfirm={handleStatusConfirm}
+          title={statusModalType === 'approve' ? 'Aprovar Proposta' : 'Reprovar Proposta'}
+          type={statusModalType}
+          loading={updatingStatus}
         />
       )}
     </div>

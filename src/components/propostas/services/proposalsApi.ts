@@ -6,6 +6,10 @@ export interface Lead {
     email: string;
     phone?: string;
     company?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    cep?: string;
 }
 
 export interface ProposalItem {
@@ -31,10 +35,12 @@ export interface Proposal {
     id: number;
     titulo: string;
     lead_id?: number;
+    lead_nome?: string;
     responsavel_id?: number;
     valor_total: number;
     status: 'rascunho' | 'enviada' | 'aceita' | 'rejeitada';
     data_criacao: string;
+    criado_em?: string;
     data_envio?: string;
     data_validade?: string;
     pdf_path?: string;
@@ -147,7 +153,11 @@ export const leadsApi = {
             name: lead.name,
             email: lead.email,
             phone: lead.phone,
-            company: lead.company
+            company: lead.company,
+            address: lead.address,
+            city: lead.city,
+            state: lead.state,
+            cep: lead.cep
         })) : [];
     }
 };

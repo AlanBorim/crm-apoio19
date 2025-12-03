@@ -11,7 +11,9 @@ import {
   Calendar,
   DollarSign,
   User,
-  RefreshCw
+  RefreshCw,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import { Proposal as ApiProposal } from './services/proposalsApi';
 
@@ -19,12 +21,15 @@ interface ProposalListProps {
   proposals: ApiProposal[];
   loading: boolean;
   error: string | null;
+  onView: (proposal: ApiProposal) => void;
   onEdit: (proposal: ApiProposal) => void;
   onDelete: (proposalId: number) => void;
+  onApprove: (proposal: ApiProposal) => void;
+  onReject: (proposal: ApiProposal) => void;
   onRefresh: () => void;
 }
 
-export function ProposalList({ proposals, loading, error, onEdit, onDelete, onRefresh }: ProposalListProps) {
+export function ProposalList({ proposals, loading, error, onView, onEdit, onDelete, onApprove, onReject, onRefresh }: ProposalListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -179,8 +184,8 @@ export function ProposalList({ proposals, loading, error, onEdit, onDelete, onRe
                     <div className="flex items-center text-sm text-gray-600">
                       <User size={14} className="mr-2" />
                       <div>
-                        <div className="font-medium">ID: {proposal.lead_id || 'N/A'}</div>
-                        <div className="text-xs">Lead</div>
+                        <div className="font-medium">{proposal.lead_nome || proposal.lead_id || 'N/A'}</div>
+                        <div className="text-xs">Cliente</div>
                       </div>
                     </div>
                   </div>
@@ -192,29 +197,56 @@ export function ProposalList({ proposals, loading, error, onEdit, onDelete, onRe
                   )}
 
                   <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <div>Criada: {new Date(proposal.data_criacao).toLocaleDateString('pt-BR')}</div>
+                    <div>Criada: {new Date(proposal.criado_em || proposal.data_criacao).toLocaleDateString('pt-BR')}</div>
                     {proposal.data_envio && (
                       <div>Enviada: {new Date(proposal.data_envio).toLocaleDateString('pt-BR')}</div>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 ml-4">
-                  <button
-                    onClick={() => onEdit(proposal)}
-                    className="p-2 text-gray-400 hover:text-blue-600"
-                    title="Editar"
-                  >
-                    <Edit size={16} />
-                  </button>
+                <div className="flex flex-col gap-2 ml-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onView(proposal)}
+                      className="p-2 text-gray-400 hover:text-blue-600"
+                      title="Visualizar"
+                    >
+                      <Eye size={16} />
+                    </button>
 
-                  <button
-                    onClick={() => onDelete(proposal.id)}
-                    className="p-2 text-gray-400 hover:text-red-600"
-                    title="Excluir"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                    <button
+                      onClick={() => onEdit(proposal)}
+                      className="p-2 text-gray-400 hover:text-blue-600"
+                      title="Editar"
+                    >
+                      <Edit size={16} />
+                    </button>
+
+                    <button
+                      onClick={() => onDelete(proposal.id)}
+                      className="p-2 text-gray-400 hover:text-red-600"
+                      title="Excluir"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2 justify-end mt-2">
+                    <button
+                      onClick={() => onApprove(proposal)}
+                      className="p-2 text-gray-400 hover:text-green-600"
+                      title="Aprovar"
+                    >
+                      <CheckCircle size={16} />
+                    </button>
+                    <button
+                      onClick={() => onReject(proposal)}
+                      className="p-2 text-gray-400 hover:text-red-600"
+                      title="Reprovar"
+                    >
+                      <XCircle size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
