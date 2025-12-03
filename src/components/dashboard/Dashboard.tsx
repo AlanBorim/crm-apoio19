@@ -8,26 +8,9 @@ import { PendingTasks } from './PendingTasks';
 import { Users, FileText, CheckSquare, DollarSign } from 'lucide-react';
 import leadService from '../../services/leadService';
 import { tasksApi, Task } from '../../services/tasksApi';
+import { dashboardApi, DashboardMetrics } from '../../services/dashboardApi';
 import { toast } from 'sonner';
 import { useNotifications } from '../notifications/NotificationSystemDB';
-
-// Dados mockados para o dashboard
-const mockPerformanceData = [
-  { name: 'Jan', leads: 40, propostas: 24, meta: 50 },
-  { name: 'Fev', leads: 30, propostas: 13, meta: 50 },
-  { name: 'Mar', leads: 20, propostas: 8, meta: 50 },
-  { name: 'Abr', leads: 27, propostas: 15, meta: 50 },
-  { name: 'Mai', leads: 18, propostas: 12, meta: 50 },
-  { name: 'Jun', leads: 23, propostas: 18, meta: 50 },
-];
-
-const mockFunnelData = [
-  { name: 'Novos Leads', value: 120, color: '#FF6B00' },
-  { name: 'Qualificados', value: 80, color: '#0073EA' },
-  { name: 'Reunião', value: 40, color: '#00C875' },
-  { name: 'Proposta', value: 25, color: '#FFCB00' },
-  { name: 'Fechados', value: 15, color: '#6E6E6E' },
-];
 
 export function Dashboard() {
   const [totalLeads, setTotalLeads] = useState(0);
@@ -35,6 +18,8 @@ export function Dashboard() {
   const [growth, setGrowth] = useState(0);
   const [growthPercent, setGrowthPercent] = useState(0);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
+  const [loadingMetrics, setLoadingMetrics] = useState(true);
   const navigate = useNavigate();
 
   const {
@@ -46,35 +31,49 @@ export function Dashboard() {
   } = useNotifications();
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await leadService.getLeadStats();
+    fetchStats();
+    loadTasks();
+    loadDashboardMetrics();
+  }, []);
 
-        if (response.success && response.data) {
-          const stats = response.data;
-          setTotalLeads(stats.total || 0);
-          setLeadsToday(stats.today || 0);
-          setGrowth(stats.growth || 0);
-          setGrowthPercent(stats.growthPercent || 0);
-        } else {
-          console.warn('Não foi possível carregar estatísticas, usando valores padrão');
-          setTotalLeads(0);
-          setLeadsToday(0);
-          setGrowth(0);
-          setGrowthPercent(0);
-        }
-      } catch (err) {
-        console.error('Erro ao carregar estatísticas de leads:', err);
+  const fetchStats = async () => {
+    try {
+      const response = await leadService.getLeadStats();
+
+      if (response.success && response.data) {
+        const stats = response.data;
+        setTotalLeads(stats.total || 0);
+        setLeadsToday(stats.today || 0);
+        setGrowth(stats.growth || 0);
+        setGrowthPercent(stats.growthPercent || 0);
+      } else {
+        console.warn('Não foi possível carregar estatísticas, usando valores padrão');
         setTotalLeads(0);
         setLeadsToday(0);
         setGrowth(0);
         setGrowthPercent(0);
       }
-    };
+    } catch (err) {
+      console.error('Erro ao carregar estatísticas de leads:', err);
+      setTotalLeads(0);
+      setLeadsToday(0);
+      setGrowth(0);
+      setGrowthPercent(0);
+    }
+  };
 
-    fetchStats();
-    loadTasks();
-  }, []);
+  const loadDashboardMetrics = async () => {
+    try {
+      setLoadingMetrics(true);
+      const metrics = await dashboardApi.getMetrics();
+      setDashboardMetrics(metrics);
+    } catch (error) {
+      console.error('Erro ao carregar métricas do dashboard:', error);
+      toast.error('Erro ao carregar métricas do dashboard');
+    } finally {
+      setLoadingMetrics(false);
+    }
+  };
 
   const loadTasks = async () => {
     try {
@@ -118,12 +117,12 @@ export function Dashboard() {
         />
         <SummaryCard
           title="Propostas Ativas"
-          value="32"
-          subtitle="R$ 240.500,00 em negociação"
+          value={loadingMetrics ? "..." : dashboardMetrics?.activeProposals.count || 0}
+          subtitle={loadingMetrics ? "Carregando..." : `R$ ${(dashboardMetrics?.activeProposals.totalValue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} em negociação`}
           icon={<FileText size={24} />}
           trend={{ value: 5, isPositive: true }}
           color="blue"
-          onClick={() => console.log('Propostas clicked')}
+          onClick={() => navigate('/propostas')}
         />
         <SummaryCard
           title="Tarefas Pendentes"
@@ -136,10 +135,10 @@ export function Dashboard() {
         />
         <SummaryCard
           title="Faturamento do Mês"
-          value="R$ 185.350"
-          subtitle="Meta: R$ 200.000"
+          value={loadingMetrics ? "..." : `R$ ${(dashboardMetrics?.monthlyRevenue.revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+          subtitle={loadingMetrics ? "Carregando..." : `Meta: R$ ${(dashboardMetrics?.monthlyRevenue.goal || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
           icon={<DollarSign size={24} />}
-          trend={{ value: 12, isPositive: true }}
+          trend={{ value: dashboardMetrics?.monthlyRevenue.percentage || 0, isPositive: (dashboardMetrics?.monthlyRevenue.percentage || 0) >= 0 }}
           color="purple"
           onClick={() => console.log('Faturamento clicked')}
         />
@@ -147,8 +146,14 @@ export function Dashboard() {
 
       {/* Gráficos */}
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <PerformanceChart data={mockPerformanceData} title="Desempenho Mensal" />
-        <FunnelChart data={mockFunnelData} title="Funil de Vendas" />
+        <PerformanceChart
+          data={loadingMetrics ? [] : dashboardMetrics?.monthlyPerformance || []}
+          title="Desempenho Mensal"
+        />
+        <FunnelChart
+          data={loadingMetrics ? [] : dashboardMetrics?.salesFunnel || []}
+          title="Funil de Vendas"
+        />
       </div>
 
       {/* Atividades e Tarefas */}

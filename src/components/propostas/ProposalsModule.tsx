@@ -150,6 +150,43 @@ export function ProposalsModule() {
     }
   };
 
+  const handleSend = async (proposal: ApiProposal) => {
+    if (!confirm('Marcar esta proposta como Enviada?')) {
+      return;
+    }
+
+    try {
+      await proposalsApi.update(proposal.id, {
+        status: 'enviada',
+        data_envio: new Date().toISOString().split('T')[0]
+      });
+
+      await loadProposals();
+      alert('Proposta marcada como Enviada!');
+    } catch (err: any) {
+      console.error('Erro ao atualizar status:', err);
+      alert('Erro ao atualizar status: ' + (err.message || 'Erro desconhecido'));
+    }
+  };
+
+  const handleNegotiate = async (proposal: ApiProposal) => {
+    if (!confirm('Marcar esta proposta como Em Negociação?')) {
+      return;
+    }
+
+    try {
+      await proposalsApi.update(proposal.id, {
+        status: 'em_negociacao'
+      });
+
+      await loadProposals();
+      alert('Proposta marcada como Em Negociação!');
+    } catch (err: any) {
+      console.error('Erro ao atualizar status:', err);
+      alert('Erro ao atualizar status: ' + (err.message || 'Erro desconhecido'));
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
@@ -178,6 +215,8 @@ export function ProposalsModule() {
           onDelete={handleDelete}
           onApprove={handleApprove}
           onReject={handleReject}
+          onSend={handleSend}
+          onNegotiate={handleNegotiate}
           onRefresh={loadProposals}
         />
       ) : (

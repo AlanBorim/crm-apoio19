@@ -38,7 +38,7 @@ export interface Proposal {
     lead_nome?: string;
     responsavel_id?: number;
     valor_total: number;
-    status: 'rascunho' | 'enviada' | 'aceita' | 'rejeitada';
+    status: 'rascunho' | 'enviada' | 'aceita' | 'rejeitada' | 'em_negociacao';
     data_criacao: string;
     criado_em?: string;
     data_envio?: string;

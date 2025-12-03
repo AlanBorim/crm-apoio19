@@ -1,20 +1,58 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, RefreshCw, CheckSquare } from 'lucide-react';
+import { Plus, RefreshCw, CheckSquare, Filter } from 'lucide-react';
 import { TaskList } from './TaskList';
 import { TaskForm } from './TaskForm';
 import { tasksApi, Task, CreateTaskRequest, UpdateTaskRequest } from '../../services/tasksApi';
+import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'sonner';
 
 export function TasksModule() {
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
+    const [filters, setFilters] = useState({
+        status: 'all',
+        priority: 'all',
+        userId: 'all',
+        leadId: 'all'
+    });
+
+    const { user } = useAuth();
+    const isAdmin = user?.role?.toLowerCase() === 'admin';
 
     useEffect(() => {
         loadTasks();
     }, []);
+
+    useEffect(() => {
+        applyFilters();
+    }, [tasks, filters]);
+
+    const applyFilters = () => {
+        let filtered = [...tasks];
+
+        if (filters.status !== 'all') {
+            filtered = filtered.filter(t => t.status === filters.status);
+        }
+
+        if (filters.priority !== 'all') {
+            filtered = filtered.filter(t => t.prioridade === filters.priority);
+        }
+
+        if (filters.userId !== 'all') {
+            filtered = filtered.filter(t => t.usuario_id === parseInt(filters.userId));
+        }
+
+        if (filters.leadId !== 'all') {
+            filtered = filtered.filter(t => t.lead_id === parseInt(filters.leadId));
+        }
+
+        setFilteredTasks(filtered);
+    };
 
     const loadTasks = async () => {
         try {
@@ -78,13 +116,23 @@ export function TasksModule() {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         <CheckSquare className="h-8 w-8 text-blue-600" />
-                        Minhas Tarefas
+                        Tarefas
                     </h1>
                     <p className="mt-1 text-sm text-gray-500">
                         Gerencie suas tarefas pessoais e vinculadas a leads.
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                    {isAdmin && (
+                        <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={`flex items-center rounded-md border px-4 py-2 text-sm font-medium ${showFilters ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'}`}
+                            title="Filtros"
+                        >
+                            <Filter size={16} className="sm:mr-2" />
+                            <span className="hidden sm:inline">Filtros</span>
+                        </button>
+                    )}
                     <button
                         onClick={loadTasks}
                         className="flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -103,8 +151,69 @@ export function TasksModule() {
                 </div>
             </div>
 
+            {isAdmin && showFilters && (
+                <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <select
+                                value={filters.status}
+                                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            >
+                                <option value="all">Todos</option>
+                                <option value="pendente">Pendente</option>
+                                <option value="em_andamento">Em Andamento</option>
+                                <option value="concluida">Concluída</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Prioridade</label>
+                            <select
+                                value={filters.priority}
+                                onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
+                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            >
+                                <option value="all">Todas</option>
+                                <option value="baixa">Baixa</option>
+                                <option value="media">Média</option>
+                                <option value="alta">Alta</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Usuário</label>
+                            <select
+                                value={filters.userId}
+                                onChange={(e) => setFilters({ ...filters, userId: e.target.value })}
+                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            >
+                                <option value="all">Todos</option>
+                                {Array.from(new Set(tasks.map(t => t.usuario_id).filter(Boolean))).map(userId => {
+                                    const task = tasks.find(t => t.usuario_id === userId);
+                                    return <option key={userId} value={userId}>{task?.usuario_nome || `ID ${userId}`}</option>;
+                                })}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Lead</label>
+                            <select
+                                value={filters.leadId}
+                                onChange={(e) => setFilters({ ...filters, leadId: e.target.value })}
+                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            >
+                                <option value="all">Todos</option>
+                                {Array.from(new Set(tasks.map(t => t.lead_id).filter(Boolean))).map(leadId => {
+                                    const task = tasks.find(t => t.lead_id === leadId);
+                                    return <option key={leadId} value={leadId}>{task?.lead_nome || `ID ${leadId}`}</option>;
+                                })}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <TaskList
-                tasks={tasks}
+                tasks={isAdmin && showFilters ? filteredTasks : tasks}
                 onEdit={handleEditTask}
                 onDelete={handleDeleteTask}
                 isLoading={isLoading}

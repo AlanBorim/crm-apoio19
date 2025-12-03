@@ -13,7 +13,9 @@ import {
   User,
   RefreshCw,
   CheckCircle,
-  XCircle
+  XCircle,
+  Mail,
+  Handshake
 } from 'lucide-react';
 import { Proposal as ApiProposal } from './services/proposalsApi';
 
@@ -26,10 +28,12 @@ interface ProposalListProps {
   onDelete: (proposalId: number) => void;
   onApprove: (proposal: ApiProposal) => void;
   onReject: (proposal: ApiProposal) => void;
+  onSend: (proposal: ApiProposal) => void;
+  onNegotiate: (proposal: ApiProposal) => void;
   onRefresh: () => void;
 }
 
-export function ProposalList({ proposals, loading, error, onView, onEdit, onDelete, onApprove, onReject, onRefresh }: ProposalListProps) {
+export function ProposalList({ proposals, loading, error, onView, onEdit, onDelete, onApprove, onReject, onSend, onNegotiate, onRefresh }: ProposalListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -245,6 +249,20 @@ export function ProposalList({ proposals, loading, error, onView, onEdit, onDele
                       title="Reprovar"
                     >
                       <XCircle size={16} />
+                    </button>
+                    <button
+                      onClick={() => onSend(proposal)}
+                      className="p-2 text-gray-400 hover:text-blue-600"
+                      title="Marcar como Enviada"
+                    >
+                      <Mail size={16} />
+                    </button>
+                    <button
+                      onClick={() => onNegotiate(proposal)}
+                      className="p-2 text-gray-400 hover:text-yellow-600"
+                      title="Marcar como Em Negociação"
+                    >
+                      <Handshake size={16} />
                     </button>
                   </div>
                 </div>
