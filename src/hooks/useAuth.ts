@@ -1,11 +1,30 @@
 import { create } from 'zustand';
 
+interface ModulePermissions {
+  view: boolean | 'own' | 'team';
+  create: boolean;
+  edit: boolean | 'own' | 'team';
+  delete: boolean | 'own' | 'team';
+  export?: boolean;
+}
+
+interface Permissions {
+  users: ModulePermissions;
+  leads: ModulePermissions;
+  proposals: ModulePermissions;
+  tasks: ModulePermissions;
+  campaigns: ModulePermissions;
+  dashboard: { view: boolean };
+  reports: { view: boolean; export: boolean };
+}
+
 interface User {
   id: number;
   nome: string;
   email: string;
   funcao: string;
   role: string;
+  permissions?: Permissions;
 }
 
 interface AuthState {
