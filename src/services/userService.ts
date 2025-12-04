@@ -372,7 +372,7 @@ export const userService = {
             const response = await apiRequest<{
                 success: boolean;
                 data: User;
-            }>(`/users/update/${userData.id}`, {
+            }>(`/users/${userData.id}`, {
                 method: 'PUT',
                 body: JSON.stringify(userData),
             });

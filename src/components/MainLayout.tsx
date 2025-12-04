@@ -61,6 +61,52 @@ export function MainLayout({ children }: MainLayoutProps) {
       .slice(0, 2);
   };
 
+  // Helper to check permissions
+  const hasPermission = (resource: string, action: string = 'view') => {
+    if (!user) return false;
+    // Admin has full access
+    if (user.funcao?.toLowerCase() === 'admin') return true;
+
+    // Check permissions object
+    if (user.permissions) {
+      // Handle array format (old)
+      if (Array.isArray(user.permissions)) {
+        if (user.permissions.includes('all')) return true;
+        // Map 'view' check to 'read' permission in array
+        if (action === 'view' && user.permissions.includes(`${resource}.read`)) return true;
+        return user.permissions.includes(`${resource}.${action}`);
+      }
+
+      // Handle object format (new)
+      if (typeof user.permissions === 'object') {
+        const resourcePerms = (user.permissions as any)[resource];
+        // If resource not in permissions, deny (unless we want to fallback to defaults, but frontend doesn't know defaults easily without duplicating logic)
+        // For now, strict check.
+        if (!resourcePerms) return false;
+
+        const perm = resourcePerms[action];
+        if (perm === true) return true;
+        if (perm === 'own') return true; // 'own' implies view access
+        return false;
+      }
+    }
+
+    return false;
+  };
+
+  const filteredMenuItems = menuItems.filter(item => {
+    switch (item.path) {
+      case '/dashboard': return hasPermission('dashboard');
+      case '/leads': return hasPermission('leads');
+      case '/kanban': return hasPermission('kanban');
+      case '/tarefas': return hasPermission('tasks');
+      case '/propostas': return hasPermission('proposals');
+      case '/whatsapp': return hasPermission('whatsapp');
+      case '/configuracoes': return hasPermission('configuracoes');
+      default: return true;
+    }
+  });
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex h-screen w-full bg-gray-50">
@@ -87,7 +133,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             <SidebarGroup>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {menuItems.map((item) => {
+                  {filteredMenuItems.map((item) => {
                     const isActive = location.pathname === item.path;
                     return (
                       <SidebarMenuItem key={item.name}>

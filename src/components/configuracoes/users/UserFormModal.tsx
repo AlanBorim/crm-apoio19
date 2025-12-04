@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  X, 
-  User as UserIcon, 
-  Mail, 
-  Phone, 
-  Shield, 
-  Eye, 
-  EyeOff, 
+import {
+  X,
+  User as UserIcon,
+  Mail,
+  Phone,
+  Shield,
+  Eye,
+  EyeOff,
   Save,
   Loader2,
   AlertCircle,
@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { User } from '../types/config';
 import { CreateUserRequest, UpdateUserRequest } from '../../../services/userService';
-import { getDefaultPermissionsByRole, ROLE_PERMISSIONS } from '../types/config';
+import { getDefaultPermissionsByRole, ROLE_PERMISSIONS, DEFAULT_PERMISSIONS } from '../types/config';
 
 interface UserFormModalProps {
   isOpen: boolean;
@@ -45,15 +45,15 @@ interface FormErrors {
   general?: string;
 }
 
-export function UserFormModal({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
-  user = null, 
-  loading = false 
+export function UserFormModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  user = null,
+  loading = false
 }: UserFormModalProps) {
   const isEditing = !!user;
-  
+
   const [formData, setFormData] = useState<FormData>({
     nome: '',
     email: '',
@@ -70,6 +70,41 @@ export function UserFormModal({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Helper to convert backend permission object to array of strings for UI
+  const flattenPermissions = (perms: any): string[] => {
+    if (!perms) return [];
+    if (Array.isArray(perms)) return perms;
+
+    const flattened: string[] = [];
+    if (typeof perms === 'object') {
+      Object.keys(perms).forEach(resource => {
+        if (typeof perms[resource] === 'object') {
+          // Directly map all backend permissions to frontend format (1:1 mapping)
+          Object.keys(perms[resource]).forEach(action => {
+            if (perms[resource][action] === true || perms[resource][action] === 'own') {
+              flattened.push(`${resource}.${action}`);
+            }
+          });
+        }
+      });
+    }
+    return flattened;
+  };
+
+  // Helper to convert UI permission array to backend object
+  const unflattenPermissions = (perms: string[]): any => {
+    const obj: any = {};
+    perms.forEach(p => {
+      const [resource, action] = p.split('.');
+      if (resource && action) {
+        if (!obj[resource]) obj[resource] = {};
+        // Direct 1:1 mapping - no conversion needed
+        obj[resource][action] = true;
+      }
+    });
+    return obj;
+  };
+
   // Preencher formulário quando editando
   useEffect(() => {
     if (isOpen) {
@@ -82,7 +117,8 @@ export function UserFormModal({
           funcao: user.funcao || 'vendedor',
           telefone: user.telefone || '',
           ativo: user.ativo ?? true,
-          permissoes: user.permissoes || []
+          // Flatten permissions from backend object format to array for UI
+          permissoes: flattenPermissions(user.permissoes)
         });
       } else {
         // Resetar para novo usuário
@@ -171,7 +207,7 @@ export function UserFormModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -191,7 +227,7 @@ export function UserFormModal({
           funcao: formData.funcao,
           telefone: formData.telefone || undefined,
           ativo: formData.ativo,
-          permissoes: formData.permissoes
+          permissoes: unflattenPermissions(formData.permissoes)
         } as UpdateUserRequest;
 
         // Adicionar senha apenas se preenchida
@@ -207,19 +243,19 @@ export function UserFormModal({
           funcao: formData.funcao,
           telefone: formData.telefone || undefined,
           ativo: formData.ativo,
-          permissoes: formData.permissoes
+          permissoes: unflattenPermissions(formData.permissoes)
         } as CreateUserRequest;
       }
 
       const success = await onSubmit(userData);
-      
+
       if (success) {
         onClose();
       }
     } catch (error) {
       console.error('Erro ao salvar usuário:', error);
-      setErrors({ 
-        general: error instanceof Error ? error.message : 'Erro ao salvar usuário' 
+      setErrors({
+        general: error instanceof Error ? error.message : 'Erro ao salvar usuário'
       });
     } finally {
       setIsSubmitting(false);
@@ -228,7 +264,7 @@ export function UserFormModal({
 
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     // Limpar erro do campo quando usuário começar a digitar
     if (errors[field as keyof FormErrors]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
@@ -238,7 +274,7 @@ export function UserFormModal({
   const formatPhone = (value: string) => {
     // Remove tudo que não é número
     const numbers = value.replace(/\D/g, '');
-    
+
     // Aplica máscara (XX) XXXXX-XXXX
     if (numbers.length <= 2) {
       return numbers;
@@ -280,11 +316,11 @@ export function UserFormModal({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
         {/* Overlay */}
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
           onClick={onClose}
         />
-        
+
         {/* Modal */}
         <div className="relative w-full max-w-2xl bg-white rounded-lg shadow-xl">
           {/* Header */}
@@ -324,9 +360,8 @@ export function UserFormModal({
                   type="text"
                   value={formData.nome}
                   onChange={(e) => handleInputChange('nome', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                    errors.nome ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.nome ? 'border-red-300' : 'border-gray-300'
+                    }`}
                   placeholder="Digite o nome completo"
                   disabled={isSubmitting}
                 />
@@ -348,9 +383,8 @@ export function UserFormModal({
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                      errors.email ? 'border-red-300' : 'border-gray-300'
-                    }`}
+                    className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.email ? 'border-red-300' : 'border-gray-300'
+                      }`}
                     placeholder="usuario@exemplo.com"
                     disabled={isSubmitting}
                   />
@@ -373,9 +407,8 @@ export function UserFormModal({
                     type="text"
                     value={formData.telefone}
                     onChange={(e) => handlePhoneChange(e.target.value)}
-                    className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                      errors.telefone ? 'border-red-300' : 'border-gray-300'
-                    }`}
+                    className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.telefone ? 'border-red-300' : 'border-gray-300'
+                      }`}
                     placeholder="(11) 99999-9999"
                     disabled={isSubmitting}
                   />
@@ -449,9 +482,8 @@ export function UserFormModal({
                     type={showPassword ? 'text' : 'password'}
                     value={formData.senha}
                     onChange={(e) => handleInputChange('senha', e.target.value)}
-                    className={`w-full px-3 py-2 pr-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                      errors.senha ? 'border-red-300' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 pr-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.senha ? 'border-red-300' : 'border-gray-300'
+                      }`}
                     placeholder={isEditing ? 'Nova senha (opcional)' : 'Digite a senha'}
                     disabled={isSubmitting}
                   />
@@ -482,9 +514,8 @@ export function UserFormModal({
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={formData.confirmarSenha}
                     onChange={(e) => handleInputChange('confirmarSenha', e.target.value)}
-                    className={`w-full px-3 py-2 pr-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                      errors.confirmarSenha ? 'border-red-300' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 pr-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.confirmarSenha ? 'border-red-300' : 'border-gray-300'
+                      }`}
                     placeholder="Confirme a senha"
                     disabled={isSubmitting}
                   />
@@ -533,25 +564,51 @@ export function UserFormModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto border border-gray-200 rounded-md p-3">
-                {(ROLE_PERMISSIONS[formData.funcao] || []).map((permission) => (
-                  <label key={permission} className="flex items-center text-sm">
-                    <input
-                      type="checkbox"
-                      checked={formData.permissoes.includes(permission)}
-                      onChange={() => togglePermission(permission)}
-                      className="mr-2 text-orange-600 focus:ring-orange-500"
-                      disabled={isSubmitting}
-                    />
-                    <span className="text-gray-700">{permission}</span>
-                  </label>
+              <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-md p-4 space-y-4">
+                {/* Group permissions by category */}
+                {Object.entries(
+                  DEFAULT_PERMISSIONS.reduce((acc, permission) => {
+                    if (!acc[permission.category]) {
+                      acc[permission.category] = [];
+                    }
+                    acc[permission.category].push(permission);
+                    return acc;
+                  }, {} as Record<string, typeof DEFAULT_PERMISSIONS>)
+                ).map(([category, permissions]) => (
+                  <div key={category} className="border-b border-gray-200 last:border-b-0 pb-4 last:pb-0">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-2 capitalize">
+                      {category === 'usuarios' ? 'Usuários' :
+                        category === 'leads' ? 'Leads' :
+                          category === 'proposals' ? 'Propostas' :
+                            category === 'tasks' ? 'Tarefas' :
+                              category === 'kanban' ? 'Kanban' :
+                                category === 'whatsapp' ? 'WhatsApp' :
+                                  category === 'configuracoes' ? 'Configurações' :
+                                    category === 'dashboard' ? 'Dashboard' :
+                                      category === 'relatorios' ? 'Relatórios' : category}
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {permissions.map((permission) => (
+                        <label key={permission.id} className="flex items-center text-sm" title={permission.description}>
+                          <input
+                            type="checkbox"
+                            checked={formData.permissoes.includes(permission.id)}
+                            onChange={() => togglePermission(permission.id)}
+                            className="mr-2 text-orange-600 focus:ring-orange-500"
+                            disabled={isSubmitting}
+                          />
+                          <span className="text-gray-700">{permission.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
-              
+
               {errors.permissoes && (
                 <p className="mt-1 text-sm text-red-600">{errors.permissoes}</p>
               )}
-              
+
               <p className="mt-2 text-xs text-gray-500">
                 {formData.permissoes.length} permissão(ões) selecionada(s)
               </p>

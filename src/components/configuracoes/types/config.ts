@@ -1,7 +1,5 @@
 // Tipos para o sistema de gerenciamento de usuários
 
-// Tipos para o sistema de gerenciamento de usuários
-
 export interface User {
   id: string;
   nome: string;
@@ -9,7 +7,7 @@ export interface User {
   funcao: 'admin' | 'gerente' | 'vendedor' | 'suporte' | 'comercial' | 'financeiro';
   ativo: boolean;
   telefone?: string;
-  permissoes: string[];
+  permissoes: string[] | any; // Can be array (old) or object (new structure)
   dataCriacao: string;
   dataAtualizacao: string;
   ultimoLogin?: string;
@@ -23,203 +21,175 @@ export interface Permission {
   category: string;
 }
 
-// Categorias de permissões disponíveis
+// Categorias de permissões
 export const PERMISSION_CATEGORIES = {
+  DASHBOARD: 'dashboard',
   LEADS: 'leads',
-  PROPOSTAS: 'propostas',
+  TASKS: 'tasks',
   KANBAN: 'kanban',
+  PROPOSALS: 'proposals',
   WHATSAPP: 'whatsapp',
   CONFIGURACOES: 'configuracoes',
   USUARIOS: 'usuarios',
   RELATORIOS: 'relatorios',
 } as const;
 
-// Permissões padrão do sistema
+// Permissões padrão do sistema (mapeadas para a estrutura do backend)
 export const DEFAULT_PERMISSIONS: Permission[] = [
+  // Users (Usuários)
+  { id: 'usuarios.view', name: 'Visualizar Usuários', description: 'Pode visualizar lista de usuários', category: PERMISSION_CATEGORIES.USUARIOS },
+  { id: 'usuarios.create', name: 'Criar Usuários', description: 'Pode criar novos usuários', category: PERMISSION_CATEGORIES.USUARIOS },
+  { id: 'usuarios.edit', name: 'Editar Usuários', description: 'Pode editar usuários existentes', category: PERMISSION_CATEGORIES.USUARIOS },
+  { id: 'usuarios.delete', name: 'Excluir Usuários', description: 'Pode excluir usuários', category: PERMISSION_CATEGORIES.USUARIOS },
+
   // Leads
-  { id: 'leads.read', name: 'Visualizar Leads', description: 'Pode visualizar a lista de leads', category: PERMISSION_CATEGORIES.LEADS },
-  { id: 'leads.write', name: 'Gerenciar Leads', description: 'Pode criar, editar e excluir leads', category: PERMISSION_CATEGORIES.LEADS },
+  { id: 'leads.view', name: 'Visualizar Leads', description: 'Pode visualizar a lista de leads', category: PERMISSION_CATEGORIES.LEADS },
+  { id: 'leads.create', name: 'Criar Leads', description: 'Pode criar novos leads', category: PERMISSION_CATEGORIES.LEADS },
+  { id: 'leads.edit', name: 'Editar Leads', description: 'Pode editar leads existentes', category: PERMISSION_CATEGORIES.LEADS },
+  { id: 'leads.delete', name: 'Excluir Leads', description: 'Pode excluir leads', category: PERMISSION_CATEGORIES.LEADS },
   { id: 'leads.assign', name: 'Atribuir Leads', description: 'Pode atribuir leads a outros usuários', category: PERMISSION_CATEGORIES.LEADS },
-  
-  // Propostas
-  { id: 'propostas.read', name: 'Visualizar Propostas', description: 'Pode visualizar propostas', category: PERMISSION_CATEGORIES.PROPOSTAS },
-  { id: 'propostas.write', name: 'Gerenciar Propostas', description: 'Pode criar, editar e excluir propostas', category: PERMISSION_CATEGORIES.PROPOSTAS },
-  { id: 'propostas.approve', name: 'Aprovar Propostas', description: 'Pode aprovar ou rejeitar propostas', category: PERMISSION_CATEGORIES.PROPOSTAS },
-  
+
+  // Proposals (alias - proposals)
+  { id: 'proposals.view', name: 'Visualizar Propostas', description: 'Pode visualizar propostas', category: PERMISSION_CATEGORIES.PROPOSALS },
+  { id: 'proposals.create', name: 'Criar Propostas', description: 'Pode criar novas propostas', category: PERMISSION_CATEGORIES.PROPOSALS },
+  { id: 'proposals.edit', name: 'Editar Propostas', description: 'Pode editar propostas existentes', category: PERMISSION_CATEGORIES.PROPOSALS },
+  { id: 'proposals.delete', name: 'Excluir Propostas', description: 'Pode excluir propostas', category: PERMISSION_CATEGORIES.PROPOSALS },
+  { id: 'proposals.approve', name: 'Aprovar Propostas', description: 'Pode aprovar ou rejeitar propostas', category: PERMISSION_CATEGORIES.PROPOSALS },
+
   // Kanban
-  { id: 'kanban.read', name: 'Visualizar Kanban', description: 'Pode visualizar o quadro kanban', category: PERMISSION_CATEGORIES.KANBAN },
-  { id: 'kanban.write', name: 'Gerenciar Kanban', description: 'Pode mover cards e gerenciar o kanban', category: PERMISSION_CATEGORIES.KANBAN },
-  
+  { id: 'kanban.view', name: 'Visualizar Kanban', description: 'Pode visualizar o quadro kanban', category: PERMISSION_CATEGORIES.KANBAN },
+  { id: 'kanban.create', name: 'Criar Cards', description: 'Pode criar novos cards no kanban', category: PERMISSION_CATEGORIES.KANBAN },
+  { id: 'kanban.edit', name: 'Editar Kanban', description: 'Pode editar cards do kanban', category: PERMISSION_CATEGORIES.KANBAN },
+  { id: 'kanban.delete', name: 'Excluir Cards', description: 'Pode excluir cards do kanban', category: PERMISSION_CATEGORIES.KANBAN },
+  { id: 'kanban.assign', name: 'Atribuir Cards', description: 'Pode atribuir cards a outros usuários', category: PERMISSION_CATEGORIES.KANBAN },
+
   // WhatsApp
-  { id: 'whatsapp.read', name: 'Visualizar WhatsApp', description: 'Pode visualizar conversas do WhatsApp', category: PERMISSION_CATEGORIES.WHATSAPP },
-  { id: 'whatsapp.write', name: 'Enviar WhatsApp', description: 'Pode enviar mensagens via WhatsApp', category: PERMISSION_CATEGORIES.WHATSAPP },
-  
+  { id: 'whatsapp.view', name: 'Visualizar WhatsApp', description: 'Pode visualizar conversas do WhatsApp', category: PERMISSION_CATEGORIES.WHATSAPP },
+  { id: 'whatsapp.create', name: 'Criar Mensagens', description: 'Pode criar mensagens no WhatsApp', category: PERMISSION_CATEGORIES.WHATSAPP },
+  { id: 'whatsapp.edit', name: 'Editar WhatsApp', description: 'Pode editar configurações do WhatsApp', category: PERMISSION_CATEGORIES.WHATSAPP },
+  { id: 'whatsapp.delete', name: 'Excluir Mensagens', description: 'Pode excluir mensagens do WhatsApp', category: PERMISSION_CATEGORIES.WHATSAPP },
+
   // Configurações
-  { id: 'configuracoes.read', name: 'Visualizar Configurações', description: 'Pode visualizar configurações do sistema', category: PERMISSION_CATEGORIES.CONFIGURACOES },
-  { id: 'configuracoes.write', name: 'Gerenciar Configurações', description: 'Pode alterar configurações do sistema', category: PERMISSION_CATEGORIES.CONFIGURACOES },
-  
-  // Usuários
-  { id: 'usuarios.read', name: 'Visualizar Usuários', description: 'Pode visualizar lista de usuários', category: PERMISSION_CATEGORIES.USUARIOS },
-  { id: 'usuarios.write', name: 'Gerenciar Usuários', description: 'Pode criar, editar e excluir usuários', category: PERMISSION_CATEGORIES.USUARIOS },
-  
-  // Relatórios
-  { id: 'relatorios.read', name: 'Visualizar Relatórios', description: 'Pode visualizar relatórios', category: PERMISSION_CATEGORIES.RELATORIOS },
+  { id: 'configuracoes.view', name: 'Visualizar Configurações', description: 'Pode visualizar configurações do sistema', category: PERMISSION_CATEGORIES.CONFIGURACOES },
+  { id: 'configuracoes.create', name: 'Criar Configurações', description: 'Pode criar novas configurações', category: PERMISSION_CATEGORIES.CONFIGURACOES },
+  { id: 'configuracoes.edit', name: 'Editar Configurações', description: 'Pode alterar configurações do sistema', category: PERMISSION_CATEGORIES.CONFIGURACOES },
+  { id: 'configuracoes.delete', name: 'Excluir Configurações', description: 'Pode excluir configurações', category: PERMISSION_CATEGORIES.CONFIGURACOES },
+
+  // Dashboard
+  { id: 'dashboard.view', name: 'Visualizar Dashboard', description: 'Pode acessar o dashboard', category: PERMISSION_CATEGORIES.DASHBOARD },
+
+
+  // Reports (Relatórios)
+  { id: 'relatorios.view', name: 'Visualizar Relatórios', description: 'Pode visualizar relatórios', category: PERMISSION_CATEGORIES.RELATORIOS },
   { id: 'relatorios.export', name: 'Exportar Relatórios', description: 'Pode exportar relatórios', category: PERMISSION_CATEGORIES.RELATORIOS },
+
+  // Tasks (Tarefas)
+  { id: 'tasks.view', name: 'Visualizar Tarefas', description: 'Pode visualizar tarefas', category: PERMISSION_CATEGORIES.TASKS },
+  { id: 'tasks.create', name: 'Criar Tarefas', description: 'Pode criar novas tarefas', category: PERMISSION_CATEGORIES.TASKS },
+  { id: 'tasks.edit', name: 'Editar Tarefas', description: 'Pode alterar tarefas', category: PERMISSION_CATEGORIES.TASKS },
+  { id: 'tasks.delete', name: 'Excluir Tarefas', description: 'Pode excluir tarefas', category: PERMISSION_CATEGORIES.TASKS },
+
 ];
 
-// Funções padrão e suas permissões
+// Funções padrão e suas permissões (sincronizadas com o backend)
 export const ROLE_PERMISSIONS: Record<User['funcao'], string[]> = {
   admin: ['all'], // Administrador tem todas as permissões
   gerente: [
-    'leads.read', 'leads.write', 'leads.assign',
-    'propostas.read', 'propostas.write', 'propostas.approve',
-    'kanban.read', 'kanban.write',
-    'whatsapp.read', 'whatsapp.write',
-    'relatorios.read', 'relatorios.export',
-    'usuarios.read'
+    'usuarios.view', 'usuarios.create', 'usuarios.edit', // Gerente não pode deletar usuários
+    'leads.view', 'leads.create', 'leads.edit', 'leads.delete', 'leads.assign',
+    'propostas.view', 'propostas.create', 'propostas.edit', 'propostas.delete', 'propostas.approve',
+    'proposals.view', 'proposals.create', 'proposals.edit', 'proposals.delete', 'proposals.approve',
+    'kanban.view', 'kanban.create', 'kanban.edit', 'kanban.delete', 'kanban.assign',
+    'whatsapp.view', 'whatsapp.create', 'whatsapp.edit', 'whatsapp.delete',
+    'configuracoes.view', 'configuracoes.edit',
+    'dashboard.view', 'dashboard.create', 'dashboard.edit',
+    'relatorios.view', 'relatorios.export'
   ],
   vendedor: [
-    'leads.read', 'leads.write',
-    'propostas.read', 'propostas.write',
-    'kanban.read', 'kanban.write',
-    'whatsapp.read', 'whatsapp.write'
-  ],
-  suporte: [
-    'leads.read',
-    'kanban.read',
-    'whatsapp.read', 'whatsapp.write',
-    'configuracoes.read'
+    'usuarios.view',
+    'leads.view', 'leads.create', 'leads.edit', 'leads.delete',
+    'propostas.view', 'propostas.create', 'propostas.edit', 'propostas.delete',
+    'proposals.view', 'proposals.create', 'proposals.edit', 'proposals.delete',
+    'kanban.view', 'kanban.create', 'kanban.edit', 'kanban.delete',
+    'whatsapp.view', 'whatsapp.create',
+    'dashboard.view'
   ],
   comercial: [
-    'leads.read',
-    'kanban.read',
-    'whatsapp.read',
-    'configuracoes.read'
+    'usuarios.view',
+    'leads.view', 'leads.create', 'leads.edit', 'leads.delete',
+    'propostas.view', 'propostas.create', 'propostas.edit', 'propostas.delete',
+    'proposals.view', 'proposals.create', 'proposals.edit', 'proposals.delete',
+    'kanban.view', 'kanban.create', 'kanban.edit', 'kanban.delete',
+    'whatsapp.view', 'whatsapp.create',
+    'dashboard.view'
+  ],
+  suporte: [
+    'usuarios.view',
+    'leads.view', 'leads.edit',
+    'propostas.view',
+    'proposals.view',
+    'kanban.view', 'kanban.create', 'kanban.edit', 'kanban.delete',
+    'whatsapp.view',
+    'dashboard.view'
   ],
   financeiro: [
-    'leads.read',
-    'kanban.read',
-    'whatsapp.read',
-    'configuracoes.read'
+    'usuarios.view',
+    'leads.view',
+    'propostas.view',
+    'proposals.view',
+    'kanban.view', 'kanban.create', 'kanban.edit', 'kanban.delete',
+    'dashboard.view',
+    'relatorios.view', 'relatorios.export'
   ]
 };
 
-// Função para verificar se um usuário tem uma permissão específica
-export function hasPermission(user: User, permission: string): boolean {
-  if (user.permissoes.includes('all')) {
-    return true;
+// Função auxiliar para obter permissões padrão por função
+export function getDefaultPermissionsByRole(funcao: User['funcao']): string[] {
+  return ROLE_PERMISSIONS[funcao] || [];
+}
+
+// Função auxiliar para verificar se usuário tem permissão
+export function hasPermission(user: User | null, permission: string): boolean {
+  if (!user) return false;
+
+  // Admin sempre tem todas as permissões
+  if (user.funcao === 'admin') return true;
+
+  // Verificar se permissões é array
+  if (Array.isArray(user.permissoes)) {
+    return user.permissoes.includes(permission) || user.permissoes.includes('all');
   }
-  return user.permissoes.includes(permission);
-}
 
-// Função para verificar se um usuário tem pelo menos uma das permissões
-export function hasAnyPermission(user: User, permissions: string[]): boolean {
-  if (user.permissoes.includes('all')) {
-    return true;
-  }
-  return permissions.some(permission => user.permissoes.includes(permission));
-}
-
-// Função para obter permissões padrão por função
-export function getDefaultPermissionsByRole(role: User['funcao']): string[] {
-  return ROLE_PERMISSIONS[role] || [];
-}
-
-// Função para agrupar permissões por categoria
-export function groupPermissionsByCategory(permissions: Permission[]): Record<string, Permission[]> {
-  return permissions.reduce((acc, permission) => {
-    if (!acc[permission.category]) {
-      acc[permission.category] = [];
+  // Verificar se permissões é objeto (nova estrutura)
+  if (user.permissoes && typeof user.permissoes === 'object') {
+    const [resource, action] = permission.split('.');
+    if (resource && action && user.permissoes[resource]) {
+      return user.permissoes[resource][action] === true || user.permissoes[resource][action] === 'own';
     }
-    acc[permission.category].push(permission);
-    return acc;
-  }, {} as Record<string, Permission[]>);
-}
-
-// Função para validar email
-export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-// Função para validar telefone brasileiro
-export function isValidPhone(phone: string): boolean {
-  const phoneRegex = /^\(\d{2}\)\s\d{4,5}-\d{4}$/;
-  return phoneRegex.test(phone);
-}
-
-// Função para formatar telefone
-export function formatPhone(phone: string): string {
-  const numbers = phone.replace(/\D/g, '');
-  if (numbers.length === 11) {
-    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`;
-  } else if (numbers.length === 10) {
-    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
   }
-  return phone;
+
+  return false;
 }
 
-// Função para gerar iniciais do nome
-export function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map(word => word.charAt(0))
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+// Função auxiliar para verificar se usuário tem alguma das permissões
+export function hasAnyPermission(user: User | null, permissions: string[]): boolean {
+  if (!user) return false;
+  return permissions.some(permission => hasPermission(user, permission));
 }
 
-// Função para formatar data para exibição
-export function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('pt-BR');
-}
-
-// Função para formatar data e hora para exibição
-export function formatDateTime(dateString: string): string {
-  const date = new Date(dateString);
-  return `${date.toLocaleDateString('pt-BR')} às ${date.toLocaleTimeString('pt-BR', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  })}`;
-}
-
-// Função para calcular tempo desde o último login
-export function getTimeSinceLastLogin(lastLogin?: string): string {
-  if (!lastLogin) return 'Nunca';
-  
-  const now = new Date();
-  const loginDate = new Date(lastLogin);
-  const diffMs = now.getTime() - loginDate.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
-  
-  if (diffDays > 0) {
-    return `${diffDays} dia${diffDays > 1 ? 's' : ''} atrás`;
-  } else if (diffHours > 0) {
-    return `${diffHours} hora${diffHours > 1 ? 's' : ''} atrás`;
-  } else if (diffMinutes > 0) {
-    return `${diffMinutes} minuto${diffMinutes > 1 ? 's' : ''} atrás`;
-  } else {
-    return 'Agora mesmo';
-  }
-}
-
-
-
-export interface DashboardConfig {
-  layout: 'grid' | 'list';
-  widgets: string[];
-}
-
+// Configurações de Layout
 export interface LayoutConfig {
   nomeEmpresa: string;
   logo: string;
   corPrimaria: string;
   tema: 'light' | 'dark';
-  configuracoesDashboard: DashboardConfig;
+  configuracoesDashboard: {
+    layout: 'grid' | 'list';
+    widgets: string[];
+  };
 }
 
+// Configurações do WhatsApp
 export interface WhatsAppConfig {
   nome: string;
   numero: string;

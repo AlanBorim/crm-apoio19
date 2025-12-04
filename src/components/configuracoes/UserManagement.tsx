@@ -152,16 +152,38 @@ export function UserManagement({
       .slice(0, 2);
   };
 
-  const getPermissionsText = (permissoes: string[] | undefined) => {
-    if (!permissoes || !Array.isArray(permissoes)) {
-      return '0 permissões';
+  const getPermissionsText = (permissoes: any) => {
+    // Check if user is admin by role
+    const isAdminUser = (userId: string) => {
+      const user = safeUsers.find(u => u.id === userId);
+      return user?.funcao?.toLowerCase() === 'admin';
+    };
+
+    // If it's an admin, show "Todas"
+    // We'll need to check this differently now
+
+    // New permission structure: object with resources
+    if (permissoes && typeof permissoes === 'object' && !Array.isArray(permissoes)) {
+      // Count total permissions
+      let totalPermissions = 0;
+      Object.keys(permissoes).forEach(resource => {
+        if (permissoes[resource] && typeof permissoes[resource] === 'object') {
+          totalPermissions += Object.keys(permissoes[resource]).length;
+        }
+      });
+
+      return totalPermissions > 0 ? `${totalPermissions} permissões` : 'Configurar';
     }
 
-    if (permissoes.includes('all')) {
-      return 'Todas';
+    // Old permission structure: array
+    if (permissoes && Array.isArray(permissoes)) {
+      if (permissoes.includes('all')) {
+        return 'Todas';
+      }
+      return permissoes.length > 0 ? `${permissoes.length} permissões` : '0 permissões';
     }
 
-    return `${permissoes.length} permissões`;
+    return 'Não configurado';
   };
 
   // Handlers do modal - SEMPRE usa modal interno se useInternalModal for true
@@ -500,171 +522,172 @@ export function UserManagement({
 
       {/* Lista de usuários */}
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        {loading.list && safeUsers.length === 0 ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 size={32} className="animate-spin text-gray-400" />
-            <span className="ml-2 text-gray-500">Carregando usuários...</span>
-          </div>
-        ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left">
-                  <input
-                    type="checkbox"
-                    checked={safeSelectedUsers.length === safeUsers.length && safeUsers.length > 0}
-                    onChange={handleSelectAll}
-                    className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Usuário
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Função
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Último Login
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Permissões
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {safeUsers.length === 0 && !loading.list ? (
+        <div className="overflow-x-auto">
+          {loading.list && safeUsers.length === 0 ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 size={32} className="animate-spin text-gray-400" />
+              <span className="ml-2 text-gray-500">Carregando usuários...</span>
+            </div>
+          ) : (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                    <div className="flex flex-col items-center">
-                      <Users size={48} className="text-gray-300 mb-4" />
-                      <p className="text-lg font-medium text-gray-900 mb-2">
-                        {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
-                      </p>
-                      <p className="text-sm text-gray-500 mb-4">
-                        {searchTerm
-                          ? 'Tente ajustar os filtros de busca.'
-                          : apiStatus === false
-                            ? 'Configure a API para ver usuários reais ou use os dados de exemplo.'
-                            : 'Comece criando o primeiro usuário do sistema.'
-                        }
-                      </p>
-                      {!searchTerm && (
-                        <button
-                          onClick={handleCreateUser}
-                          className="inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600"
-                        >
-                          <Plus size={16} className="mr-2" />
-                          Criar Primeiro Usuário
-                        </button>
-                      )}
-                    </div>
-                  </td>
+                  <th className="px-6 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={safeSelectedUsers.length === safeUsers.length && safeUsers.length > 0}
+                      onChange={handleSelectAll}
+                      className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                    />
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Usuário
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Função
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Último Login
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Permissões
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Ações
+                  </th>
                 </tr>
-              ) : (
-                safeUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <input
-                        type="checkbox"
-                        checked={isUserSelected(user.id)}
-                        onChange={() => handleSelectUser(user.id)}
-                        className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
-                      />
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-sm font-medium text-orange-600">
-                          {getUserInitials(user.nome)}
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{user.nome}</div>
-                          <div className="text-sm text-gray-500 flex items-center">
-                            <Mail size={12} className="mr-1" />
-                            {user.email}
-                          </div>
-                          {user.telefone && (
-                            <div className="text-sm text-gray-500 flex items-center">
-                              <Phone size={12} className="mr-1" />
-                              {user.telefone}
-                            </div>
-                          )}
-                        </div>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {safeUsers.length === 0 && !loading.list ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <Users size={48} className="text-gray-300 mb-4" />
+                        <p className="text-lg font-medium text-gray-900 mb-2">
+                          {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
+                        </p>
+                        <p className="text-sm text-gray-500 mb-4">
+                          {searchTerm
+                            ? 'Tente ajustar os filtros de busca.'
+                            : apiStatus === false
+                              ? 'Configure a API para ver usuários reais ou use os dados de exemplo.'
+                              : 'Comece criando o primeiro usuário do sistema.'
+                          }
+                        </p>
+                        {!searchTerm && (
+                          <button
+                            onClick={handleCreateUser}
+                            className="inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600"
+                          >
+                            <Plus size={16} className="mr-2" />
+                            Criar Primeiro Usuário
+                          </button>
+                        )}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getFuncaoColor(user.funcao)}`}>
-                        {user.funcao}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => handleToggleUserStatus(user)}
-                        disabled={String(currentUser?.id) === String(user.id)}
-                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold transition-colors ${String(currentUser?.id) === String(user.id)
+                  </tr>
+                ) : (
+                  safeUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <input
+                          type="checkbox"
+                          checked={isUserSelected(user.id)}
+                          onChange={() => handleSelectUser(user.id)}
+                          className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-sm font-medium text-orange-600">
+                            {getUserInitials(user.nome)}
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">{user.nome}</div>
+                            <div className="text-sm text-gray-500 flex items-center">
+                              <Mail size={12} className="mr-1" />
+                              {user.email}
+                            </div>
+                            {user.telefone && (
+                              <div className="text-sm text-gray-500 flex items-center">
+                                <Phone size={12} className="mr-1" />
+                                {user.telefone}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getFuncaoColor(user.funcao)}`}>
+                          {user.funcao}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => handleToggleUserStatus(user)}
+                          disabled={String(currentUser?.id) === String(user.id)}
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold transition-colors ${String(currentUser?.id) === String(user.id)
                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                             : user.ativo
                               ? 'bg-green-100 text-green-800 hover:bg-green-200'
                               : 'bg-red-100 text-red-800 hover:bg-red-200'
-                          }`}
-                        title={
-                          String(currentUser?.id) === String(user.id)
-                            ? 'Você não pode desativar seu próprio usuário'
-                            : user.ativo ? 'Clique para desativar' : 'Clique para ativar'
-                        }
-                      >
-                        {user.ativo ? (
-                          <>
-                            <Power size={12} className="mr-1" />
-                            Ativo
-                          </>
-                        ) : (
-                          <>
-                            <PowerOff size={12} className="mr-1" />
-                            Inativo
-                          </>
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4">
-                      {user.ultimoLogin ? (
-                        <div className="text-sm text-gray-900 flex items-center">
-                          <Calendar size={12} className="mr-1" />
-                          <div>
-                            {formatDate(user.ultimoLogin)}
-                            <br />
-                            <span className="text-xs text-gray-500">
-                              {formatTime(user.ultimoLogin)}
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-500">Nunca</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <Shield size={16} className="mr-2 text-gray-400" />
-                        <span className="text-sm text-gray-900">
-                          {getPermissionsText(user.permissoes)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleEditUserInternal(user)}
-                          className="text-gray-400 hover:text-blue-600 transition-colors"
-                          title="Editar usuário"
+                            }`}
+                          title={
+                            String(currentUser?.id) === String(user.id)
+                              ? 'Você não pode desativar seu próprio usuário'
+                              : user.ativo ? 'Clique para desativar' : 'Clique para ativar'
+                          }
                         >
-                          <Edit size={16} />
+                          {user.ativo ? (
+                            <>
+                              <Power size={12} className="mr-1" />
+                              Ativo
+                            </>
+                          ) : (
+                            <>
+                              <PowerOff size={12} className="mr-1" />
+                              Inativo
+                            </>
+                          )}
                         </button>
-                        {/* <button
+                      </td>
+                      <td className="px-6 py-4">
+                        {user.ultimoLogin ? (
+                          <div className="text-sm text-gray-900 flex items-center">
+                            <Calendar size={12} className="mr-1" />
+                            <div>
+                              {formatDate(user.ultimoLogin)}
+                              <br />
+                              <span className="text-xs text-gray-500">
+                                {formatTime(user.ultimoLogin)}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-500">Nunca</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center">
+                          <Shield size={16} className="mr-2 text-gray-400" />
+                          <span className="text-sm text-gray-900">
+                            {getPermissionsText(user.permissoes)}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleEditUserInternal(user)}
+                            className="text-gray-400 hover:text-blue-600 transition-colors"
+                            title="Editar usuário"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          {/* <button
                           onClick={() => handleToggleUserStatus(user)}
                           className={`transition-colors ${
                             user.ativo 
@@ -693,14 +716,15 @@ export function UserManagement({
                         >
                           <MoreHorizontal size={16} />
                         </button> */}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
       {/* Paginação */}

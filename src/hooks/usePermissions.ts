@@ -43,29 +43,42 @@ export function usePermissions() {
     /**
      * Check if user has permission for an action on a resource
      * 
-     * @param resource - Resource name (e.g., 'leads', 'users')
-     * @param action - Action name (e.g., 'view', 'create', 'edit', 'delete')
+     * @param resource - Resource name (e.g., 'leads', 'users', 'usuarios')
+     * @param action - Action name (e.g., 'view', 'create', 'edit', 'delete', 'assign', 'approve')
      * @param ownerId - Optional owner ID for ownership-based permissions
      * @returns boolean indicating if user has permission
      */
     const can = (
-        resource: keyof Permissions,
+        resource: string,
         action: string,
-        ownerId?: number
+        ownerId?: number | string
     ): boolean => {
         if (!user || !user.permissions) {
             return false;
         }
 
+        // Admin always has full access
+        if (user.funcao === 'admin' || user.role?.toLowerCase() === 'admin') {
+            return true;
+        }
+
         const permissions = user.permissions;
-        const resourcePermissions = permissions[resource];
+
+        // Handle array-based permissions (old format)
+        if (Array.isArray(permissions)) {
+            if (permissions.includes('all')) return true;
+            return permissions.includes(`${resource}.${action}`);
+        }
+
+        // Handle object-based permissions (new format)
+        const resourcePermissions = (permissions as any)[resource];
 
         if (!resourcePermissions) {
             return false;
         }
 
         // Check if action exists
-        const permission = (resourcePermissions as any)[action];
+        const permission = resourcePermissions[action];
 
         if (permission === undefined) {
             return false;
@@ -79,17 +92,17 @@ export function usePermissions() {
         // Ownership-based permission ('own')
         if (permission === 'own') {
             if (ownerId === undefined || ownerId === null) {
-                // No owner specified, can't verify ownership
-                return false;
+                // No owner specified, allow for listing but server will filter
+                return true;
             }
             // Check if user is the owner
-            return user.id === ownerId;
+            return String(user.id) === String(ownerId);
         }
 
         // Team-based permission ('team') - future implementation
         if (permission === 'team') {
             // TODO: Implement team-based permission checks
-            return false;
+            return true; // Allow for now, server will filter
         }
 
         return false;
@@ -113,12 +126,26 @@ export function usePermissions() {
      * Check if user can perform action on ANY resource
      * Useful for showing/hiding entire sections
      */
-    const canAny = (resource: keyof Permissions): boolean => {
+    const canAny = (resource: string): boolean => {
         if (!user || !user.permissions) {
             return false;
         }
 
-        const resourcePermissions = user.permissions[resource];
+        // Admin always has access
+        if (user.funcao === 'admin' || user.role?.toLowerCase() === 'admin') {
+            return true;
+        }
+
+        const permissions = user.permissions;
+
+        // Handle array-based permissions
+        if (Array.isArray(permissions)) {
+            if (permissions.includes('all')) return true;
+            return permissions.some(p => p.startsWith(`${resource}.`));
+        }
+
+        // Handle object-based permissions
+        const resourcePermissions = (permissions as any)[resource];
         if (!resourcePermissions) {
             return false;
         }
