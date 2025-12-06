@@ -6,6 +6,7 @@ import { ForgotPasswordForm } from './components/forgotPassword/ForgotPasswordFo
 import { PasswordResetSent } from './components/forgotPassword/PasswordResetSent';
 import { ResetPasswordForm } from './components/forgotPassword/ResetPasswordForm';
 import { PasswordResetSuccess } from './components/forgotPassword/PasswordResetSuccess';
+import { AccessDenied } from './components/AccessDenied';
 import { MainLayout } from './components/MainLayout';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { LeadsModule } from './components/leads/LeadsModule';
@@ -20,12 +21,13 @@ import { isTokenExpired, refreshToken } from './utils/auth';
 import { NotificationProvider } from './components/notifications/NotificationSystemDB';
 import { UserProvider } from './hooks/useCurrentUser';
 import { Toaster } from './components/ui/sonner';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
   const { isAuthenticated } = useAuth();
 
-  // Componente para rotas protegidas COM NotificationProvider
-  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  // Componente para rotas autenticadas COM NotificationProvider
+  const AuthGuard = ({ children }: { children: React.ReactNode }) => {
     if (!isAuthenticated) {
       return <Navigate to="/login" replace />;
     }
@@ -41,6 +43,9 @@ function App() {
 
   useEffect(() => {
     setupActivityListeners();
+    // Refresh user data on mount to ensure permissions are up to date
+    const { refreshUser } = useAuth.getState();
+    refreshUser();
   }, []);
 
   useEffect(() => {
@@ -79,45 +84,60 @@ function App() {
           <Route path="/password-reset-sent" element={<PasswordResetSent />} />
           <Route path="/reset-password" element={<ResetPasswordForm />} />
           <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
+          <Route path="/acesso-negado" element={<AccessDenied />} />
 
           {/* Todas as rotas protegidas envolvidas pelo NotificationProvider */}
           <Route path="/*" element={
             isAuthenticated ? (
               <Routes>
                 <Route path="/dashboard" element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
+                  <AuthGuard>
+                    <ProtectedRoute resource="dashboard" action="view">
+                      <Dashboard />
+                    </ProtectedRoute>
+                  </AuthGuard>
                 } />
                 <Route path="/leads" element={
-                  <ProtectedRoute>
-                    <LeadsModule />
-                  </ProtectedRoute>
+                  <AuthGuard>
+                    <ProtectedRoute resource="leads" action="view">
+                      <LeadsModule />
+                    </ProtectedRoute>
+                  </AuthGuard>
                 } />
                 <Route path="/kanban" element={
-                  <ProtectedRoute>
-                    <KanbanBoard />
-                  </ProtectedRoute>
+                  <AuthGuard>
+                    <ProtectedRoute resource="kanban" action="view">
+                      <KanbanBoard />
+                    </ProtectedRoute>
+                  </AuthGuard>
                 } />
                 <Route path="/propostas" element={
-                  <ProtectedRoute>
-                    <ProposalsModule />
-                  </ProtectedRoute>
+                  <AuthGuard>
+                    <ProtectedRoute resource="proposals" action="view">
+                      <ProposalsModule />
+                    </ProtectedRoute>
+                  </AuthGuard>
                 } />
                 <Route path="/configuracoes" element={
-                  <ProtectedRoute>
-                    <ConfigurationsModule />
-                  </ProtectedRoute>
+                  <AuthGuard>
+                    <ProtectedRoute resource="configuracoes" action="view">
+                      <ConfigurationsModule />
+                    </ProtectedRoute>
+                  </AuthGuard>
                 } />
                 <Route path="/whatsapp" element={
-                  <ProtectedRoute>
-                    <WhatsAppModule />
-                  </ProtectedRoute>
+                  <AuthGuard>
+                    <ProtectedRoute resource="whatsapp" action="view">
+                      <WhatsAppModule />
+                    </ProtectedRoute>
+                  </AuthGuard>
                 } />
                 <Route path="/tarefas" element={
-                  <ProtectedRoute>
-                    <TasksModule />
-                  </ProtectedRoute>
+                  <AuthGuard>
+                    <ProtectedRoute resource="tasks" action="view">
+                      <TasksModule />
+                    </ProtectedRoute>
+                  </AuthGuard>
                 } />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
               </Routes>

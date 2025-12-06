@@ -92,60 +92,101 @@ export const DEFAULT_PERMISSIONS: Permission[] = [
 ];
 
 // Funções padrão e suas permissões (sincronizadas com o backend)
-export const ROLE_PERMISSIONS: Record<User['funcao'], string[]> = {
-  admin: ['all'], // Administrador tem todas as permissões
-  gerente: [
-    'usuarios.view', 'usuarios.create', 'usuarios.edit', // Gerente não pode deletar usuários
-    'leads.view', 'leads.create', 'leads.edit', 'leads.delete', 'leads.assign',
-    'propostas.view', 'propostas.create', 'propostas.edit', 'propostas.delete', 'propostas.approve',
-    'proposals.view', 'proposals.create', 'proposals.edit', 'proposals.delete', 'proposals.approve',
-    'kanban.view', 'kanban.create', 'kanban.edit', 'kanban.delete', 'kanban.assign',
-    'whatsapp.view', 'whatsapp.create', 'whatsapp.edit', 'whatsapp.delete',
-    'configuracoes.view', 'configuracoes.edit',
-    'dashboard.view', 'dashboard.create', 'dashboard.edit',
-    'relatorios.view', 'relatorios.export'
-  ],
-  vendedor: [
-    'usuarios.view',
-    'leads.view', 'leads.create', 'leads.edit', 'leads.delete',
-    'propostas.view', 'propostas.create', 'propostas.edit', 'propostas.delete',
-    'proposals.view', 'proposals.create', 'proposals.edit', 'proposals.delete',
-    'kanban.view', 'kanban.create', 'kanban.edit', 'kanban.delete',
-    'whatsapp.view', 'whatsapp.create',
-    'dashboard.view'
-  ],
-  comercial: [
-    'usuarios.view',
-    'leads.view', 'leads.create', 'leads.edit', 'leads.delete',
-    'propostas.view', 'propostas.create', 'propostas.edit', 'propostas.delete',
-    'proposals.view', 'proposals.create', 'proposals.edit', 'proposals.delete',
-    'kanban.view', 'kanban.create', 'kanban.edit', 'kanban.delete',
-    'whatsapp.view', 'whatsapp.create',
-    'dashboard.view'
-  ],
-  suporte: [
-    'usuarios.view',
-    'leads.view', 'leads.edit',
-    'propostas.view',
-    'proposals.view',
-    'kanban.view', 'kanban.create', 'kanban.edit', 'kanban.delete',
-    'whatsapp.view',
-    'dashboard.view'
-  ],
-  financeiro: [
-    'usuarios.view',
-    'leads.view',
-    'propostas.view',
-    'proposals.view',
-    'kanban.view', 'kanban.create', 'kanban.edit', 'kanban.delete',
-    'dashboard.view',
-    'relatorios.view', 'relatorios.export'
-  ]
+export const ROLE_PERMISSIONS: Record<User['funcao'], any> = {
+  admin: {
+    usuarios: { view: true, create: true, edit: true, delete: true, scope: 'all' },
+    leads: { view: true, create: true, edit: true, delete: true, assign: true, scope: 'all' },
+    proposals: { view: true, create: true, edit: true, delete: true, approve: true, scope: 'all' },
+    kanban: { view: true, create: true, edit: true, delete: true, assign: true, scope: 'all' },
+    whatsapp: { view: true, create: true, edit: true, delete: true, scope: 'all' },
+    configuracoes: { view: true, create: true, edit: true, delete: true },
+    dashboard: { view: true, scope: 'all' },
+    relatorios: { view: true, export: true, scope: 'all' },
+    tasks: { view: true, create: true, edit: true, delete: true, scope: 'all' }
+  },
+  gerente: {
+    usuarios: { view: true, create: true, edit: true, delete: false, scope: 'all' },
+    leads: { view: true, create: true, edit: true, delete: true, assign: true, scope: 'team' },
+    proposals: { view: true, create: true, edit: true, delete: true, approve: true, scope: 'team' },
+    kanban: { view: true, create: true, edit: true, delete: true, assign: true, scope: 'team' },
+    whatsapp: { view: true, create: true, edit: true, delete: false, scope: 'team' },
+    configuracoes: { view: true, create: false, edit: false, delete: false },
+    dashboard: { view: true, scope: 'team' },
+    relatorios: { view: true, export: true, scope: 'team' },
+    tasks: { view: true, create: true, edit: true, delete: true, scope: 'team' }
+  },
+  vendedor: {
+    usuarios: { view: true, create: false, edit: false, delete: false },
+    leads: { view: true, create: true, edit: true, delete: true, scope: 'own' },
+    proposals: { view: true, create: true, edit: true, delete: true, scope: 'own' },
+    kanban: { view: true, create: true, edit: true, delete: true, scope: 'own' },
+    whatsapp: { view: true, create: true, edit: true, delete: false, scope: 'own' },
+    configuracoes: { view: false, create: false, edit: false, delete: false },
+    dashboard: { view: true, scope: 'own' },
+    relatorios: { view: true, export: false, scope: 'own' },
+    tasks: { view: true, create: true, edit: true, delete: false, scope: 'own' }
+  },
+  suporte: {
+    usuarios: { view: true, create: false, edit: false, delete: false },
+    leads: { view: true, create: false, edit: true, delete: false, scope: 'team' },
+    proposals: { view: true, create: false, edit: false, delete: false, scope: 'team' },
+    kanban: { view: true, create: true, edit: true, delete: true, scope: 'team' },
+    whatsapp: { view: true, create: true, edit: true, delete: false, scope: 'team' },
+    configuracoes: { view: false, create: false, edit: false, delete: false },
+    dashboard: { view: true, scope: 'team' },
+    relatorios: { view: true, export: false, scope: 'team' },
+    tasks: { view: true, create: true, edit: true, delete: false, scope: 'team' }
+  },
+  comercial: {
+    usuarios: { view: true, create: false, edit: false, delete: false },
+    leads: { view: true, create: true, edit: true, delete: true, scope: 'team' },
+    proposals: { view: true, create: true, edit: true, delete: true, scope: 'team' },
+    kanban: { view: true, create: true, edit: true, delete: true, scope: 'team' },
+    whatsapp: { view: true, create: true, edit: true, delete: false, scope: 'team' },
+    configuracoes: { view: false, create: false, edit: false, delete: false },
+    dashboard: { view: true, scope: 'team' },
+    relatorios: { view: true, export: false, scope: 'team' },
+    tasks: { view: true, create: true, edit: true, delete: false, scope: 'team' }
+  },
+  financeiro: {
+    usuarios: { view: true, create: false, edit: false, delete: false },
+    leads: { view: true, create: false, edit: false, delete: false, scope: 'all' },
+    proposals: { view: true, create: false, edit: false, delete: false, scope: 'all' },
+    kanban: { view: true, create: true, edit: true, delete: true, scope: 'own' },
+    whatsapp: { view: false, create: false, edit: false, delete: false },
+    configuracoes: { view: true, create: false, edit: false, delete: false },
+    dashboard: { view: true, scope: 'all' },
+    relatorios: { view: true, export: true, scope: 'all' },
+    tasks: { view: true, create: true, edit: true, delete: false, scope: 'own' }
+  }
 };
 
-// Função auxiliar para obter permissões padrão por função
+// Função auxiliar para obter permissões padrão por função (retorna array de strings para compatibilidade UI)
 export function getDefaultPermissionsByRole(funcao: User['funcao']): string[] {
-  return ROLE_PERMISSIONS[funcao] || [];
+  const rolePerms = ROLE_PERMISSIONS[funcao];
+  if (!rolePerms) return [];
+
+  const flattened: string[] = [];
+
+  // Admin tem acesso total
+  if (funcao === 'admin') {
+    // Retorna todas as permissões do sistema
+    return DEFAULT_PERMISSIONS.map(p => p.id);
+  }
+
+  Object.keys(rolePerms).forEach(resource => {
+    const perms = rolePerms[resource];
+    if (typeof perms === 'object') {
+      Object.keys(perms).forEach(action => {
+        // Ignora a propriedade 'scope' e verifica se a ação é verdadeira
+        if (action !== 'scope' && perms[action] === true) {
+          flattened.push(`${resource}.${action}`);
+        }
+      });
+    }
+  });
+
+  return flattened;
 }
 
 // Função auxiliar para verificar se usuário tem permissão

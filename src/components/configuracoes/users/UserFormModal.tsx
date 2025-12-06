@@ -302,7 +302,7 @@ export function UserFormModal({
   };
 
   const selectAllPermissions = () => {
-    const allPermissions = ROLE_PERMISSIONS[formData.funcao] || [];
+    const allPermissions = DEFAULT_PERMISSIONS.map(p => p.id);
     setFormData(prev => ({ ...prev, permissoes: [...allPermissions] }));
   };
 

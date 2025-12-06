@@ -232,7 +232,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                     </div>
                     <div className="ml-2 hidden md:block">
                       <div className="text-sm font-medium text-gray-700">{user?.nome || 'Usuário'}</div>
-                      <div className="text-xs text-gray-500">{user?.funcao || 'Função'}</div>
+                      <div className="text-xs text-gray-500">{user?.role || 'Role'}</div>
                     </div>
                     <ChevronDown size={16} className="ml-1 hidden text-gray-400 md:block" />
                   </div>

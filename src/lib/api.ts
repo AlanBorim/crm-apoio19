@@ -138,6 +138,12 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     throw new Error('Sessão expirada. Por favor, faça login novamente.');
   }
 
+  if (response.status === 403) {
+    // Redirecionar para página de acesso negado
+    window.location.href = '/acesso-negado';
+    throw new Error('Acesso negado. Você não tem permissão para realizar esta ação.');
+  }
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
     throw new Error(errorData.error || errorData.message || `Erro HTTP ${response.status}`);

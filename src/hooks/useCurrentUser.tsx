@@ -1,6 +1,6 @@
 // hooks/useCurrentUser.tsx - Hook para obter usuário atual
 
-import { useState, useEffect, useContext, createContext } from 'react';
+import React, { useState, useEffect, useContext, createContext } from 'react';
 
 // Interface do usuário
 export interface User {
@@ -52,16 +52,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         //   throw new Error('Usuário não autenticado');
         // }
 
-        // OPÇÃO 3: Usuário padrão para desenvolvimento
-        const defaultUser: User = {
-          id: 1,
-          name: 'Usuário Padrão',
-          email: 'usuario@exemplo.com',
-          role: 'admin'
-        };
-        
-        setUser(defaultUser);
-        
+        // OPÇÃO 3: Usuário padrão para desenvolvimento (REMOVIDO PARA EVITAR PERMISSÕES INDEVIDAS)
+        // const defaultUser: User = {
+        //   id: 1,
+        //   name: 'Usuário Padrão',
+        //   email: 'usuario@exemplo.com',
+        //   role: 'admin'
+        // };
+
+        // setUser(defaultUser);
+        setUser(null); // Default to null if no user found
+
+
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar usuário';
         setError(errorMessage);
@@ -84,7 +86,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 // Hook principal para usar o contexto de usuário
 export function useCurrentUser() {
   const context = useContext(UserContext);
-  
+
   if (!context) {
     throw new Error('useCurrentUser deve ser usado dentro de um UserProvider');
   }
@@ -95,30 +97,30 @@ export function useCurrentUser() {
 // Hook simplificado que retorna apenas o ID do usuário
 export function useUserId(): number {
   const { user, loading } = useCurrentUser();
-  
+
   // Se ainda está carregando, retorna ID padrão
   if (loading || !user) {
     return 1; // ID padrão para desenvolvimento
   }
-  
+
   return user.id;
 }
 
 // Hook que retorna o usuário ou um usuário padrão
 export function useUserWithFallback(): User {
   const { user, loading } = useCurrentUser();
-  
+
   // Usuário padrão para fallback
   const defaultUser: User = {
     id: 1,
     name: 'Usuário Padrão',
     email: 'usuario@exemplo.com'
   };
-  
+
   if (loading || !user) {
     return defaultUser;
   }
-  
+
   return user;
 }
 
@@ -165,7 +167,7 @@ export function useAuth() {
       //   headers: { 'Content-Type': 'application/json' },
       //   body: JSON.stringify({ email, password })
       // });
-      
+
       // if (response.ok) {
       //   const userData = await response.json();
       //   setUser(userData);
@@ -179,7 +181,7 @@ export function useAuth() {
         email,
         role: 'user'
       };
-      
+
       setUser(userData);
       localStorage.setItem('currentUser', JSON.stringify(userData));
     } catch (error) {

@@ -37,6 +37,7 @@ interface AuthState {
   logout: () => void;
   clearError: () => void;
   initializeAuth: () => void;
+  refreshUser: () => Promise<boolean>;
 }
 
 export const useAuth = create<AuthState>((set: any) => ({
@@ -143,6 +144,40 @@ export const useAuth = create<AuthState>((set: any) => ({
   },
 
   clearError: () => set({ error: null }),
+
+  refreshUser: async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+
+    try {
+      // Call refresh endpoint to get fresh user data
+      const response = await fetch('/api/refresh', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const { access_token, user } = data;
+
+        if (access_token) {
+          localStorage.setItem('token', access_token);
+        }
+
+        if (user) {
+          localStorage.setItem('user', JSON.stringify(user));
+          set({ user, token: access_token || token, isAuthenticated: true });
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+      return false;
+    }
+  }
 }));
 
 // Inicializar autenticação ao carregar o módulo
