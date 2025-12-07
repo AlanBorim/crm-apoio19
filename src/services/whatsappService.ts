@@ -97,5 +97,31 @@ export const whatsappService = {
 
   deleteTemplate: async (id: number): Promise<void> => {
     await apiRequest(`/whatsapp/templates/${id}`, { method: 'DELETE' });
+  },
+
+  // Configurações
+  getConfig: async (): Promise<any> => {
+    const response = await apiRequest('/whatsapp/config', { method: 'GET' });
+    return response.data;
+  },
+
+  saveConfig: async (data: any): Promise<void> => {
+    await apiRequest('/whatsapp/config', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  testConnection: async (): Promise<any> => {
+    const response = await apiRequest('/whatsapp/test-connection', { method: 'POST' });
+    return response;
+  },
+
+  sendTestMessage: async (number: string, message: string): Promise<any> => {
+    const response = await apiRequest('/whatsapp/test-message', {
+      method: 'POST',
+      body: JSON.stringify({ number, message })
+    });
+    return response;
   }
 };

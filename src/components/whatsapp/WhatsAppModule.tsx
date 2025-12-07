@@ -2,15 +2,14 @@ import { useState } from 'react';
 import {
   MessageSquare,
   Send,
-  BarChart3,
-  Settings
+  BarChart3
 } from 'lucide-react';
 import { ContactList } from './ContactList';
 import { ChatInterface } from './ChatInterface';
 import { CampaignManager } from './CampaignManager';
 import { WhatsAppContact } from './types/whatsapp';
 
-type WhatsAppView = 'chat' | 'campaigns' | 'analytics' | 'settings';
+type WhatsAppView = 'chat' | 'campaigns' | 'analytics';
 
 export function WhatsAppModule() {
   const [activeView, setActiveView] = useState<WhatsAppView>('chat');
@@ -35,12 +34,6 @@ export function WhatsAppModule() {
       name: 'Relatórios',
       icon: <BarChart3 size={20} />,
       description: 'Métricas e análises'
-    },
-    {
-      id: 'settings' as WhatsAppView,
-      name: 'Configurações',
-      icon: <Settings size={20} />,
-      description: 'Configurar WhatsApp'
     }
   ];
 
@@ -74,7 +67,7 @@ export function WhatsAppModule() {
                 selectedContactId={selectedContact?.id}
               />
             </div>
-            
+
             {/* Chat Interface - Hidden on mobile when no contact selected */}
             <div className={`w-full lg:w-2/3 ${!showMobileChat ? 'hidden lg:block' : 'block'}`}>
               <ChatInterface
@@ -84,7 +77,7 @@ export function WhatsAppModule() {
             </div>
           </div>
         );
-      
+
       case 'campaigns':
         return (
           <CampaignManager
@@ -92,13 +85,10 @@ export function WhatsAppModule() {
             onEditCampaign={handleEditCampaign}
           />
         );
-      
+
       case 'analytics':
         return <WhatsAppAnalytics />;
-      
-      case 'settings':
-        return <WhatsAppSettings />;
-      
+
       default:
         return null;
     }
@@ -132,15 +122,13 @@ export function WhatsAppModule() {
                       setSelectedContact(null);
                     }
                   }}
-                  className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    activeView === view.id
-                      ? 'bg-white text-orange-600 shadow-sm'
-                      : 'text-gray-700 hover:text-gray-900'
-                  }`}
+                  className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors ${activeView === view.id
+                    ? 'bg-white text-orange-600 shadow-sm'
+                    : 'text-gray-700 hover:text-gray-900'
+                    }`}
                 >
-                  <div className={`mr-2 ${
-                    activeView === view.id ? 'text-orange-500' : 'text-gray-400'
-                  }`}>
+                  <div className={`mr-2 ${activeView === view.id ? 'text-orange-500' : 'text-gray-400'
+                    }`}>
                     {view.icon}
                   </div>
                   <span className="hidden sm:inline">{view.name}</span>
@@ -155,7 +143,7 @@ export function WhatsAppModule() {
       <div className="flex-1 overflow-hidden">
         {renderContent()}
       </div>
-    </div>
+    </div >
   );
 }
 
@@ -168,55 +156,38 @@ function WhatsAppAnalytics() {
           <BarChart3 size={24} className="mr-2" />
           Relatórios WhatsApp
         </h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-blue-50 p-6 rounded-lg">
             <div className="text-2xl font-bold text-blue-600">1,234</div>
             <div className="text-sm text-gray-600">Mensagens Enviadas</div>
             <div className="text-xs text-green-600 mt-1">+12% este mês</div>
           </div>
-          
+
           <div className="bg-green-50 p-6 rounded-lg">
             <div className="text-2xl font-bold text-green-600">89%</div>
             <div className="text-sm text-gray-600">Taxa de Entrega</div>
             <div className="text-xs text-green-600 mt-1">+3% este mês</div>
           </div>
-          
+
           <div className="bg-purple-50 p-6 rounded-lg">
             <div className="text-2xl font-bold text-purple-600">67%</div>
             <div className="text-sm text-gray-600">Taxa de Leitura</div>
             <div className="text-xs text-red-600 mt-1">-2% este mês</div>
           </div>
-          
+
           <div className="bg-orange-50 p-6 rounded-lg">
             <div className="text-2xl font-bold text-orange-600">156</div>
             <div className="text-sm text-gray-600">Novos Contatos</div>
             <div className="text-xs text-green-600 mt-1">+8% este mês</div>
           </div>
         </div>
-        
+
         <p className="text-gray-600">Relatórios detalhados em desenvolvimento...</p>
       </div>
     </div>
   );
 }
 
-function WhatsAppSettings() {
-  return (
-    <div className="p-6">
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-          <Settings size={24} className="mr-2" />
-          Configurações WhatsApp
-        </h2>
-        <p className="text-gray-600">
-          Configurações específicas do módulo WhatsApp em desenvolvimento...
-          <br />
-          Para configurações de integração, acesse o menu Configurações → WhatsApp.
-        </p>
-      </div>
-    </div>
-  );
-}
 
 

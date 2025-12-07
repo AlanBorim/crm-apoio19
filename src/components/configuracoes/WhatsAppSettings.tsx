@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   MessageSquare,
   Phone,
@@ -10,6 +10,7 @@ import {
   Zap
 } from 'lucide-react';
 import { WhatsAppConfig } from './types/config';
+import { whatsappService } from '../../services/whatsappService';
 
 export function WhatsAppSettings() {
   const [config, setConfig] = useState<WhatsAppConfig>({
@@ -44,19 +45,60 @@ export function WhatsAppSettings() {
     { id: 6, nome: 'Sábado' }
   ];
 
-  const handleSave = () => {
-    // Aqui você salvaria as configurações via API
-    console.log('Salvando configurações do WhatsApp:', config);
+  // Load config on mount
+  useEffect(() => {
+    loadConfig();
+  }, []);
+
+  const loadConfig = async () => {
+    try {
+      const data = await whatsappService.getConfig();
+      if (data) {
+        setConfig(prev => ({
+          ...prev,
+          nome: data.name || '',
+          numero: data.phone_number || '',
+        }));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configuração:', error);
+    }
   };
 
-  const handleTest = () => {
-    // Aqui você testaria a conexão com o WhatsApp
-    console.log('Testando conexão WhatsApp');
+  const handleSave = async () => {
+    try {
+      await whatsappService.saveConfig(config);
+      alert('Configurações salvas com sucesso!');
+    } catch (error) {
+      alert('Erro ao salvar configurações');
+      console.error(error);
+    }
   };
 
-  const handleSendTestMessage = () => {
-    // Aqui você enviaria uma mensagem de teste
-    console.log('Enviando mensagem de teste:', { number: testNumber, message: testMessage });
+  const handleTest = async () => {
+    try {
+      await whatsappService.testConnection();
+      alert('Conexão testada com sucesso!');
+    } catch (error) {
+      alert('Erro ao testar conexão');
+      console.error(error);
+    }
+  };
+
+  const handleSendTestMessage = async () => {
+    if (!testNumber || !testMessage) {
+      alert('Preencha número e mensagem');
+      return;
+    }
+    try {
+      await whatsappService.sendTestMessage(testNumber, testMessage);
+      alert('Mensagem enviada com sucesso!');
+      setTestMessage('');
+      setTestNumber('');
+    } catch (error) {
+      alert('Erro ao enviar mensagem');
+      console.error(error);
+    }
   };
 
   const toggleDiaSemana = (diaId: number) => {

@@ -15,6 +15,7 @@ import {
 import { User } from '../types/config';
 import { CreateUserRequest, UpdateUserRequest } from '../../../services/userService';
 import { getDefaultPermissionsByRole, ROLE_PERMISSIONS, DEFAULT_PERMISSIONS } from '../types/config';
+import { useAuth } from '../../../hooks/useAuth';
 
 interface UserFormModalProps {
   isOpen: boolean;
@@ -69,6 +70,12 @@ export function UserFormModal({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Get current logged-in user to check permissions
+  const { user: currentUser } = useAuth();
+  const isAdmin = currentUser?.role === 'admin';
+  // Admin can edit permissions for any user, including themselves
+  const canEditPermissions = isAdmin;
 
   // Helper to convert backend permission object to array of strings for UI
   const flattenPermissions = (perms: any): string[] => {
@@ -137,15 +144,16 @@ export function UserFormModal({
     }
   }, [isOpen, user]);
 
-  // Atualizar permissões quando função mudar
+  // Auto-populate permissions when role changes (only for admin)
   useEffect(() => {
-    if (!isEditing) {
+    // Only auto-populate if admin is creating/editing AND can edit permissions
+    if (canEditPermissions) {
       setFormData(prev => ({
         ...prev,
         permissoes: getDefaultPermissionsByRole(prev.funcao)
       }));
     }
-  }, [formData.funcao, isEditing]);
+  }, [formData.funcao, canEditPermissions]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -422,12 +430,16 @@ export function UserFormModal({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Função *
+                  {!canEditPermissions && (
+                    <span className="ml-2 text-xs text-gray-500">(somente admin pode alterar)</span>
+                  )}
                 </label>
                 <select
                   value={formData.funcao}
                   onChange={(e) => handleInputChange('funcao', e.target.value as User['funcao'])}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  disabled={isSubmitting}
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${!canEditPermissions ? 'bg-gray-100 cursor-not-allowed' : ''
+                    }`}
+                  disabled={isSubmitting || !canEditPermissions}
                 >
                   <option value="admin">Administrador</option>
                   <option value="gerente">Gerente</option>
@@ -543,21 +555,24 @@ export function UserFormModal({
                 <label className="block text-sm font-medium text-gray-700">
                   <Shield size={16} className="inline mr-1" />
                   Permissões *
+                  {!canEditPermissions && (
+                    <span className="ml-2 text-xs text-gray-500">(somente admin pode alterar)</span>
+                  )}
                 </label>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={selectAllPermissions}
-                    className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded"
-                    disabled={isSubmitting}
+                    className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSubmitting || !canEditPermissions}
                   >
                     Selecionar Todas
                   </button>
                   <button
                     type="button"
                     onClick={clearAllPermissions}
-                    className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded"
-                    disabled={isSubmitting}
+                    className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSubmitting || !canEditPermissions}
                   >
                     Limpar Todas
                   </button>
@@ -594,8 +609,8 @@ export function UserFormModal({
                             type="checkbox"
                             checked={formData.permissoes.includes(permission.id)}
                             onChange={() => togglePermission(permission.id)}
-                            className="mr-2 text-orange-600 focus:ring-orange-500"
-                            disabled={isSubmitting}
+                            className="mr-2 text-orange-600 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={isSubmitting || !canEditPermissions}
                           />
                           <span className="text-gray-700">{permission.name}</span>
                         </label>

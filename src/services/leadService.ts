@@ -419,6 +419,7 @@ class LeadService {
     usuario_id: string;
     acao: string;
     observacao: string;
+    temperatura?: string;
   }): Promise<ApiResponse<any>> {
     try {
       const token = localStorage.getItem('token');

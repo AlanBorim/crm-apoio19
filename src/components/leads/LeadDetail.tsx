@@ -70,6 +70,7 @@ interface Interaction {
   descricao: string;
   data_interacao: string;
   usuario?: string;
+  temperatura?: string; // New field
   // Campos alternativos para compatibilidade
   acao?: string;
   data_acao?: string;
@@ -85,7 +86,8 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
   const [showAddInteraction, setShowAddInteraction] = useState(false);
   const [newInteraction, setNewInteraction] = useState({
     tipo: '',
-    descricao: ''
+    descricao: '',
+    temperatura: '' // Initialize
   });
 
   // Estados para campos dinâmicos
@@ -166,7 +168,8 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
           tipo: item.acao,
           descricao: item.observacao,
           data_interacao: item.data,
-          usuario: item.usuario_nome || 'Desconhecido'
+          usuario: item.usuario_nome || 'Desconhecido',
+          temperatura: item.temperatura // Map temperature
         }));
 
         setInteractions(formatted);
@@ -196,7 +199,8 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
         contato_id: null,
         usuario_id: user.id.toString(),
         acao: newInteraction.tipo,
-        observacao: newInteraction.descricao
+        observacao: newInteraction.descricao,
+        temperatura: newInteraction.temperatura // Send to API
       };
 
       const response = await leadService.addInteraction(interactionPayload);
@@ -207,11 +211,12 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
           tipo: newInteraction.tipo,
           descricao: newInteraction.descricao,
           data_interacao: new Date().toISOString(),
-          usuario: user.nome
+          usuario: user.nome,
+          temperatura: newInteraction.temperatura // Add to local state
         };
 
         setInteractions(prev => [interaction, ...prev]);
-        setNewInteraction({ tipo: '', descricao: '' });
+        setNewInteraction({ tipo: '', descricao: '', temperatura: '' });
         setShowAddInteraction(false);
       } else {
         console.error('Erro na API ao adicionar interação:', response.message);
@@ -590,6 +595,30 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Sentimento do Cliente (Temperatura)
+                    </label>
+                    <div className="flex gap-4">
+                      {['frio', 'morno', 'quente'].map((temp) => (
+                        <label key={temp} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="interactionValues"
+                            value={temp}
+                            checked={newInteraction.temperatura === temp}
+                            onChange={(e) => setNewInteraction(prev => ({ ...prev, temperatura: e.target.value }))}
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          />
+                          <span className="flex items-center gap-1">
+                            {getTemperatureIcon(temp as LeadTemperature)}
+                            <span className="capitalize">{temp}</span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="flex gap-2">
                     <button
                       onClick={handleAddInteraction}
@@ -617,9 +646,16 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
                 interactions.map((interaction) => (
                   <div key={interaction.id} className="border-l-4 border-blue-200 pl-4 py-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-blue-600 capitalize">
-                        {interaction.tipo || interaction.acao}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-blue-600 capitalize">
+                          {interaction.tipo || interaction.acao}
+                        </span>
+                        {interaction.temperatura && (
+                          <span title={`Temperatura: ${interaction.temperatura}`}>
+                            {getTemperatureIcon(interaction.temperatura as LeadTemperature)}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-sm text-gray-500">
                         {formatDate(interaction.data_interacao || interaction.data_acao || '')}
                       </span>
