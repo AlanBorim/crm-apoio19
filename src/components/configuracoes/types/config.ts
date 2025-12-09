@@ -234,6 +234,8 @@ export interface LayoutConfig {
 export interface WhatsAppConfig {
   nome: string;
   numero: string;
+  phoneNumberId: string;
+  businessAccountId: string;
   token: string;
   webhookUrl: string;
   ativo: boolean;

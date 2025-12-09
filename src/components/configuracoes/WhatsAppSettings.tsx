@@ -11,11 +11,14 @@ import {
 } from 'lucide-react';
 import { WhatsAppConfig } from './types/config';
 import { whatsappService } from '../../services/whatsappService';
+import { toast } from 'sonner';
 
 export function WhatsAppSettings() {
   const [config, setConfig] = useState<WhatsAppConfig>({
     nome: '',
     numero: '',
+    phoneNumberId: '',
+    businessAccountId: '',
     token: '',
     webhookUrl: '',
     ativo: false,
@@ -53,11 +56,17 @@ export function WhatsAppSettings() {
   const loadConfig = async () => {
     try {
       const data = await whatsappService.getConfig();
+      console.log(data);
       if (data) {
         setConfig(prev => ({
           ...prev,
           nome: data.name || '',
           numero: data.phone_number || '',
+          phoneNumberId: data.phone_number_id || '',
+          businessAccountId: data.business_account_id || '',
+          token: data.webhook_verify_token || '', // Map correct field
+          webhookUrl: '', // Usually not returned for security or hardcoded in backend
+          ativo: data.status === 'active'
         }));
       }
     } catch (error) {
@@ -67,20 +76,28 @@ export function WhatsAppSettings() {
 
   const handleSave = async () => {
     try {
-      await whatsappService.saveConfig(config);
-      alert('Configurações salvas com sucesso!');
+      const response = await whatsappService.saveConfig(config);
+      toast.success('Configurações salvas com sucesso!');
     } catch (error) {
-      alert('Erro ao salvar configurações');
+      toast.error('Erro ao salvar configurações');
       console.error(error);
     }
   };
 
   const handleTest = async () => {
     try {
-      await whatsappService.testConnection();
-      alert('Conexão testada com sucesso!');
+      const response = await whatsappService.testConnection();
+      if (response && response.connected) {
+        toast.success('Conexão estabelecida com sucesso!', {
+          description: 'API do WhatsApp está acessível.'
+        });
+      } else {
+        toast.error('Falha na conexão', {
+          description: response?.error || 'Não foi possível conectar à API.'
+        });
+      }
     } catch (error) {
-      alert('Erro ao testar conexão');
+      toast.error('Erro ao testar conexão');
       console.error(error);
     }
   };
@@ -92,11 +109,11 @@ export function WhatsAppSettings() {
     }
     try {
       await whatsappService.sendTestMessage(testNumber, testMessage);
-      alert('Mensagem enviada com sucesso!');
+      toast.success('Mensagem enviada com sucesso!');
       setTestMessage('');
       setTestNumber('');
     } catch (error) {
-      alert('Erro ao enviar mensagem');
+      toast.error('Erro ao enviar mensagem');
       console.error(error);
     }
   };
@@ -178,6 +195,32 @@ export function WhatsAppSettings() {
                   onChange={(e) => setConfig(prev => ({ ...prev, numero: e.target.value }))}
                   className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
                   placeholder="+5511999999999"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  ID do Número (Phone Number ID)
+                </label>
+                <input
+                  type="text"
+                  value={config.phoneNumberId}
+                  onChange={(e) => setConfig(prev => ({ ...prev, phoneNumberId: e.target.value }))}
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  placeholder="Ex: 100609346426084"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  ID da Conta Business (WABA ID)
+                </label>
+                <input
+                  type="text"
+                  value={config.businessAccountId}
+                  onChange={(e) => setConfig(prev => ({ ...prev, businessAccountId: e.target.value }))}
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  placeholder="Ex: 100509346426084"
                 />
               </div>
 
@@ -410,7 +453,7 @@ export function WhatsAppSettings() {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 
