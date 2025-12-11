@@ -14,6 +14,7 @@ import { KanbanBoard } from './components/kanban/KanbanBoard';
 import { ProposalsModule } from './components/propostas/ProposalsModule';
 import { ConfigurationsModule } from './components/configuracoes/ConfigurationsModule';
 import { WhatsAppModule } from './components/whatsapp/WhatsAppModule';
+import { WhatsAppConversations } from './components/whatsapp/WhatsAppConversations';
 import { TasksModule } from './components/tarefas/TasksModule';
 import { setupActivityListeners } from './utils/activityTracker';
 import { isUserInactive } from './utils/activityTracker';
@@ -129,6 +130,13 @@ function App() {
                   <AuthGuard>
                     <ProtectedRoute resource="whatsapp" action="view">
                       <WhatsAppModule />
+                    </ProtectedRoute>
+                  </AuthGuard>
+                } />
+                <Route path="/conversas" element={
+                  <AuthGuard>
+                    <ProtectedRoute resource="whatsapp" action="view">
+                      <WhatsAppConversations />
                     </ProtectedRoute>
                   </AuthGuard>
                 } />

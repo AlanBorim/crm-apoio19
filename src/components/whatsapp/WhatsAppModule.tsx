@@ -4,17 +4,13 @@ import {
   Send,
   BarChart3
 } from 'lucide-react';
-import { ContactList } from './ContactList';
-import { ChatInterface } from './ChatInterface';
+import { WhatsAppConversations } from './WhatsAppConversations';
 import { CampaignManager } from './CampaignManager';
-import { WhatsAppContact } from './types/whatsapp';
 
 type WhatsAppView = 'chat' | 'campaigns' | 'analytics';
 
 export function WhatsAppModule() {
   const [activeView, setActiveView] = useState<WhatsAppView>('chat');
-  const [selectedContact, setSelectedContact] = useState<WhatsAppContact | null>(null);
-  const [showMobileChat, setShowMobileChat] = useState(false);
 
   const views = [
     {
@@ -37,16 +33,6 @@ export function WhatsAppModule() {
     }
   ];
 
-  const handleSelectContact = (contact: WhatsAppContact) => {
-    setSelectedContact(contact);
-    setShowMobileChat(true);
-  };
-
-  const handleBackToContacts = () => {
-    setShowMobileChat(false);
-    setSelectedContact(null);
-  };
-
   const handleCreateCampaign = () => {
     console.log('Criar nova campanha');
   };
@@ -58,25 +44,7 @@ export function WhatsAppModule() {
   const renderContent = () => {
     switch (activeView) {
       case 'chat':
-        return (
-          <div className="flex h-full">
-            {/* Contact List - Hidden on mobile when chat is open */}
-            <div className={`w-full lg:w-1/3 ${showMobileChat ? 'hidden lg:block' : 'block'}`}>
-              <ContactList
-                onSelectContact={handleSelectContact}
-                selectedContactId={selectedContact?.id}
-              />
-            </div>
-
-            {/* Chat Interface - Hidden on mobile when no contact selected */}
-            <div className={`w-full lg:w-2/3 ${!showMobileChat ? 'hidden lg:block' : 'block'}`}>
-              <ChatInterface
-                selectedContact={selectedContact}
-                onBackToContacts={handleBackToContacts}
-              />
-            </div>
-          </div>
-        );
+        return <WhatsAppConversations />;
 
       case 'campaigns':
         return (
@@ -96,48 +64,39 @@ export function WhatsAppModule() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header - Only show on non-chat views or when no contact selected */}
-      {(activeView !== 'chat' || !showMobileChat) && (
-        <div className="p-6 border-b border-gray-200 bg-white">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                <MessageSquare size={28} className="mr-3" />
-                WhatsApp
-              </h1>
-              <p className="text-gray-600">Gerencie conversas e campanhas do WhatsApp</p>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <div className="mt-6">
-            <nav className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-              {views.map((view) => (
-                <button
-                  key={view.id}
-                  onClick={() => {
-                    setActiveView(view.id);
-                    if (view.id !== 'chat') {
-                      setShowMobileChat(false);
-                      setSelectedContact(null);
-                    }
-                  }}
-                  className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors ${activeView === view.id
-                    ? 'bg-white text-orange-600 shadow-sm'
-                    : 'text-gray-700 hover:text-gray-900'
-                    }`}
-                >
-                  <div className={`mr-2 ${activeView === view.id ? 'text-orange-500' : 'text-gray-400'
-                    }`}>
-                    {view.icon}
-                  </div>
-                  <span className="hidden sm:inline">{view.name}</span>
-                </button>
-              ))}
-            </nav>
+      {/* Header */}
+      <div className="p-6 border-b border-gray-200 bg-white">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+              <MessageSquare size={28} className="mr-3" />
+              WhatsApp
+            </h1>
+            <p className="text-gray-600">Gerencie conversas e campanhas do WhatsApp</p>
           </div>
         </div>
-      )}
+
+        {/* Navigation */}
+        <div className="mt-6">
+          <nav className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+            {views.map((view) => (
+              <button
+                key={view.id}
+                onClick={() => setActiveView(view.id)}
+                className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors ${activeView === view.id
+                    ? 'bg-white text-orange-600 shadow-sm'
+                    : 'text-gray-700 hover:text-gray-900'
+                  }`}
+              >
+                <div className={`mr-2 ${activeView === view.id ? 'text-orange-500' : 'text-gray-400'}`}>
+                  {view.icon}
+                </div>
+                <span className="hidden sm:inline">{view.name}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
 
       {/* Content */}
       <div className="flex-1 overflow-hidden">

@@ -123,5 +123,37 @@ export const whatsappService = {
       body: JSON.stringify({ number, message })
     });
     return response;
+  },
+
+  // Conversations
+  getConversations: async (): Promise<any> => {
+    const response = await apiRequest('/whatsapp/conversations', { method: 'GET' });
+    return response.data;
+  },
+
+  getMessages: async (contactId: number, limit = 100, offset = 0): Promise<any> => {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString()
+    });
+    const response = await apiRequest(`/whatsapp/conversations/${contactId}/messages?${params}`, {
+      method: 'GET'
+    });
+    return response.data;
+  },
+
+  sendMessage: async (contactId: number, message: string): Promise<any> => {
+    const response = await apiRequest(`/whatsapp/conversations/${contactId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ message })
+    });
+    return response;
+  },
+
+  markAsRead: async (contactId: number): Promise<void> => {
+    // Messages are marked as read when fetching them
+    await apiRequest(`/whatsapp/conversations/${contactId}/messages?limit=1`, {
+      method: 'GET'
+    });
   }
 };

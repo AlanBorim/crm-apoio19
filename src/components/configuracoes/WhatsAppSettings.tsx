@@ -87,13 +87,14 @@ export function WhatsAppSettings() {
   const handleTest = async () => {
     try {
       const response = await whatsappService.testConnection();
-      if (response && response.connected) {
+      // The connected property is inside response.data, not at the root
+      if (response?.data?.connected) {
         toast.success('Conexão estabelecida com sucesso!', {
           description: 'API do WhatsApp está acessível.'
         });
       } else {
         toast.error('Falha na conexão', {
-          description: response?.error || 'Não foi possível conectar à API.'
+          description: response?.data?.error || 'Não foi possível conectar à API.'
         });
       }
     } catch (error) {
