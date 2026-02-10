@@ -130,16 +130,16 @@ export function WhatsAppConversations() {
     };
 
     return (
-        <div className="flex h-[calc(100vh-200px)] gap-4">
+        <div className="flex h-[calc(90vh-200px)] gap-4">
             {/* Conversation List */}
-            <Card className="w-80 flex flex-col">
-                <CardHeader>
+            <Card className="w-80 flex flex-col overflow-hidden">
+                <CardHeader className="flex-shrink-0">
                     <CardTitle className="flex items-center gap-2">
                         <MessageCircle className="h-5 w-5" />
                         Conversas WhatsApp
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="flex-1 p-0">
+                <CardContent className="flex-1 overflow-hidden p-0">
                     <ScrollArea className="h-full">
                         <div className="p-4 space-y-2">
                             {conversations.length === 0 ? (
@@ -161,15 +161,15 @@ export function WhatsAppConversations() {
                                                 </AvatarFallback>
                                             </Avatar>
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-between">
+                                                <div className="flex items-center justify-between gap-2">
                                                     <span className="font-medium truncate">{contact.name}</span>
                                                     {contact.unread_count > 0 && (
-                                                        <span className="ml-2 bg-primary text-primary-foreground text-xs rounded-full px-2 py-0.5">
+                                                        <span className="ml-2 bg-primary text-primary-foreground text-xs rounded-full px-2 py-0.5 flex-shrink-0">
                                                             {contact.unread_count}
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-sm text-muted-foreground truncate">
+                                                <p className="text-sm text-muted-foreground truncate break-all">
                                                     {contact.phone_number}
                                                 </p>
                                                 {contact.last_message && (

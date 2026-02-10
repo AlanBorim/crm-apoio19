@@ -27,48 +27,6 @@ export interface Template {
 }
 
 export const whatsappService = {
-  // Campanhas
-  getCampaigns: async (): Promise<Campaign[]> => {
-    const response = await apiRequest('/whatsapp/campaigns', { method: 'GET' });
-    return response.data;
-  },
-
-  getCampaign: async (id: number): Promise<Campaign> => {
-    const response = await apiRequest(`/whatsapp/campaigns/${id}`, { method: 'GET' });
-    return response.data;
-  },
-
-  createCampaign: async (data: Partial<Campaign>): Promise<Campaign> => {
-    const response = await apiRequest('/whatsapp/campaigns', {
-      method: 'POST',
-      body: JSON.stringify(data)
-    });
-    return response.data;
-  },
-
-  updateCampaign: async (id: number, data: Partial<Campaign>): Promise<void> => {
-    await apiRequest(`/whatsapp/campaigns/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
-    });
-  },
-
-  startCampaign: async (id: number): Promise<void> => {
-    await apiRequest(`/whatsapp/campaigns/${id}/start`, { method: 'POST' });
-  },
-
-  pauseCampaign: async (id: number): Promise<void> => {
-    await apiRequest(`/whatsapp/campaigns/${id}/pause`, { method: 'POST' });
-  },
-
-  cancelCampaign: async (id: number): Promise<void> => {
-    await apiRequest(`/whatsapp/campaigns/${id}/cancel`, { method: 'POST' });
-  },
-
-  deleteCampaign: async (id: number): Promise<void> => {
-    await apiRequest(`/whatsapp/campaigns/${id}`, { method: 'DELETE' });
-  },
-
   // Templates
   getTemplates: async (): Promise<Template[]> => {
     const response = await apiRequest('/whatsapp/templates', { method: 'GET' });
@@ -155,5 +113,118 @@ export const whatsappService = {
     await apiRequest(`/whatsapp/conversations/${contactId}/messages?limit=1`, {
       method: 'GET'
     });
+  },
+
+  // Phone Numbers Management
+  syncPhoneNumbers: async (): Promise<any> => {
+    const response = await apiRequest('/whatsapp/phone-numbers/sync', {
+      method: 'POST'
+    });
+    return response.data;
+  },
+
+  getPhoneNumbers: async (): Promise<any> => {
+    const response = await apiRequest('/whatsapp/phone-numbers', {
+      method: 'GET'
+    });
+    return response.data;
+  },
+
+  // Campaign Management
+  getCampaignContacts: async (campaignId: number): Promise<any> => {
+    const response = await apiRequest(`/whatsapp/campaigns/${campaignId}/contacts`, {
+      method: 'GET'
+    });
+    return response.data;
+  },
+
+  getCampaigns: async (filters?: { status?: string; search?: string }): Promise<any> => {
+    const queryParams = new URLSearchParams();
+    if (filters?.status) queryParams.append('status', filters.status);
+    if (filters?.search) queryParams.append('search', filters.search);
+
+    const url = `/whatsapp/campaigns${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await apiRequest(url, {
+      method: 'GET'
+    });
+    console.log('[getCampaigns] Resposta completa:', response);
+    console.log('[getCampaigns] response.data:', response.data);
+    return response.data;
+  },
+
+  getCampaign: async (id: number): Promise<any> => {
+    const response = await apiRequest(`/whatsapp/campaigns/${id}`, {
+      method: 'GET'
+    });
+    return response.data;
+  },
+
+  createCampaign: async (data: any): Promise<any> => {
+    const response = await apiRequest('/whatsapp/campaigns', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    return response.data;
+  },
+
+  updateCampaign: async (id: number, data: any): Promise<any> => {
+    const response = await apiRequest(`/whatsapp/campaigns/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+    return response.data;
+  },
+
+  deleteCampaign: async (id: number): Promise<any> => {
+    const response = await apiRequest(`/whatsapp/campaigns/${id}`, {
+      method: 'DELETE'
+    });
+    return response.data;
+  },
+
+  updateCampaignStatus: async (id: number, status: string): Promise<any> => {
+    const response = await apiRequest(`/whatsapp/campaigns/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    });
+    return response.data;
+  },
+
+  // Campaign Messages Management
+  getCampaignMessages: async (campaignId: number): Promise<any> => {
+    const response = await apiRequest(`/whatsapp/campaigns/${campaignId}/messages`, {
+      method: 'GET'
+    });
+    return response.data;
+  },
+
+  createCampaignMessage: async (campaignId: number, data: any): Promise<any> => {
+    const response = await apiRequest(`/whatsapp/campaigns/${campaignId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    return response.data;
+  },
+
+  updateCampaignMessage: async (campaignId: number, messageId: number, data: any): Promise<any> => {
+    const response = await apiRequest(`/whatsapp/campaigns/${campaignId}/messages/${messageId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+    return response.data;
+  },
+
+  deleteCampaignMessage: async (campaignId: number, messageId: number): Promise<any> => {
+    const response = await apiRequest(`/whatsapp/campaigns/${campaignId}/messages/${messageId}`, {
+      method: 'DELETE'
+    });
+    return response.data;
+  },
+
+  resendCampaignMessage: async (campaignId: number, messageId: number): Promise<any> => {
+    const response = await apiRequest(`/whatsapp/campaigns/${campaignId}/messages/${messageId}/resend`, {
+      method: 'POST'
+    });
+    return response.data;
   }
 };
