@@ -158,7 +158,10 @@ export const whatsappService = {
     if (filters?.search) queryParams.append('search', filters.search);
     if (filters?.phoneNumberId) queryParams.append('phone_number_id', filters.phoneNumberId.toString());
 
-    const url = `/whatsapp/campaigns${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const queryString = queryParams.toString();
+    const url = queryString ? `/whatsapp/campaigns?${queryString}` : '/whatsapp/campaigns';
+
+    console.log('[whatsappService] getCampaigns URL:', url);
     const response = await apiRequest(url, {
       method: 'GET'
     });

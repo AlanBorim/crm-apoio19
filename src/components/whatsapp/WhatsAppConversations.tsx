@@ -200,10 +200,10 @@ export function WhatsAppConversations() {
             </Card>
 
             {/* Chat View */}
-            <Card className="flex-1 flex flex-col">
+            <Card className="flex-1 flex flex-col min-h-0 overflow-hidden">
                 {selectedContact ? (
                     <>
-                        <CardHeader className="border-b">
+                        <CardHeader className="border-b flex-shrink-0">
                             <CardTitle className="flex items-center gap-3">
                                 <Avatar>
                                     <AvatarFallback>
@@ -219,8 +219,8 @@ export function WhatsAppConversations() {
                             </CardTitle>
                         </CardHeader>
 
-                        <CardContent className="flex-1 flex flex-col p-0">
-                            <ScrollArea className="flex-1 p-4">
+                        <CardContent className="flex-1 flex flex-col p-0 min-h-0 overflow-hidden">
+                            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
                                 {loading ? (
                                     <div className="flex items-center justify-center h-full">
                                         <p className="text-muted-foreground">Carregando mensagens...</p>
@@ -277,7 +277,7 @@ export function WhatsAppConversations() {
                                         <div ref={messagesEndRef} />
                                     </div>
                                 )}
-                            </ScrollArea>
+                            </div>
 
                             <div className="border-t p-4">
                                 <form onSubmit={handleSendMessage} className="flex gap-2">

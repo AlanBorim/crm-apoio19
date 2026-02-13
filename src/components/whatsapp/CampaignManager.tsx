@@ -79,9 +79,12 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
       }
       if (selectedPhone?.id) {
         filters.phoneNumberId = selectedPhone.id;
+        console.log('[CampaignManager] Filtro phoneNumberId adicionado:', filters.phoneNumberId);
+      } else {
+        console.warn('[CampaignManager] selectedPhone.id está vazio ou indefinido:', selectedPhone);
       }
 
-
+      console.log('[CampaignManager] Chamando getCampaigns com filtros:', filters);
       const data = await whatsappService.getCampaigns(filters);
       console.log('Campanhas recebidas:', data);
       console.log('Tipo de data:', typeof data);
@@ -225,6 +228,18 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
   }
 
   const filteredCampaigns = campaigns.filter(campaign => {
+    // Filtro de Segurança: Garantir que a campanha pertence ao número selecionado
+    // O backend pode retornar tudo se o filtro falhar, então filtramos aqui também.
+    if (selectedPhone && campaign.phone_number_id) {
+      // Converter ambos para string para garantir comparação correta (Meta IDs são grandes)
+      const campaignPhoneId = String(campaign.phone_number_id);
+      const selectedPhoneId = String(selectedPhone.phone_number_id);
+
+      if (campaignPhoneId !== selectedPhoneId) {
+        return false;
+      }
+    }
+
     if (searchTerm && !campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
       !campaign.description?.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
