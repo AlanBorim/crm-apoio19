@@ -84,16 +84,30 @@ export const whatsappService = {
   },
 
   // Conversations
-  getConversations: async (): Promise<any> => {
-    const response = await apiRequest('/whatsapp/conversations', { method: 'GET' });
+  getConversations: async (phoneNumberId?: number): Promise<any> => {
+    const params = new URLSearchParams();
+    if (phoneNumberId) {
+      params.append('phone_number_id', phoneNumberId.toString());
+    }
+    const queryString = params.toString();
+    const url = queryString ? `/whatsapp/conversations?${queryString}` : '/whatsapp/conversations';
+
+    console.log('[whatsappService] getConversations URL:', url);
+
+    const response = await apiRequest(url, { method: 'GET' });
     return response.data;
   },
 
-  getMessages: async (contactId: number, limit = 100, offset = 0): Promise<any> => {
+  getMessages: async (contactId: number, phoneNumberId?: number, limit = 100, offset = 0): Promise<any> => {
     const params = new URLSearchParams({
       limit: limit.toString(),
       offset: offset.toString()
     });
+
+    if (phoneNumberId) {
+      params.append('phone_number_id', phoneNumberId.toString());
+    }
+
     const response = await apiRequest(`/whatsapp/conversations/${contactId}/messages?${params}`, {
       method: 'GET'
     });
@@ -138,10 +152,11 @@ export const whatsappService = {
     return response.data;
   },
 
-  getCampaigns: async (filters?: { status?: string; search?: string }): Promise<any> => {
+  getCampaigns: async (filters?: { status?: string; search?: string; phoneNumberId?: number }): Promise<any> => {
     const queryParams = new URLSearchParams();
     if (filters?.status) queryParams.append('status', filters.status);
     if (filters?.search) queryParams.append('search', filters.search);
+    if (filters?.phoneNumberId) queryParams.append('phone_number_id', filters.phoneNumberId.toString());
 
     const url = `/whatsapp/campaigns${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     const response = await apiRequest(url, {

@@ -16,6 +16,7 @@ import { whatsappService } from '../../services/whatsappService';
 import { toast } from 'sonner';
 import { CampaignFormModal } from './CampaignFormModal';
 import { CampaignMessagesManager } from './CampaignMessagesManager';
+import { useWhatsAppPhone } from '../../contexts/WhatsAppPhoneContext';
 
 interface Campaign {
   id: number;
@@ -53,6 +54,7 @@ interface CampaignManagerProps {
 }
 
 export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignManagerProps) {
+  const { selectedPhone } = useWhatsAppPhone();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -63,7 +65,7 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
 
   useEffect(() => {
     loadCampaigns();
-  }, [statusFilter]);
+  }, [statusFilter, selectedPhone]);
 
   const loadCampaigns = async () => {
     try {
@@ -74,6 +76,9 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
       }
       if (searchTerm) {
         filters.search = searchTerm;
+      }
+      if (selectedPhone?.id) {
+        filters.phoneNumberId = selectedPhone.id;
       }
 
 

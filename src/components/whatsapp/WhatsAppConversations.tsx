@@ -7,6 +7,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Send, MessageCircle, Phone } from 'lucide-react';
 import { toast } from 'sonner';
+import { useWhatsAppPhone } from '../../contexts/WhatsAppPhoneContext';
 
 interface Contact {
     id: number;
@@ -30,6 +31,7 @@ interface Message {
 }
 
 export function WhatsAppConversations() {
+    const { selectedPhone } = useWhatsAppPhone();
     const [conversations, setConversations] = useState<Contact[]>([]);
     const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -49,7 +51,7 @@ export function WhatsAppConversations() {
         }, 30000);
 
         return () => clearInterval(interval);
-    }, [selectedContact]);
+    }, [selectedContact, selectedPhone]);
 
     useEffect(() => {
         scrollToBottom();
@@ -62,7 +64,15 @@ export function WhatsAppConversations() {
     const loadConversations = async () => {
         try {
             console.log('[WhatsApp] Carregando conversas...');
-            const data = await whatsappService.getConversations();
+            console.log('[WhatsApp] Selected Phone Context:', selectedPhone);
+            const phoneNumberId = selectedPhone?.id;
+            console.log('[WhatsApp] Usando phoneNumberId:', phoneNumberId);
+
+            if (!phoneNumberId) {
+                console.warn('[WhatsApp] Nenhum telefone selecionado, abortando carga ou carregando todos?');
+            }
+
+            const data = await whatsappService.getConversations(phoneNumberId);
             console.log('[WhatsApp] Conversas recebidas:', data);
             console.log('[WhatsApp] Total de conversas:', data?.length || 0);
             setConversations(data || []);
@@ -75,7 +85,8 @@ export function WhatsAppConversations() {
     const loadMessages = async (contactId: number, silent = false) => {
         if (!silent) setLoading(true);
         try {
-            const data = await whatsappService.getMessages(contactId);
+            const phoneNumberId = selectedPhone?.id;
+            const data = await whatsappService.getMessages(contactId, phoneNumberId);
             setMessages(data || []);
         } catch (error) {
             console.error('Erro ao carregar mensagens:', error);

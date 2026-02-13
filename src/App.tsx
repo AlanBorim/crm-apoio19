@@ -23,6 +23,7 @@ import { NotificationProvider } from './components/notifications/NotificationSys
 import { UserProvider } from './hooks/useCurrentUser';
 import { Toaster } from './components/ui/sonner';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { WhatsAppPhoneProvider } from './contexts/WhatsAppPhoneContext';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -129,7 +130,9 @@ function App() {
                 <Route path="/whatsapp" element={
                   <AuthGuard>
                     <ProtectedRoute resource="whatsapp" action="view">
-                      <WhatsAppModule />
+                      <WhatsAppPhoneProvider>
+                        <WhatsAppModule />
+                      </WhatsAppPhoneProvider>
                     </ProtectedRoute>
                   </AuthGuard>
                 } />

@@ -1,16 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   MessageSquare,
   Send,
-  BarChart3
+  BarChart3,
+  Phone,
+  ChevronDown
 } from 'lucide-react';
 import { WhatsAppConversations } from './WhatsAppConversations';
 import { CampaignManager } from './CampaignManager';
+import { PhoneNumberSelector } from './PhoneNumberSelector';
+import { useWhatsAppPhone } from '../../contexts/WhatsAppPhoneContext';
 
 type WhatsAppView = 'chat' | 'campaigns' | 'analytics';
 
 export function WhatsAppModule() {
+  const { selectedPhone, setSelectedPhone } = useWhatsAppPhone();
   const [activeView, setActiveView] = useState<WhatsAppView>('chat');
+  const [showPhoneSelector, setShowPhoneSelector] = useState(false);
+
+  // Reset showPhoneSelector when a phone is selected
+  useEffect(() => {
+    if (selectedPhone && showPhoneSelector) {
+      setShowPhoneSelector(false);
+    }
+  }, [selectedPhone]);
+
+  // If no phone is selected, show the selector
+  if (!selectedPhone || showPhoneSelector) {
+    return <PhoneNumberSelector />;
+  }
 
   const views = [
     {
@@ -39,6 +57,10 @@ export function WhatsAppModule() {
 
   const handleEditCampaign = (campaignId: string) => {
     console.log('Editar campanha:', campaignId);
+  };
+
+  const handleChangePhone = () => {
+    setShowPhoneSelector(true);
   };
 
   const renderContent = () => {
@@ -74,6 +96,21 @@ export function WhatsAppModule() {
             </h1>
             <p className="text-gray-600">Gerencie conversas e campanhas do WhatsApp</p>
           </div>
+
+          {/* Selected Phone Indicator */}
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleChangePhone}
+              className="flex items-center space-x-2 px-4 py-2 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
+            >
+              <Phone size={18} className="text-orange-600" />
+              <div className="text-left">
+                <div className="text-xs text-gray-500">Número ativo</div>
+                <div className="text-sm font-semibold text-gray-900">{selectedPhone.name}</div>
+              </div>
+              <ChevronDown size={16} className="text-gray-400" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation */}
@@ -84,8 +121,8 @@ export function WhatsAppModule() {
                 key={view.id}
                 onClick={() => setActiveView(view.id)}
                 className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors ${activeView === view.id
-                    ? 'bg-white text-orange-600 shadow-sm'
-                    : 'text-gray-700 hover:text-gray-900'
+                  ? 'bg-white text-orange-600 shadow-sm'
+                  : 'text-gray-700 hover:text-gray-900'
                   }`}
               >
                 <div className={`mr-2 ${activeView === view.id ? 'text-orange-500' : 'text-gray-400'}`}>
