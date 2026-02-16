@@ -144,17 +144,17 @@ export function WhatsAppSettings() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-              <MessageSquare size={24} className="mr-2" />
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center dark:text-gray-100">
+              <MessageSquare size={24} className="mr-2 text-gray-700 dark:text-gray-300" />
               Configurações do WhatsApp
             </h2>
-            <p className="text-gray-600">Configure a integração com o WhatsApp Business API</p>
+            <p className="text-gray-600 dark:text-gray-400">Configure a integração com o WhatsApp Business API</p>
           </div>
           {activeSection === 'config' && (
             <div className="flex gap-2">
               <button
                 onClick={handleTest}
-                className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-600 dark:text-gray-300 dark:hover:bg-slate-700"
               >
                 <TestTube size={16} className="mr-2" />
                 Testar Conexão
@@ -211,7 +211,7 @@ export function WhatsAppSettings() {
       {activeSection === 'templates' ? (
         <TemplateLibrary />
       ) : activeSection === 'phones' ? (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <div className="rounded-lg border border-gray-200 bg-white p-6 dark:bg-slate-800 dark:border-slate-700">
           <PhoneNumbersManager />
         </div>
       ) : (
@@ -219,87 +219,87 @@ export function WhatsAppSettings() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Configurações Básicas */}
           <div className="space-y-6">
-            <div className="rounded-lg border border-gray-200 bg-white p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                <Settings size={20} className="mr-2" />
+            <div className="rounded-lg border border-gray-200 bg-white p-6 dark:bg-slate-800 dark:border-slate-700">
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center dark:text-gray-100">
+                <Settings size={20} className="mr-2 text-gray-500 dark:text-gray-400" />
                 Configurações Básicas
               </h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                     Nome da Configuração
                   </label>
                   <input
                     type="text"
                     value={config.nome}
                     onChange={(e) => setConfig(prev => ({ ...prev, nome: e.target.value }))}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                     placeholder="Ex: WhatsApp Principal"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                     Número do WhatsApp
                   </label>
                   <input
                     type="text"
                     value={config.numero}
                     onChange={(e) => setConfig(prev => ({ ...prev, numero: e.target.value }))}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                     placeholder="+5511999999999"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                     ID do Número (Phone Number ID)
                   </label>
                   <input
                     type="text"
                     value={config.phoneNumberId}
                     onChange={(e) => setConfig(prev => ({ ...prev, phoneNumberId: e.target.value }))}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                     placeholder="Ex: 100609346426084"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                     ID da Conta Business (WABA ID)
                   </label>
                   <input
                     type="text"
                     value={config.businessAccountId}
                     onChange={(e) => setConfig(prev => ({ ...prev, businessAccountId: e.target.value }))}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                     placeholder="Ex: 100509346426084"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                     Token da API
                   </label>
                   <input
                     type="password"
                     value={config.token}
                     onChange={(e) => setConfig(prev => ({ ...prev, token: e.target.value }))}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                     placeholder="Token do WhatsApp Business API"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                     URL do Webhook
                   </label>
                   <input
                     type="url"
                     value={config.webhookUrl}
                     onChange={(e) => setConfig(prev => ({ ...prev, webhookUrl: e.target.value }))}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                     placeholder="https://seu-dominio.com/webhook"
                   />
                 </div>
@@ -310,9 +310,9 @@ export function WhatsAppSettings() {
                     id="ativo"
                     checked={config.ativo}
                     onChange={(e) => setConfig(prev => ({ ...prev, ativo: e.target.checked }))}
-                    className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                    className="rounded border-gray-300 text-orange-600 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-600"
                   />
-                  <label htmlFor="ativo" className="ml-2 text-sm text-gray-700">
+                  <label htmlFor="ativo" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     Ativar integração WhatsApp
                   </label>
                 </div>
@@ -320,16 +320,16 @@ export function WhatsAppSettings() {
             </div>
 
             {/* Horário de Atendimento */}
-            <div className="rounded-lg border border-gray-200 bg-white p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                <Clock size={20} className="mr-2" />
+            <div className="rounded-lg border border-gray-200 bg-white p-6 dark:bg-slate-800 dark:border-slate-700">
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center dark:text-gray-100">
+                <Clock size={20} className="mr-2 text-gray-500 dark:text-gray-400" />
                 Horário de Atendimento
               </h3>
 
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                       Horário de Início
                     </label>
                     <input
@@ -350,7 +350,7 @@ export function WhatsAppSettings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                       Horário de Fim
                     </label>
                     <input
@@ -366,13 +366,13 @@ export function WhatsAppSettings() {
                           }
                         }
                       }))}
-                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                     Dias da Semana
                   </label>
                   <div className="grid grid-cols-4 gap-2">
@@ -382,9 +382,9 @@ export function WhatsAppSettings() {
                           type="checkbox"
                           checked={config.configuracoes.horarioAtendimento.diasSemana.includes(dia.id)}
                           onChange={() => toggleDiaSemana(dia.id)}
-                          className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                          className="rounded border-gray-300 text-orange-600 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-600"
                         />
-                        <span className="ml-2 text-sm text-gray-700">{dia.nome}</span>
+                        <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{dia.nome}</span>
                       </label>
                     ))}
                   </div>
@@ -395,15 +395,15 @@ export function WhatsAppSettings() {
 
           {/* Mensagens Automáticas */}
           <div className="space-y-6">
-            <div className="rounded-lg border border-gray-200 bg-white p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                <MessageCircle size={20} className="mr-2" />
+            <div className="rounded-lg border border-gray-200 bg-white p-6 dark:bg-slate-800 dark:border-slate-700">
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center dark:text-gray-100">
+                <MessageCircle size={20} className="mr-2 text-gray-500 dark:text-gray-400" />
                 Mensagens Automáticas
               </h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                     Mensagem de Boas-vindas
                   </label>
                   <textarea
@@ -416,13 +416,13 @@ export function WhatsAppSettings() {
                       }
                     }))}
                     rows={3}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                     placeholder="Mensagem enviada quando um novo contato inicia uma conversa"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                     Mensagem Fora do Horário
                   </label>
                   <textarea
@@ -435,7 +435,7 @@ export function WhatsAppSettings() {
                       }
                     }))}
                     rows={3}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                     placeholder="Mensagem enviada quando o contato escreve fora do horário de atendimento"
                   />
                 </div>
@@ -452,9 +452,9 @@ export function WhatsAppSettings() {
                         respostasAutomaticas: e.target.checked
                       }
                     }))}
-                    className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                    className="rounded border-gray-300 text-orange-600 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-600"
                   />
-                  <label htmlFor="respostasAutomaticas" className="ml-2 text-sm text-gray-700">
+                  <label htmlFor="respostasAutomaticas" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     Ativar respostas automáticas
                   </label>
                 </div>
@@ -462,35 +462,35 @@ export function WhatsAppSettings() {
             </div>
 
             {/* Teste de Mensagem */}
-            <div className="rounded-lg border border-gray-200 bg-white p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                <Zap size={20} className="mr-2" />
+            <div className="rounded-lg border border-gray-200 bg-white p-6 dark:bg-slate-800 dark:border-slate-700">
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center dark:text-gray-100">
+                <Zap size={20} className="mr-2 text-gray-500 dark:text-gray-400" />
                 Teste de Mensagem
               </h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                     Número de Teste
                   </label>
                   <input
                     type="text"
                     value={testNumber}
                     onChange={(e) => setTestNumber(e.target.value)}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                     placeholder="+5511999999999"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                     Mensagem de Teste
                   </label>
                   <textarea
                     value={testMessage}
                     onChange={(e) => setTestMessage(e.target.value)}
                     rows={3}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                     placeholder="Digite a mensagem de teste..."
                   />
                 </div>

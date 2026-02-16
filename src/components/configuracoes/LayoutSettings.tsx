@@ -76,32 +76,30 @@ export function LayoutSettings() {
       {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-            <Palette size={24} className="mr-2" />
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center dark:text-gray-100">
+            <Palette size={24} className="mr-2 text-gray-700 dark:text-gray-300" />
             Configurações de Layout
           </h2>
-          <p className="text-gray-600">Personalize a aparência do sistema</p>
+          <p className="text-gray-600 dark:text-gray-400">Personalize a aparência do sistema</p>
         </div>
         <div className="flex gap-2">
           <div className="flex rounded-md border border-gray-300 bg-white">
             <button
               onClick={() => setPreviewMode('desktop')}
-              className={`px-3 py-2 text-sm font-medium ${
-                previewMode === 'desktop' 
-                  ? 'bg-orange-500 text-white' 
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
+              className={`px-3 py-2 text-sm font-medium transition-colors ${previewMode === 'desktop'
+                  ? 'bg-orange-500 text-white'
+                  : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-slate-700 dark:bg-slate-800'
+                }`}
             >
               <Monitor size={16} className="mr-1" />
               Desktop
             </button>
             <button
               onClick={() => setPreviewMode('mobile')}
-              className={`px-3 py-2 text-sm font-medium ${
-                previewMode === 'mobile' 
-                  ? 'bg-orange-500 text-white' 
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
+              className={`px-3 py-2 text-sm font-medium transition-colors ${previewMode === 'mobile'
+                  ? 'bg-orange-500 text-white'
+                  : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-slate-700 dark:bg-slate-800'
+                }`}
             >
               <Smartphone size={16} className="mr-1" />
               Mobile
@@ -121,34 +119,34 @@ export function LayoutSettings() {
         {/* Configurações */}
         <div className="space-y-6">
           {/* Identidade Visual */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <Image size={20} className="mr-2" />
+          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:bg-slate-800 dark:border-slate-700">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center dark:text-gray-100">
+              <Image size={20} className="mr-2 text-gray-500 dark:text-gray-400" />
               Identidade Visual
             </h3>
-            
+
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                   Nome da Empresa
                 </label>
                 <input
                   type="text"
                   value={config.nomeEmpresa}
                   onChange={(e) => setConfig(prev => ({ ...prev, nomeEmpresa: e.target.value }))}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                   Logo da Empresa
                 </label>
                 <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-gray-300 bg-gray-50">
-                    <img 
-                      src={config.logo} 
-                      alt="Logo" 
+                  <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-gray-300 bg-gray-50 dark:bg-slate-700 dark:border-slate-600">
+                    <img
+                      src={config.logo}
+                      alt="Logo"
                       className="h-12 w-12 object-contain"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
@@ -165,7 +163,7 @@ export function LayoutSettings() {
                     />
                     <label
                       htmlFor="logo-upload"
-                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer"
+                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer dark:bg-slate-800 dark:border-slate-600 dark:text-gray-300 dark:hover:bg-slate-700"
                     >
                       <Upload size={16} className="mr-2" />
                       Alterar Logo
@@ -177,15 +175,15 @@ export function LayoutSettings() {
           </div>
 
           {/* Cores */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <Type size={20} className="mr-2" />
+          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:bg-slate-800 dark:border-slate-700">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center dark:text-gray-100">
+              <Type size={20} className="mr-2 text-gray-500 dark:text-gray-400" />
               Cores do Sistema
             </h3>
-            
+
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                   Cor Primária
                 </label>
                 <div className="flex items-center gap-2 mb-2">
@@ -193,13 +191,13 @@ export function LayoutSettings() {
                     type="color"
                     value={config.corPrimaria}
                     onChange={(e) => setConfig(prev => ({ ...prev, corPrimaria: e.target.value }))}
-                    className="h-10 w-16 rounded border border-gray-300"
+                    className="h-10 w-16 rounded border border-gray-300 dark:border-slate-600"
                   />
                   <input
                     type="text"
                     value={config.corPrimaria}
                     onChange={(e) => setConfig(prev => ({ ...prev, corPrimaria: e.target.value }))}
-                    className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                   />
                 </div>
                 <div className="grid grid-cols-4 gap-2">
@@ -216,13 +214,13 @@ export function LayoutSettings() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                   Tema
                 </label>
                 <select
                   value={config.tema}
                   onChange={(e) => setConfig(prev => ({ ...prev, tema: e.target.value as 'light' | 'dark' }))}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                 >
                   <option value="light">Claro</option>
                   <option value="dark">Escuro</option>
@@ -232,15 +230,15 @@ export function LayoutSettings() {
           </div>
 
           {/* Dashboard */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <Layout size={20} className="mr-2" />
+          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:bg-slate-800 dark:border-slate-700">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center dark:text-gray-100">
+              <Layout size={20} className="mr-2 text-gray-500 dark:text-gray-400" />
               Configurações do Dashboard
             </h3>
-            
+
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                   Layout dos Widgets
                 </label>
                 <select
@@ -252,7 +250,7 @@ export function LayoutSettings() {
                       layout: e.target.value as 'grid' | 'list'
                     }
                   }))}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                 >
                   <option value="grid">Grade</option>
                   <option value="list">Lista</option>
@@ -260,7 +258,7 @@ export function LayoutSettings() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                   Widgets Visíveis
                 </label>
                 <div className="space-y-2">
@@ -270,11 +268,11 @@ export function LayoutSettings() {
                         type="checkbox"
                         checked={config.configuracoesDashboard.widgets.includes(widget.id)}
                         onChange={() => toggleWidget(widget.id)}
-                        className="mt-1 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                        className="mt-1 rounded border-gray-300 text-orange-600 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-600"
                       />
                       <div className="ml-2">
-                        <div className="text-sm font-medium text-gray-900">{widget.nome}</div>
-                        <div className="text-xs text-gray-500">{widget.descricao}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{widget.nome}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{widget.descricao}</div>
                       </div>
                     </label>
                   ))}
@@ -286,17 +284,16 @@ export function LayoutSettings() {
 
         {/* Preview */}
         <div className="space-y-6">
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <Eye size={20} className="mr-2" />
+          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:bg-slate-800 dark:border-slate-700">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center dark:text-gray-100">
+              <Eye size={20} className="mr-2 text-gray-500 dark:text-gray-400" />
               Preview {previewMode === 'desktop' ? 'Desktop' : 'Mobile'}
             </h3>
-            
-            <div className={`border border-gray-300 rounded-lg overflow-hidden ${
-              previewMode === 'mobile' ? 'max-w-sm mx-auto' : ''
-            }`}>
+
+            <div className={`border border-gray-300 rounded-lg overflow-hidden dark:border-slate-600 ${previewMode === 'mobile' ? 'max-w-sm mx-auto' : ''
+              }`}>
               {/* Header Preview */}
-              <div 
+              <div
                 className="p-4 text-white flex items-center justify-between"
                 style={{ backgroundColor: config.corPrimaria }}
               >
@@ -318,11 +315,10 @@ export function LayoutSettings() {
               <div className="p-4 bg-gray-50">
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-gray-900 mb-2">Dashboard</h4>
-                  <div className={`grid gap-2 ${
-                    config.configuracoesDashboard.layout === 'grid' 
-                      ? 'grid-cols-2' 
+                  <div className={`grid gap-2 ${config.configuracoesDashboard.layout === 'grid'
+                      ? 'grid-cols-2'
                       : 'grid-cols-1'
-                  }`}>
+                    }`}>
                     {config.configuracoesDashboard.widgets.slice(0, 4).map((widget: string, index: number) => (
                       <div key={widget} className="bg-white p-3 rounded border">
                         <div className="text-xs text-gray-500 mb-1">

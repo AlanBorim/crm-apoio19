@@ -110,8 +110,8 @@ export function TemplateLibrary() {
         <div className="space-y-6">
             {/* Header */}
             <div>
-                <h2 className="text-2xl font-bold text-gray-900">Biblioteca de Templates</h2>
-                <p className="mt-1 text-sm text-gray-600">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Biblioteca de Templates</h2>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                     Templates do WhatsApp Business sincronizados da Meta
                 </p>
             </div>
@@ -120,23 +120,23 @@ export function TemplateLibrary() {
             <div className="flex flex-col sm:flex-row gap-4">
                 {/* Search */}
                 <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
                     <input
                         type="text"
                         placeholder="Buscar templates..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 dark:placeholder-gray-500"
                     />
                 </div>
 
                 {/* Status Filter */}
                 <div className="flex items-center gap-2">
-                    <Filter size={20} className="text-gray-500" />
+                    <Filter size={20} className="text-gray-500 dark:text-gray-400" />
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                     >
                         <option value="all">Todos os status</option>
                         <option value="APPROVED">Aprovados</option>
@@ -147,16 +147,16 @@ export function TemplateLibrary() {
             </div>
 
             {/* Templates Count */}
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
                 {filteredTemplates.length} template{filteredTemplates.length !== 1 ? 's' : ''} encontrado{filteredTemplates.length !== 1 ? 's' : ''}
             </div>
 
             {/* Templates Grid */}
             {filteredTemplates.length === 0 ? (
                 <div className="text-center py-12">
-                    <FileText size={48} className="mx-auto text-gray-400 mb-4" />
-                    <p className="text-gray-600">Nenhum template encontrado</p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <FileText size={48} className="mx-auto text-gray-400 mb-4 dark:text-gray-500" />
+                    <p className="text-gray-600 dark:text-gray-400">Nenhum template encontrado</p>
+                    <p className="text-sm text-gray-500 mt-1 dark:text-gray-500">
                         Sincronize os números de telefone para carregar os templates
                     </p>
                 </div>
@@ -165,15 +165,15 @@ export function TemplateLibrary() {
                     {filteredTemplates.map((template) => (
                         <div
                             key={template.id}
-                            className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                            className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700"
                         >
                             {/* Header */}
                             <div className="flex items-start justify-between mb-3">
                                 <div className="flex-1">
-                                    <h3 className="font-semibold text-gray-900 truncate">
+                                    <h3 className="font-semibold text-gray-900 truncate dark:text-gray-100">
                                         {template.name}
                                     </h3>
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
                                         {template.language.toUpperCase()}
                                     </p>
                                 </div>
@@ -187,7 +187,7 @@ export function TemplateLibrary() {
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(template.status)}`}>
                                     {template.status}
                                 </span>
-                                <span className="text-xs text-gray-600">
+                                <span className="text-xs text-gray-600 dark:text-gray-400">
                                     {getCategoryLabel(template.category)}
                                 </span>
                             </div>
@@ -199,7 +199,7 @@ export function TemplateLibrary() {
                                     <div className="mt-3 mb-3 space-y-2">
                                         {/* Header Image */}
                                         {headerImage && (
-                                            <div className="w-full h-32 bg-gray-100 rounded-md overflow-hidden">
+                                            <div className="w-full h-32 bg-gray-100 rounded-md overflow-hidden dark:bg-slate-700">
                                                 <img
                                                     src={headerImage}
                                                     alt="Template header"
@@ -212,14 +212,14 @@ export function TemplateLibrary() {
                                         )}
                                         {/* Body Text */}
                                         {bodyText && (
-                                            <div className="bg-gray-50 rounded-md p-3">
-                                                <p className="text-sm text-gray-700 line-clamp-3">
+                                            <div className="bg-gray-50 rounded-md p-3 dark:bg-slate-700/50">
+                                                <p className="text-sm text-gray-700 line-clamp-3 dark:text-gray-300">
                                                     {bodyText}
                                                 </p>
                                             </div>
                                         )}
                                         {!headerImage && !bodyText && (
-                                            <div className="text-xs text-gray-500">
+                                            <div className="text-xs text-gray-500 dark:text-gray-400">
                                                 {template.components?.length || 0} componente{template.components?.length !== 1 ? 's' : ''}
                                             </div>
                                         )}
@@ -228,8 +228,8 @@ export function TemplateLibrary() {
                             })()}
 
                             {/* Footer */}
-                            <div className="mt-4 pt-4 border-t border-gray-100">
-                                <p className="text-xs text-gray-500">
+                            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700">
+                                <p className="text-xs text-gray-500 dark:text-gray-500">
                                     Atualizado: {new Date(template.updated_at).toLocaleDateString('pt-BR')}
                                 </p>
                             </div>

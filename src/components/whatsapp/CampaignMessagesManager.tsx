@@ -110,60 +110,60 @@ export function CampaignMessagesManager({
                 <div className="flex items-center gap-4">
                     <button
                         onClick={onBack}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-slate-700 search-input"
                     >
-                        <ArrowLeft size={20} />
+                        <ArrowLeft size={20} className="dark:text-gray-100" />
                     </button>
                     <div>
-                        <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                        <h2 className="text-xl font-semibold text-gray-900 flex items-center dark:text-gray-100">
                             <Mail size={24} className="mr-2" />
                             Contatos da Campanha
                         </h2>
-                        <p className="text-gray-600">{campaignName}</p>
+                        <p className="text-gray-600 dark:text-gray-400">{campaignName}</p>
                     </div>
                 </div>
             </div>
 
             {/* Statistics */}
             <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-                    <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-                    <div className="text-xs text-gray-500">Total Encontros</div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center dark:bg-slate-800 dark:border-slate-700">
+                    <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.total}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Total Encontros</div>
                 </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-                    <div className="text-2xl font-bold text-gray-600">{stats.pending}</div>
-                    <div className="text-xs text-gray-500">Pendentes</div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center dark:bg-slate-800 dark:border-slate-700">
+                    <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{stats.pending}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Pendentes</div>
                 </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-                    <div className="text-2xl font-bold text-blue-600">{stats.sent}</div>
-                    <div className="text-xs text-gray-500">Enviadas</div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center dark:bg-slate-800 dark:border-slate-700">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.sent}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Enviadas</div>
                 </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-                    <div className="text-2xl font-bold text-green-600">
+                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center dark:bg-slate-800 dark:border-slate-700">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {stats.delivered}
-                        <span className="text-sm font-normal text-gray-400 ml-1">
+                        <span className="text-sm font-normal text-gray-400 ml-1 dark:text-gray-500">
                             ({stats.sent > 0 ? Math.round((stats.delivered / stats.sent) * 100) : 0}%)
                         </span>
                     </div>
-                    <div className="text-xs text-gray-500">Entregues</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Entregues</div>
                 </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-                    <div className="text-2xl font-bold text-purple-600">
+                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center dark:bg-slate-800 dark:border-slate-700">
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                         {stats.read}
-                        <span className="text-sm font-normal text-gray-400 ml-1">
+                        <span className="text-sm font-normal text-gray-400 ml-1 dark:text-gray-500">
                             ({stats.sent > 0 ? Math.round((stats.read / stats.sent) * 100) : 0}%)
                         </span>
                     </div>
-                    <div className="text-xs text-gray-500">Lidas</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Lidas</div>
                 </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-                    <div className="text-2xl font-bold text-red-600">
+                <div className="bg-white rounded-lg border border-gray-200 p-4 text-center dark:bg-slate-800 dark:border-slate-700">
+                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {stats.failed}
-                        <span className="text-sm font-normal text-gray-400 ml-1">
+                        <span className="text-sm font-normal text-gray-400 ml-1 dark:text-gray-500">
                             ({stats.sent > 0 ? Math.round((stats.failed / stats.sent) * 100) : 0}%)
                         </span>
                     </div>
-                    <div className="text-xs text-gray-500">Erros</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Erros</div>
                 </div>
             </div>
 
@@ -173,60 +173,60 @@ export function CampaignMessagesManager({
                     <p className="text-gray-500">Carregando contatos...</p>
                 </div>
             ) : contacts.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-                    <User className="mx-auto h-12 w-12 text-gray-400" />
-                    <p className="mt-2 text-gray-500">Nenhum contato encontrado nesta campanha</p>
+                <div className="text-center py-12 bg-white rounded-lg border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+                    <User className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+                    <p className="mt-2 text-gray-500 dark:text-gray-400">Nenhum contato encontrado nesta campanha</p>
                 </div>
             ) : (
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm dark:bg-slate-800 dark:border-slate-700">
                     <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50 sticky top-0 z-10">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                            <thead className="bg-gray-50 sticky top-0 z-10 dark:bg-slate-900">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                                         Contato
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                                         Interações
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                                         Último Status
                                     </th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                                         Ação
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="bg-white divide-y divide-gray-200 dark:bg-slate-800 dark:divide-slate-700">
                                 {contacts.map((contact) => (
                                     <tr
                                         key={contact.id}
-                                        className="hover:bg-gray-50 cursor-pointer"
+                                        className="hover:bg-gray-50 cursor-pointer dark:hover:bg-slate-700/50"
                                         onClick={() => handleOpenHistory(contact)}
                                     >
                                         <td className="px-6 py-4">
                                             <div className="flex items-center">
-                                                <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                                                <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 dark:bg-slate-700 dark:text-gray-400">
                                                     <User size={20} />
                                                 </div>
                                                 <div className="ml-4">
-                                                    <div className="text-sm font-medium text-gray-900">
+                                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                         {contact.name || 'Sem nome'}
                                                     </div>
-                                                    <div className="text-sm text-gray-500">{contact.phone_number}</div>
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400">{contact.phone_number}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="text-sm text-gray-900">{contact.total_messages} mensagens</div>
-                                            <div className="text-xs text-gray-500 mt-1">
+                                            <div className="text-sm text-gray-900 dark:text-gray-100">{contact.total_messages} mensagens</div>
+                                            <div className="text-xs text-gray-500 mt-1 dark:text-gray-400">
                                                 Última: {formatDate(contact.last_interaction_at)}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize
-                                                ${['read', 'delivered', 'sent'].includes(contact.last_status) ? 'bg-green-100 text-green-800' :
-                                                    contact.last_status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}
+                                                ${['read', 'delivered', 'sent'].includes(contact.last_status) ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' :
+                                                    contact.last_status === 'failed' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' : 'bg-gray-100 text-gray-800 dark:bg-slate-700 dark:text-gray-300'}
                                             `}>
                                                 {contact.last_status || 'Pendente'}
                                             </span>
@@ -237,7 +237,7 @@ export function CampaignMessagesManager({
                                                     e.stopPropagation();
                                                     handleOpenHistory(contact);
                                                 }}
-                                                className="text-orange-600 hover:text-orange-900 flex items-center justify-end gap-1 ml-auto"
+                                                className="text-orange-600 hover:text-orange-900 flex items-center justify-end gap-1 ml-auto dark:text-orange-400 dark:hover:text-orange-300"
                                             >
                                                 Ver Histórico <ChevronRight size={16} />
                                             </button>

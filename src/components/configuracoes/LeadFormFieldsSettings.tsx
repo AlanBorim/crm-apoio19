@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  FormInput, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Save, 
-  X, 
+import {
+  FormInput,
+  Plus,
+  Edit,
+  Trash2,
+  Save,
+  X,
   Settings,
   AlertCircle,
   CheckCircle,
@@ -92,19 +92,19 @@ export function LeadFormFieldsSettings() {
     setLoading(true);
     setError(null);
     addDebugInfo(`Carregando configurações para aba: ${activeTab}`);
-    
+
     try {
       const response = await leadService.getLeadSettings(activeTab);
       addDebugInfo(`Resposta do servidor: ${JSON.stringify(response)}`);
-      
+
       if (response.success) {
         // Converter dados antigos para nova estrutura se necessário
         const convertedData = (response.data || []).map((item: LeadSource): ExtendedLeadSource => {
-          const converted: ExtendedLeadSource = { 
+          const converted: ExtendedLeadSource = {
             ...item,
             meta_config: item.meta_config ? { ...item.meta_config } : undefined
           };
-          
+
           // Converter meta_config.extra_field para meta_config.extra_fields se existir
           if (item.meta_config?.extra_field && !converted.meta_config?.extra_fields) {
             const extraField = item.meta_config.extra_field;
@@ -121,10 +121,10 @@ export function LeadFormFieldsSettings() {
             };
             addDebugInfo(`Convertido campo legacy: ${extraField.label}`);
           }
-          
+
           return converted;
         });
-        
+
         setSettings(convertedData);
         addDebugInfo(`Configurações carregadas: ${convertedData.length} itens`);
       } else {
@@ -148,7 +148,7 @@ export function LeadFormFieldsSettings() {
     setSaving(true);
     setError(null);
     setSuccess(null);
-    
+
     addDebugInfo('=== INICIANDO PROCESSO DE SALVAMENTO ===');
     addDebugInfo(`Dados a serem salvos: ${JSON.stringify(fieldData, null, 2)}`);
 
@@ -156,13 +156,13 @@ export function LeadFormFieldsSettings() {
       // Verificar se leadService tem os métodos necessários
       addDebugInfo(`leadService disponível: ${typeof leadService}`);
       addDebugInfo(`Métodos do leadService: ${Object.keys(leadService).join(', ')}`);
-      
+
       let response;
-      
+
       if (fieldData.id) {
         // Atualização
         addDebugInfo(`Tentando atualizar registro ID: ${fieldData.id}`);
-        
+
         if (typeof leadService.updateLeadSetting === 'function') {
           response = await leadService.updateLeadSetting(fieldData.id, fieldData);
           addDebugInfo(`Resposta da atualização: ${JSON.stringify(response)}`);
@@ -173,7 +173,7 @@ export function LeadFormFieldsSettings() {
       } else {
         // Criação
         addDebugInfo('Tentando criar novo registro');
-        
+
         if (typeof leadService.createLeadSetting === 'function') {
           response = await leadService.createLeadSetting(fieldData);
           addDebugInfo(`Resposta da criação: ${JSON.stringify(response)}`);
@@ -204,18 +204,18 @@ export function LeadFormFieldsSettings() {
       addDebugInfo(`Exceção durante salvamento: ${errorMsg}`);
       addDebugInfo(`Tipo do erro: ${typeof err}`);
       addDebugInfo(`Stack trace: ${err.stack || 'N/A'}`);
-      
+
       // Verificar se é erro de rede
       if (err.name === 'NetworkError' || err.code === 'NETWORK_ERROR') {
         addDebugInfo('ERRO DE REDE detectado');
       }
-      
+
       // Verificar se é erro HTTP
       if (err.response) {
         addDebugInfo(`Status HTTP: ${err.response.status}`);
         addDebugInfo(`Dados da resposta: ${JSON.stringify(err.response.data)}`);
       }
-      
+
       console.error('Erro ao salvar:', err);
     } finally {
       setSaving(false);
@@ -231,14 +231,14 @@ export function LeadFormFieldsSettings() {
     setSaving(true);
     setError(null);
     setSuccess(null);
-    
+
     addDebugInfo(`=== INICIANDO EXCLUSÃO DO ID: ${id} ===`);
 
     try {
       if (typeof leadService.deleteLeadSetting === 'function') {
         const response = await leadService.deleteLeadSetting(id);
         addDebugInfo(`Resposta da exclusão: ${JSON.stringify(response)}`);
-        
+
         if (response && response.success) {
           setSuccess('Configuração excluída com sucesso!');
           addDebugInfo('Exclusão realizada com sucesso');
@@ -296,22 +296,22 @@ export function LeadFormFieldsSettings() {
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white">
+    <div className="rounded-lg border border-gray-200 bg-white dark:bg-slate-800 dark:border-slate-700">
       {/* Cabeçalho */}
-      <div className="border-b border-gray-200 p-6">
+      <div className="border-b border-gray-200 p-6 dark:border-slate-700">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-              <FormInput size={24} className="mr-2" />
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center dark:text-gray-100">
+              <FormInput size={24} className="mr-2 text-gray-700 dark:text-gray-300" />
               Configuração de Campos de Formulário de Leads
             </h2>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-600 mt-1 dark:text-gray-400">
               Configure os campos dinâmicos do formulário de leads, incluindo campos extras personalizados e condicionais
             </p>
           </div>
           <button
             onClick={() => setShowDebug(!showDebug)}
-            className={`p-2 rounded-lg ${showDebug ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'} hover:bg-opacity-80`}
+            className={`p-2 rounded-lg ${showDebug ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-300'} hover:bg-opacity-80`}
             title="Toggle Debug"
           >
             <Bug size={20} />
@@ -338,17 +338,16 @@ export function LeadFormFieldsSettings() {
       )}
 
       {/* Abas */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8 px-6">
+      <div className="border-b border-gray-200 dark:border-slate-700">
+        <nav className="flex space-x-8 px-6 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === tab.id
-                  ? 'border-orange-500 text-orange-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${activeTab === tab.id
+                  ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-slate-600'
+                }`}
             >
               {tab.name}
             </button>
@@ -360,7 +359,7 @@ export function LeadFormFieldsSettings() {
       <div className="p-6">
         {/* Mensagens de feedback */}
         {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center dark:bg-red-900/20 dark:border-red-900/50 dark:text-red-400">
             <AlertCircle size={20} className="mr-2" />
             <div className="flex-1">
               <div className="font-medium">Erro:</div>
@@ -370,7 +369,7 @@ export function LeadFormFieldsSettings() {
         )}
 
         {success && (
-          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
+          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center dark:bg-green-900/20 dark:border-green-900/50 dark:text-green-400">
             <CheckCircle size={20} className="mr-2" />
             {success}
           </div>
@@ -397,16 +396,16 @@ export function LeadFormFieldsSettings() {
         ) : (
           <div className="space-y-4">
             {settings.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <FormInput size={48} className="mx-auto mb-4 text-gray-300" />
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <FormInput size={48} className="mx-auto mb-4 text-gray-300 dark:text-gray-600" />
                 <p>Nenhuma configuração encontrada para {tabs.find(t => t.id === activeTab)?.name.toLowerCase()}</p>
                 <p className="text-sm mt-2">Clique em "Adicionar" para criar a primeira configuração</p>
               </div>
             ) : (
               settings.map((setting) => (
-                <SettingCard 
-                  key={setting.id} 
-                  setting={setting} 
+                <SettingCard
+                  key={setting.id}
+                  setting={setting}
                   fieldTypes={fieldTypes}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
@@ -447,36 +446,36 @@ function SettingCard({ setting, fieldTypes, onEdit, onDelete, saving }: SettingC
   const extraFields = setting.meta_config?.extra_fields || [];
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
+    <div className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors dark:border-slate-700 dark:hover:border-slate-600">
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-medium text-gray-900">{setting.value}</h3>
+            <h3 className="font-medium text-gray-900 dark:text-gray-100">{setting.value}</h3>
             {extraFields.length > 0 && (
-              <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">
+              <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full dark:bg-orange-900/30 dark:text-orange-300">
                 {extraFields.length} campo{extraFields.length > 1 ? 's' : ''} extra{extraFields.length > 1 ? 's' : ''}
               </span>
             )}
           </div>
-          
+
           {extraFields.length > 0 ? (
             <div className="mt-2">
               <button
                 onClick={() => setExpanded(!expanded)}
-                className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
+                className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
               >
                 {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 {expanded ? 'Ocultar' : 'Ver'} campos extras
               </button>
-              
+
               {expanded && (
                 <div className="mt-3 space-y-3">
                   {extraFields.map((field, index) => (
-                    <div key={field.id} className="bg-gray-50 p-3 rounded border-l-4 border-orange-200">
+                    <div key={field.id} className="bg-gray-50 p-3 rounded border-l-4 border-orange-200 dark:bg-slate-900/50 dark:border-orange-900/50">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="font-medium text-sm text-gray-900">{field.label}</p>
-                          <div className="text-xs text-gray-600 mt-1 space-y-1">
+                          <p className="font-medium text-sm text-gray-900 dark:text-gray-100">{field.label}</p>
+                          <div className="text-xs text-gray-600 mt-1 space-y-1 dark:text-gray-400">
                             <p><strong>Tipo:</strong> {fieldTypes.find(t => t.value === field.type)?.label}</p>
                             <p><strong>Obrigatório:</strong> {field.required ? 'Sim' : 'Não'}</p>
                             {field.placeholder && (
@@ -499,15 +498,15 @@ function SettingCard({ setting, fieldTypes, onEdit, onDelete, saving }: SettingC
               )}
             </div>
           ) : (
-            <p className="text-sm text-gray-500 mt-1">Sem campos extras configurados</p>
+            <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">Sem campos extras configurados</p>
           )}
         </div>
-        
+
         <div className="flex items-center gap-2 ml-4">
           <button
             onClick={() => onEdit(setting)}
             disabled={saving}
-            className="text-blue-600 hover:text-blue-800 disabled:opacity-50 p-2 hover:bg-blue-50 rounded"
+            className="text-blue-600 hover:text-blue-800 disabled:opacity-50 p-2 hover:bg-blue-50 rounded dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20"
             title="Editar"
           >
             <Edit size={18} />
@@ -515,7 +514,7 @@ function SettingCard({ setting, fieldTypes, onEdit, onDelete, saving }: SettingC
           <button
             onClick={() => setting.id && onDelete(setting.id)}
             disabled={saving}
-            className="text-red-600 hover:text-red-800 disabled:opacity-50 p-2 hover:bg-red-50 rounded"
+            className="text-red-600 hover:text-red-800 disabled:opacity-50 p-2 hover:bg-red-50 rounded dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
             title="Excluir"
           >
             <Trash2 size={18} />
@@ -542,7 +541,7 @@ function FieldForm({ field, fieldTypes, allSettings, onSave, onCancel, saving }:
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.value.trim()) {
       alert('O nome do campo é obrigatório');
       return;
@@ -554,7 +553,7 @@ function FieldForm({ field, fieldTypes, allSettings, onSave, onCancel, saving }:
         alert('Todos os campos extras devem ter um label');
         return;
       }
-      
+
       if (extraField.type === 'select' && (!extraField.options || extraField.options.length === 0)) {
         alert('Campos do tipo seleção devem ter pelo menos uma opção');
         return;
@@ -563,9 +562,9 @@ function FieldForm({ field, fieldTypes, allSettings, onSave, onCancel, saving }:
 
     const dataToSave: ExtendedLeadSource = {
       ...formData,
-      meta_config: extraFields.length > 0 ? { 
+      meta_config: extraFields.length > 0 ? {
         ...formData.meta_config,
-        extra_fields: extraFields 
+        extra_fields: extraFields
       } : formData.meta_config
     };
 
@@ -602,24 +601,24 @@ function FieldForm({ field, fieldTypes, allSettings, onSave, onCancel, saving }:
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto dark:bg-slate-800 dark:border dark:border-slate-700">
         <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 dark:text-gray-100">
             {field.id ? 'Editar' : 'Adicionar'} Configuração
           </h3>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Nome do campo */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                 Nome do Campo *
               </label>
               <input
                 type="text"
                 value={formData.value}
                 onChange={(e) => setFormData(prev => ({ ...prev, value: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                 placeholder="Ex: Website, Evento, Indicação..."
                 required
                 disabled={saving}
@@ -627,9 +626,9 @@ function FieldForm({ field, fieldTypes, allSettings, onSave, onCancel, saving }:
             </div>
 
             {/* Seção de campos extras */}
-            <div className="border border-gray-200 rounded-lg p-4">
+            <div className="border border-gray-200 rounded-lg p-4 dark:border-slate-700">
               <div className="flex items-center justify-between mb-4">
-                <h4 className="font-medium text-gray-900">Campos Extras Dinâmicos</h4>
+                <h4 className="font-medium text-gray-900 dark:text-gray-100">Campos Extras Dinâmicos</h4>
                 <button
                   type="button"
                   onClick={addExtraField}
@@ -642,7 +641,7 @@ function FieldForm({ field, fieldTypes, allSettings, onSave, onCancel, saving }:
               </div>
 
               {extraFields.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center py-4">
+                <p className="text-gray-500 text-sm text-center py-4 dark:text-gray-400">
                   Nenhum campo extra configurado. Clique em "Adicionar Campo" para começar.
                 </p>
               ) : (
@@ -668,12 +667,12 @@ function FieldForm({ field, fieldTypes, allSettings, onSave, onCancel, saving }:
             </div>
 
             {/* Botões de ação */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-slate-700">
               <button
                 type="button"
                 onClick={onCancel}
                 disabled={saving}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600"
               >
                 Cancelar
               </button>
@@ -712,18 +711,18 @@ interface ExtraFieldFormProps {
   saving: boolean;
 }
 
-function ExtraFieldForm({ 
-  field, 
-  index, 
-  fieldTypes, 
-  allSettings, 
-  currentSetting, 
-  onUpdate, 
-  onRemove, 
-  onMove, 
-  canMoveUp, 
-  canMoveDown, 
-  saving 
+function ExtraFieldForm({
+  field,
+  index,
+  fieldTypes,
+  allSettings,
+  currentSetting,
+  onUpdate,
+  onRemove,
+  onMove,
+  canMoveUp,
+  canMoveDown,
+  saving
 }: ExtraFieldFormProps) {
   const [showConditions, setShowConditions] = useState(!!field.condition);
 
@@ -733,9 +732,9 @@ function ExtraFieldForm({
   };
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 dark:bg-slate-900/50 dark:border-slate-700">
       <div className="flex items-center justify-between mb-3">
-        <h5 className="font-medium text-gray-900">Campo Extra #{index + 1}</h5>
+        <h5 className="font-medium text-gray-900 dark:text-gray-100">Campo Extra #{index + 1}</h5>
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -770,14 +769,14 @@ function ExtraFieldForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Label do campo */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
             Label do Campo *
           </label>
           <input
             type="text"
             value={field.label}
             onChange={(e) => onUpdate({ label: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
             placeholder="Ex: Percentual pela Indicação, Nome do Evento..."
             required
             disabled={saving}
@@ -786,13 +785,13 @@ function ExtraFieldForm({
 
         {/* Tipo do campo */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
             Tipo do Campo
           </label>
           <select
             value={field.type}
             onChange={(e) => onUpdate({ type: e.target.value as ExtraField['type'] })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
             disabled={saving}
           >
             {fieldTypes.map(type => (
@@ -883,11 +882,11 @@ function ExtraFieldForm({
                 </label>
                 <select
                   value={field.condition?.field || ''}
-                  onChange={(e) => onUpdate({ 
-                    condition: { 
-                      field: e.target.value, 
-                      value: field.condition?.value || '' 
-                    } 
+                  onChange={(e) => onUpdate({
+                    condition: {
+                      field: e.target.value,
+                      value: field.condition?.value || ''
+                    }
                   })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   disabled={saving}
@@ -905,11 +904,11 @@ function ExtraFieldForm({
                 <input
                   type="text"
                   value={field.condition?.value || ''}
-                  onChange={(e) => onUpdate({ 
-                    condition: { 
-                      field: field.condition?.field || '', 
-                      value: e.target.value 
-                    } 
+                  onChange={(e) => onUpdate({
+                    condition: {
+                      field: field.condition?.field || '',
+                      value: e.target.value
+                    }
                   })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Ex: Indicação, Website..."

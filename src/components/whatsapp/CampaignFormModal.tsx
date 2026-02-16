@@ -182,16 +182,16 @@ export function CampaignFormModal({
                 />
 
                 {/* Modal */}
-                <div className="relative w-full max-w-2xl bg-white rounded-lg shadow-xl">
+                <div className="relative w-full max-w-2xl bg-white rounded-lg shadow-xl dark:bg-slate-900">
                     {/* Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                        <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                    <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700">
+                        <h2 className="text-xl font-semibold text-gray-900 flex items-center dark:text-gray-100">
                             <Send size={24} className="mr-2" />
                             {isEditing ? 'Editar Campanha' : 'Nova Campanha'}
                         </h2>
                         <button
                             onClick={onClose}
-                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                            className="text-gray-400 hover:text-gray-600 transition-colors dark:text-gray-500 dark:hover:text-gray-300"
                             disabled={isSubmitting}
                         >
                             <X size={24} />
@@ -213,18 +213,18 @@ export function CampaignFormModal({
                         <div className="space-y-4">
                             {/* Campaign Name */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                                     Nome da Campanha *
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FileText size={16} className="text-gray-400" />
+                                        <FileText size={16} className="text-gray-400 dark:text-gray-500" />
                                     </div>
                                     <input
                                         type="text"
                                         value={formData.name}
                                         onChange={(e) => handleInputChange('name', e.target.value)}
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.name ? 'border-red-300' : 'border-gray-300'
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 ${errors.name ? 'border-red-300' : 'border-gray-300'
                                             }`}
                                         placeholder="Ex: Black Friday 2024"
                                         disabled={isSubmitting}
@@ -237,13 +237,13 @@ export function CampaignFormModal({
 
                             {/* Description */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                                     Descrição
                                 </label>
                                 <textarea
                                     value={formData.description}
                                     onChange={(e) => handleInputChange('description', e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.description ? 'border-red-300' : 'border-gray-300'
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 ${errors.description ? 'border-red-300' : 'border-gray-300'
                                         }`}
                                     placeholder="Descreva o objetivo da campanha..."
                                     rows={3}
@@ -259,17 +259,17 @@ export function CampaignFormModal({
 
                             {/* Phone Number Selection */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                                     Número de Telefone
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Phone size={16} className="text-gray-400" />
+                                        <Phone size={16} className="text-gray-400 dark:text-gray-500" />
                                     </div>
                                     <select
                                         value={formData.phone_number_id}
                                         onChange={(e) => handleInputChange('phone_number_id', e.target.value)}
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.phone_number_id ? 'border-red-300' : 'border-gray-300'
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 ${errors.phone_number_id ? 'border-red-300' : 'border-gray-300'
                                             }`}
                                         disabled={isSubmitting || loadingPhoneNumbers}
                                     >
@@ -291,18 +291,18 @@ export function CampaignFormModal({
 
                             {/* Scheduled Date */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                                     Iniciar em
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Calendar size={16} className="text-gray-400" />
+                                        <Calendar size={16} className="text-gray-400 dark:text-gray-500" />
                                     </div>
                                     <input
                                         type="datetime-local"
                                         value={formData.scheduled_at}
                                         onChange={(e) => handleInputChange('scheduled_at', e.target.value)}
-                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.scheduled_at ? 'border-red-300' : 'border-gray-300'
+                                        className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 ${errors.scheduled_at ? 'border-red-300' : 'border-gray-300'
                                             }`}
                                         disabled={isSubmitting}
                                     />
@@ -318,13 +318,13 @@ export function CampaignFormModal({
                             {/* Status (only when editing) */}
                             {isEditing && (
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                                         Status
                                     </label>
                                     <select
                                         value={formData.status}
                                         onChange={(e) => handleInputChange('status', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                                         disabled={isSubmitting}
                                     >
                                         <option value="draft">Rascunho</option>
@@ -338,11 +338,11 @@ export function CampaignFormModal({
                         </div>
 
                         {/* Buttons */}
-                        <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
+                        <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-slate-700">
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-700"
                                 disabled={isSubmitting}
                             >
                                 Cancelar

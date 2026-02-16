@@ -252,11 +252,11 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
       {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
             <Send size={24} className="mr-2" />
             Campanhas WhatsApp
           </h2>
-          <p className="text-gray-600">Gerencie campanhas de envio em massa</p>
+          <p className="text-gray-600 dark:text-gray-400">Gerencie campanhas de envio em massa</p>
         </div>
         <button
           onClick={handleCreateClick}
@@ -269,52 +269,52 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
 
       {/* Métricas Gerais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6 dark:bg-slate-800 dark:border-slate-700">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Send size={20} className="text-blue-600" />
+            <div className="p-2 bg-blue-100 rounded-lg dark:bg-blue-900/30">
+              <Send size={20} className="text-blue-600 dark:text-blue-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Enviadas</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Enviadas</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {totalSent.toLocaleString()}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6 dark:bg-slate-800 dark:border-slate-700">
           <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <BarChart3 size={20} className="text-green-600" />
+            <div className="p-2 bg-green-100 rounded-lg dark:bg-green-900/30">
+              <BarChart3 size={20} className="text-green-600 dark:text-green-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Taxa de Entrega</p>
-              <p className="text-2xl font-bold text-gray-900">{deliveryRate}%</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Taxa de Entrega</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{deliveryRate}%</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6 dark:bg-slate-800 dark:border-slate-700">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Users size={20} className="text-purple-600" />
+            <div className="p-2 bg-purple-100 rounded-lg dark:bg-purple-900/30">
+              <Users size={20} className="text-purple-600 dark:text-purple-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Taxa de Leitura</p>
-              <p className="text-2xl font-bold text-gray-900">{readRate}%</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Taxa de Leitura</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{readRate}%</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6 dark:bg-slate-800 dark:border-slate-700">
           <div className="flex items-center">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <Calendar size={20} className="text-orange-600" />
+            <div className="p-2 bg-orange-100 rounded-lg dark:bg-orange-900/30">
+              <Calendar size={20} className="text-orange-600 dark:text-orange-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Campanhas Ativas</p>
-              <p className="text-2xl font-bold text-gray-900">{activeCampaigns}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Campanhas Ativas</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{activeCampaigns}</p>
             </div>
           </div>
         </div>
@@ -332,7 +332,7 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && loadCampaigns()}
-            className="block w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            className="block w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 dark:placeholder-gray-400"
           />
         </div>
 
@@ -340,7 +340,7 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
           >
             <option value="all">Todos os status</option>
             <option value="draft">Rascunho</option>
@@ -358,9 +358,9 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
           <p className="text-gray-500">Carregando campanhas...</p>
         </div>
       ) : filteredCampaigns.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-          <Send className="mx-auto h-12 w-12 text-gray-400" />
-          <p className="mt-2 text-gray-500">Nenhuma campanha encontrada</p>
+        <div className="text-center py-12 bg-white rounded-lg border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+          <Send className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+          <p className="mt-2 text-gray-500 dark:text-gray-400">Nenhuma campanha encontrada</p>
           <button
             onClick={handleCreateClick}
             className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700"
@@ -382,52 +382,52 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
             };
 
             return (
-              <div key={campaign.id} className="rounded-lg border border-gray-200 bg-white p-6">
+              <div key={campaign.id} className="rounded-lg border border-gray-200 bg-white p-6 dark:bg-slate-800 dark:border-slate-700">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-medium text-gray-900">{campaign.name}</h3>
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{campaign.name}</h3>
                       <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getStatusColor(campaign.status)}`}>
                         {getStatusText(campaign.status)}
                       </span>
                     </div>
 
                     {campaign.description && (
-                      <p className="text-sm text-gray-600 mb-4">{campaign.description}</p>
+                      <p className="text-sm text-gray-600 mb-4 dark:text-gray-400">{campaign.description}</p>
                     )}
 
                     {/* Métricas da Campanha */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
                       <div className="text-center">
-                        <div className="text-lg font-bold text-gray-900">{stats.total}</div>
-                        <div className="text-xs text-gray-500">Total</div>
+                        <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{stats.total}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">Total</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-lg font-bold text-blue-600">{stats.sent}</div>
-                        <div className="text-xs text-gray-500">Enviadas</div>
+                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{stats.sent}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">Enviadas</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-lg font-bold text-green-600">{stats.delivered}</div>
-                        <div className="text-xs text-gray-500">Entregues</div>
+                        <div className="text-lg font-bold text-green-600 dark:text-green-400">{stats.delivered}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">Entregues</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-lg font-bold text-purple-600">{stats.read}</div>
-                        <div className="text-xs text-gray-500">Lidas</div>
+                        <div className="text-lg font-bold text-purple-600 dark:text-purple-400">{stats.read}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">Lidas</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-lg font-bold text-red-600">{stats.failed}</div>
-                        <div className="text-xs text-gray-500">Falhas</div>
+                        <div className="text-lg font-bold text-red-600 dark:text-red-400">{stats.failed}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">Falhas</div>
                       </div>
                     </div>
 
                     {/* Barra de Progresso */}
                     {stats.total > 0 && (
                       <div className="mb-4">
-                        <div className="flex justify-between text-sm text-gray-600 mb-1">
+                        <div className="flex justify-between text-sm text-gray-600 mb-1 dark:text-gray-400">
                           <span>Progresso</span>
                           <span>{Math.round((stats.sent / stats.total) * 100)}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-slate-700">
                           <div
                             className="bg-orange-500 h-2 rounded-full"
                             style={{ width: `${(stats.sent / stats.total) * 100}%` }}
@@ -438,13 +438,13 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
 
                     {/* Taxa de Engajamento */}
                     <div className="mb-4">
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
                         Taxa de Leitura: <span className="font-medium">{calculateEngagementRate(campaign)}%</span>
                       </span>
                     </div>
 
                     {/* Datas */}
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400">
                       <div>Criada: {formatDate(campaign.created_at)}</div>
                       {campaign.scheduled_at && <div>Agendada: {formatDate(campaign.scheduled_at)}</div>}
                       {campaign.started_at && <div>Iniciada: {formatDate(campaign.started_at)}</div>}
@@ -477,7 +477,7 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
 
                     <button
                       onClick={() => handleEditClick(campaign)}
-                      className="p-2 text-gray-400 hover:text-gray-600"
+                      className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                       title="Editar"
                     >
                       <Edit size={16} />

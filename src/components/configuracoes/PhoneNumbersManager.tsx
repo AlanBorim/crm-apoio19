@@ -85,7 +85,7 @@ export function PhoneNumbersManager() {
 
     if (isLoading) {
         return (
-            <div className="p-6 text-center text-gray-500">
+            <div className="p-6 text-center text-gray-500 dark:text-gray-400">
                 Carregando números...
             </div>
         );
@@ -96,11 +96,11 @@ export function PhoneNumbersManager() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
                         <Phone className="h-5 w-5" />
                         Números de Clientes
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-gray-600 mt-1 dark:text-gray-400">
                         Números de telefone sincronizados da plataforma Meta
                     </p>
                 </div>
@@ -116,10 +116,10 @@ export function PhoneNumbersManager() {
 
             {/* Phone Numbers List */}
             {phoneNumbers.length === 0 ? (
-                <div className="p-8 text-center border border-dashed border-gray-300 rounded-lg">
-                    <Phone className="h-12 w-12 mx-auto text-gray-400 mb-3" />
-                    <p className="text-gray-600 mb-2">Nenhum número cadastrado</p>
-                    <p className="text-sm text-gray-500">
+                <div className="p-8 text-center border border-dashed border-gray-300 rounded-lg dark:border-slate-700">
+                    <Phone className="h-12 w-12 mx-auto text-gray-400 mb-3 dark:text-gray-500" />
+                    <p className="text-gray-600 mb-2 dark:text-gray-400">Nenhum número cadastrado</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-500">
                         Clique em "Sincronizar" para buscar números da Meta API
                     </p>
                 </div>
@@ -128,12 +128,12 @@ export function PhoneNumbersManager() {
                     {phoneNumbers.map((phone) => (
                         <div
                             key={phone.id}
-                            className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                            className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow dark:border-slate-700 dark:bg-slate-800/50"
                         >
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <h4 className="font-medium text-gray-900">{phone.name}</h4>
+                                        <h4 className="font-medium text-gray-900 dark:text-gray-100">{phone.name}</h4>
                                         {phone.status === 'active' ? (
                                             <CheckCircle className="h-4 w-4 text-green-500" />
                                         ) : (
@@ -142,19 +142,19 @@ export function PhoneNumbersManager() {
                                         {getQualityBadge(phone.metadata?.quality_rating)}
                                     </div>
 
-                                    <div className="space-y-1 text-sm text-gray-600">
+                                    <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                                         <p className="flex items-center gap-2">
                                             <Phone className="h-3.5 w-3.5" />
                                             {phone.phone_number}
                                         </p>
                                         <p>
-                                            <span className="font-medium">Phone Number ID:</span> {phone.phone_number_id}
+                                            <span className="font-medium text-gray-700 dark:text-gray-300">Phone Number ID:</span> {phone.phone_number_id}
                                         </p>
                                         <p>
-                                            <span className="font-medium">Limite Diário:</span> {phone.current_daily_count} / {phone.daily_limit} mensagens
+                                            <span className="font-medium text-gray-700 dark:text-gray-300">Limite Diário:</span> {phone.current_daily_count} / {phone.daily_limit} mensagens
                                         </p>
                                         {phone.metadata?.synced_at && (
-                                            <p className="text-xs text-gray-500">
+                                            <p className="text-xs text-gray-500 dark:text-gray-500">
                                                 Sincronizado em: {new Date(phone.metadata.synced_at).toLocaleString('pt-BR')}
                                             </p>
                                         )}
@@ -162,8 +162,8 @@ export function PhoneNumbersManager() {
                                 </div>
 
                                 <div className="relative group">
-                                    <AlertCircle className="h-5 w-5 text-gray-400 cursor-help" />
-                                    <div className="absolute right-0 top-6 hidden group-hover:block bg-gray-900 text-white text-xs rounded p-2 w-48 z-10">
+                                    <AlertCircle className="h-5 w-5 text-gray-400 cursor-help dark:text-gray-500" />
+                                    <div className="absolute right-0 top-6 hidden group-hover:block bg-gray-900 text-white text-xs rounded p-2 w-48 z-10 dark:bg-slate-700">
                                         Este número está ativo na sua conta Meta Business
                                     </div>
                                 </div>

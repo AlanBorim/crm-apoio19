@@ -364,7 +364,7 @@ export function UserManagement({
     <div className="space-y-6 relative">
       {/* Debug info - apenas em desenvolvimento */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-xs">
+        <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-xs dark:bg-yellow-900/20 dark:border-yellow-900/30 dark:text-yellow-200">
           <strong>Debug Modal:</strong> isOpen={isModalOpen.toString()},
           useInternalModal={useInternalModal.toString()},
           editingUser={editingUser?.nome || 'null'},
@@ -375,27 +375,27 @@ export function UserManagement({
       {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-            <Users size={24} className="mr-2" />
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center dark:text-gray-100">
+            <Users size={24} className="mr-2 text-gray-700 dark:text-gray-300" />
             Gerenciamento de Usuários
             {process.env.NODE_ENV === 'development' && (
-              <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+              <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded dark:bg-blue-900/30 dark:text-blue-300">
                 DEV
               </span>
             )}
             {apiStatus !== null && (
               <span className={`ml-2 text-xs px-2 py-1 rounded ${apiStatus
-                ? 'bg-green-100 text-green-800'
-                : 'bg-orange-100 text-orange-800'
+                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
                 }`}>
                 {apiStatus ? 'API Online' : 'Modo Mock'}
               </span>
             )}
           </h2>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Gerencie usuários e suas permissões
             {safeUsers.length > 0 && (
-              <span className="ml-2 text-sm text-gray-500">
+              <span className="ml-2 text-sm text-gray-500 dark:text-gray-500">
                 ({safeUsers.length} de {total} usuários)
               </span>
             )}
@@ -405,7 +405,7 @@ export function UserManagement({
           <button
             onClick={refreshUsers}
             disabled={loading.list}
-            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-700"
             title="Atualizar lista"
           >
             <RefreshCw size={16} className={loading.list ? 'animate-spin' : ''} />
@@ -460,20 +460,20 @@ export function UserManagement({
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <Search size={16} className="text-gray-400" />
+            <Search size={16} className="text-gray-400 dark:text-gray-500" />
           </div>
           <input
             type="text"
             placeholder="Buscar usuários..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            className="block w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 dark:placeholder-gray-500"
           />
         </div>
         <button
           onClick={refreshUsers}
           disabled={loading.list}
-          className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-700"
         >
           {loading.list ? (
             <Loader2 size={16} className="animate-spin" />
@@ -485,9 +485,9 @@ export function UserManagement({
 
       {/* Ações em lote */}
       {hasSelectedUsers && (
-        <div className="rounded-lg border border-gray-200 bg-blue-50 p-4">
+        <div className="rounded-lg border border-gray-200 bg-blue-50 p-4 dark:bg-blue-900/20 dark:border-blue-800">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-blue-700">
+            <span className="text-sm text-blue-700 dark:text-blue-300">
               {safeSelectedUsers.length} usuário(s) selecionado(s)
             </span>
             <div className="flex gap-2">
@@ -521,55 +521,55 @@ export function UserManagement({
       )}
 
       {/* Lista de usuários */}
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white dark:bg-slate-800 dark:border-slate-700">
         <div className="overflow-x-auto">
           {loading.list && safeUsers.length === 0 ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 size={32} className="animate-spin text-gray-400" />
-              <span className="ml-2 text-gray-500">Carregando usuários...</span>
+              <span className="ml-2 text-gray-500 dark:text-gray-400">Carregando usuários...</span>
             </div>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+              <thead className="bg-gray-50 dark:bg-slate-900">
                 <tr>
                   <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
                       checked={safeSelectedUsers.length === safeUsers.length && safeUsers.length > 0}
                       onChange={handleSelectAll}
-                      className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                      className="rounded border-gray-300 text-orange-600 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-600"
                     />
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Usuário
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Função
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Último Login
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Permissões
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Ações
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="divide-y divide-gray-200 bg-white dark:bg-slate-800 dark:divide-slate-700">
                 {safeUsers.length === 0 && !loading.list ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                       <div className="flex flex-col items-center">
-                        <Users size={48} className="text-gray-300 mb-4" />
-                        <p className="text-lg font-medium text-gray-900 mb-2">
+                        <Users size={48} className="text-gray-300 mb-4 dark:text-slate-600" />
+                        <p className="text-lg font-medium text-gray-900 mb-2 dark:text-gray-100">
                           {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
                         </p>
-                        <p className="text-sm text-gray-500 mb-4">
+                        <p className="text-sm text-gray-500 mb-4 dark:text-gray-400">
                           {searchTerm
                             ? 'Tente ajustar os filtros de busca.'
                             : apiStatus === false
@@ -591,28 +591,28 @@ export function UserManagement({
                   </tr>
                 ) : (
                   safeUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
+                    <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/50">
                       <td className="px-6 py-4">
                         <input
                           type="checkbox"
                           checked={isUserSelected(user.id)}
                           onChange={() => handleSelectUser(user.id)}
-                          className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                          className="rounded border-gray-300 text-orange-600 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-600"
                         />
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-sm font-medium text-orange-600">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-sm font-medium text-orange-600 dark:bg-orange-900/40 dark:text-orange-300">
                             {getUserInitials(user.nome)}
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{user.nome}</div>
-                            <div className="text-sm text-gray-500 flex items-center">
+                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.nome}</div>
+                            <div className="text-sm text-gray-500 flex items-center dark:text-gray-400">
                               <Mail size={12} className="mr-1" />
                               {user.email}
                             </div>
                             {user.telefone && (
-                              <div className="text-sm text-gray-500 flex items-center">
+                              <div className="text-sm text-gray-500 flex items-center dark:text-gray-400">
                                 <Phone size={12} className="mr-1" />
                                 {user.telefone}
                               </div>
@@ -656,24 +656,24 @@ export function UserManagement({
                       </td>
                       <td className="px-6 py-4">
                         {user.ultimoLogin ? (
-                          <div className="text-sm text-gray-900 flex items-center">
+                          <div className="text-sm text-gray-900 flex items-center dark:text-gray-100">
                             <Calendar size={12} className="mr-1" />
                             <div>
                               {formatDate(user.ultimoLogin)}
                               <br />
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
                                 {formatTime(user.ultimoLogin)}
                               </span>
                             </div>
                           </div>
                         ) : (
-                          <span className="text-sm text-gray-500">Nunca</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">Nunca</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center">
-                          <Shield size={16} className="mr-2 text-gray-400" />
-                          <span className="text-sm text-gray-900">
+                          <Shield size={16} className="mr-2 text-gray-400 dark:text-gray-500" />
+                          <span className="text-sm text-gray-900 dark:text-gray-100">
                             {getPermissionsText(user.permissoes)}
                           </span>
                         </div>
@@ -682,7 +682,7 @@ export function UserManagement({
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleEditUserInternal(user)}
-                            className="text-gray-400 hover:text-blue-600 transition-colors"
+                            className="text-gray-400 hover:text-blue-600 transition-colors dark:text-gray-500 dark:hover:text-blue-400"
                             title="Editar usuário"
                           >
                             <Edit size={16} />
@@ -729,29 +729,29 @@ export function UserManagement({
 
       {/* Paginação */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+        <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 dark:bg-slate-800 dark:border-slate-700">
           <div className="flex flex-1 justify-between sm:hidden">
             <button
               onClick={previousPage}
               disabled={currentPage === 1}
-              className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:bg-slate-700 dark:border-slate-600 dark:text-gray-300 dark:hover:bg-slate-600"
             >
               Anterior
             </button>
             <button
               onClick={nextPage}
               disabled={currentPage === totalPages}
-              className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:bg-slate-700 dark:border-slate-600 dark:text-gray-300 dark:hover:bg-slate-600"
             >
               Próximo
             </button>
           </div>
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-gray-700">
-                Mostrando <span className="font-medium">{((currentPage - 1) * 10) + 1}</span> até{' '}
-                <span className="font-medium">{Math.min(currentPage * 10, total)}</span> de{' '}
-                <span className="font-medium">{total}</span> resultados
+              <p className="text-sm text-gray-700 dark:text-gray-400">
+                Mostrando <span className="font-medium text-gray-900 dark:text-white">{((currentPage - 1) * 10) + 1}</span> até{' '}
+                <span className="font-medium text-gray-900 dark:text-white">{Math.min(currentPage * 10, total)}</span> de{' '}
+                <span className="font-medium text-gray-900 dark:text-white">{total}</span> resultados
               </p>
             </div>
             <div>
@@ -759,7 +759,7 @@ export function UserManagement({
                 <button
                   onClick={previousPage}
                   disabled={currentPage === 1}
-                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 dark:ring-slate-600 dark:hover:bg-slate-700 dark:text-gray-500"
                 >
                   <span className="sr-only">Anterior</span>
                   <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -775,7 +775,7 @@ export function UserManagement({
                       onClick={() => goToPage(page)}
                       className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${page === currentPage
                         ? 'z-10 bg-orange-600 text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600'
-                        : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
+                        : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 dark:text-gray-300 dark:ring-slate-600 dark:hover:bg-slate-700'
                         }`}
                     >
                       {page}
@@ -786,7 +786,7 @@ export function UserManagement({
                 <button
                   onClick={nextPage}
                   disabled={currentPage === totalPages}
-                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 dark:ring-slate-600 dark:hover:bg-slate-700 dark:text-gray-500"
                 >
                   <span className="sr-only">Próximo</span>
                   <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
