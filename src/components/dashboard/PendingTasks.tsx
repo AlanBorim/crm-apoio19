@@ -54,31 +54,31 @@ export function PendingTasks({ tasks, title, onComplete }: PendingTasksProps) {
   const pendingTasks = tasks.filter(t => t.status !== 'concluida');
 
   return (
-    <div className="rounded-lg bg-white p-6 shadow-sm">
+    <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-slate-900 dark:border dark:border-slate-800">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-medium text-gray-900">{title}</h3>
-        <a href="/tarefas" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-slate-50">{title}</h3>
+        <a href="/tarefas" className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
           Ver todas
         </a>
       </div>
       <div className="space-y-3">
         {pendingTasks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-6 text-center">
-            <CheckCircle className="mb-2 h-8 w-8 text-green-100" />
-            <p className="text-sm text-gray-500">Nenhuma tarefa pendente</p>
+            <CheckCircle className="mb-2 h-8 w-8 text-green-100 dark:text-green-900/50" />
+            <p className="text-sm text-gray-500 dark:text-slate-400">Nenhuma tarefa pendente</p>
           </div>
         ) : (
           pendingTasks.slice(0, 5).map((task) => (
             <div
               key={task.id}
-              className="flex items-center justify-between rounded-md border border-gray-100 bg-gray-50 p-3 transition-colors hover:bg-gray-100"
+              className="flex items-center justify-between rounded-md border border-gray-100 bg-gray-50 p-3 transition-colors hover:bg-gray-100 dark:bg-slate-800/50 dark:border-slate-700 dark:hover:bg-slate-800"
             >
               <div className="flex items-start space-x-3">
                 <div className="mt-0.5">{getStatusIcon(task.status)}</div>
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900">{task.titulo}</h4>
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-slate-200">{task.titulo}</h4>
                   <div className="mt-1 flex items-center space-x-2">
-                    <span className="flex items-center text-xs text-gray-500">
+                    <span className="flex items-center text-xs text-gray-500 dark:text-slate-400">
                       <Calendar size={12} className="mr-1" />
                       {formatDate(task.data_vencimento)}
                     </span>
@@ -89,7 +89,7 @@ export function PendingTasks({ tasks, title, onComplete }: PendingTasksProps) {
               <div className="flex items-center">
                 <button
                   onClick={() => onComplete(task)}
-                  className="ml-3 rounded-full p-1 text-gray-400 hover:bg-green-100 hover:text-green-600 transition-colors"
+                  className="ml-3 rounded-full p-1 text-gray-400 hover:bg-green-100 hover:text-green-600 dark:text-slate-500 dark:hover:bg-green-900/30 dark:hover:text-green-400 transition-colors"
                   title="Marcar como concluída"
                 >
                   <CheckCircle size={20} />

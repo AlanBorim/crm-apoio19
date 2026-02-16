@@ -49,24 +49,24 @@ export function RecentActivities({
   };
 
   return (
-    <div className="rounded-lg bg-white p-6 shadow-sm">
+    <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-slate-900 dark:border dark:border-slate-800">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-medium text-gray-900">{title}</h3>
+        <h3 className="text-lg font-medium text-gray-900 dark:text-slate-50">{title}</h3>
         <div className="flex space-x-2">
           {notifications.length > 0 && (
             <>
               <button
                 onClick={onMarkAllAsRead}
-                className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center"
+                className="text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center"
                 title="Marcar todas como lidas"
               >
                 <Check size={14} className="mr-1" />
                 Ler todas
               </button>
-              <span className="text-gray-300">|</span>
+              <span className="text-gray-300 dark:text-slate-700">|</span>
               <button
                 onClick={onDeleteAll}
-                className="text-xs font-medium text-red-600 hover:text-red-800 flex items-center"
+                className="text-xs font-medium text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 flex items-center"
                 title="Excluir todas"
               >
                 <Trash2 size={14} className="mr-1" />
@@ -79,35 +79,35 @@ export function RecentActivities({
       <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
         {notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <Bell className="mb-2 h-8 w-8 text-gray-200" />
-            <p className="text-sm text-gray-500">Nenhuma atividade recente</p>
+            <Bell className="mb-2 h-8 w-8 text-gray-200 dark:text-slate-700" />
+            <p className="text-sm text-gray-500 dark:text-slate-400">Nenhuma atividade recente</p>
           </div>
         ) : (
           notifications.map((notification) => (
             <div
               key={notification.id}
-              className={`flex items-start space-x-3 border-b border-gray-100 pb-4 last:border-0 last:pb-0 ${!notification.is_read ? 'bg-blue-50/50 -mx-2 p-2 rounded' : ''}`}
+              className={`flex items-start space-x-3 border-b border-gray-100 dark:border-slate-800 pb-4 last:border-0 last:pb-0 ${!notification.is_read ? 'bg-blue-50/50 dark:bg-blue-900/10 -mx-2 p-2 rounded' : ''}`}
             >
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 mt-1">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-slate-800 mt-1">
                 {getIcon(notification.type)}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <p className={`text-sm font-medium ${!notification.is_read ? 'text-blue-900' : 'text-gray-900'}`}>
+                  <p className={`text-sm font-medium ${!notification.is_read ? 'text-blue-900 dark:text-blue-300' : 'text-gray-900 dark:text-slate-200'}`}>
                     {notification.title}
                   </p>
-                  <span className="text-xs text-gray-500 flex items-center flex-shrink-0 ml-2">
+                  <span className="text-xs text-gray-500 dark:text-slate-500 flex items-center flex-shrink-0 ml-2">
                     <Clock size={10} className="mr-1" />
                     {formatDate(notification.created_at)}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 mt-1 break-words">{notification.message}</p>
+                <p className="text-sm text-gray-600 dark:text-slate-400 mt-1 break-words">{notification.message}</p>
 
                 <div className="mt-2 flex justify-end space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
                   {!notification.is_read && (
                     <button
                       onClick={() => onMarkAsRead(notification.id)}
-                      className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
+                      className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center"
                     >
                       <Check size={12} className="mr-1" />
                       Marcar como lida
@@ -115,7 +115,7 @@ export function RecentActivities({
                   )}
                   <button
                     onClick={() => onDelete(notification.id)}
-                    className="text-xs text-red-600 hover:text-red-800 flex items-center"
+                    className="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 flex items-center"
                   >
                     <Trash2 size={12} className="mr-1" />
                     Excluir
@@ -126,7 +126,7 @@ export function RecentActivities({
               <div className="flex flex-col space-y-1">
                 <button
                   onClick={() => onDelete(notification.id)}
-                  className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                  className="text-gray-400 hover:text-red-600 dark:text-slate-500 dark:hover:text-red-400 transition-colors p-1"
                   title="Excluir"
                 >
                   <Trash2 size={14} />
@@ -134,7 +134,7 @@ export function RecentActivities({
                 {!notification.is_read && (
                   <button
                     onClick={() => onMarkAsRead(notification.id)}
-                    className="text-blue-400 hover:text-blue-600 transition-colors p-1"
+                    className="text-blue-400 hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-400 transition-colors p-1"
                     title="Marcar como lida"
                   >
                     <Check size={14} />

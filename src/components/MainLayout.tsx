@@ -11,9 +11,11 @@ import {
   MessageSquare,
   PanelLeftClose,
   PanelLeft,
-  CheckSquare
+  CheckSquare,
+  Briefcase
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { ThemeToggle } from './ThemeToggle';
 import { NotificationBell } from './NotificationBell';
 import {
   Sidebar,
@@ -44,6 +46,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const menuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { name: 'Leads', icon: Users, path: '/leads' },
+    { name: 'Clientes', icon: Briefcase, path: '/clientes' },
     { name: 'Kanban', icon: Grid, path: '/kanban' },
     { name: 'Tarefas', icon: CheckSquare, path: '/tarefas' },
     { name: 'Propostas', icon: FileText, path: '/propostas' },
@@ -98,6 +101,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     switch (item.path) {
       case '/dashboard': return hasPermission('dashboard');
       case '/leads': return hasPermission('leads');
+      case '/clientes': return hasPermission('clients') || hasPermission('leads'); // Fallback or separate perm
       case '/kanban': return hasPermission('kanban');
       case '/tarefas': return hasPermission('tasks');
       case '/propostas': return hasPermission('proposals');
@@ -109,7 +113,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex h-screen w-full bg-gray-50">
+      <div className="flex h-screen w-full bg-gray-50 dark:bg-slate-950">
         {/* Sidebar */}
         <Sidebar collapsible="icon" className="border-r border-gray-200 bg-white">
           {/* Header do Sidebar */}
@@ -143,16 +147,16 @@ export function MainLayout({ children }: MainLayoutProps) {
                           tooltip={item.name}
                           className={
                             isActive
-                              ? 'bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700'
-                              : 'text-gray-700 hover:bg-gray-100'
+                              ? 'bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700 dark:bg-orange-950/30 dark:text-orange-400 dark:hover:bg-orange-900/50 dark:hover:text-orange-300'
+                              : 'text-gray-700 hover:bg-gray-100 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
                           }
                         >
                           <Link to={item.path}>
                             <item.icon
                               className={
                                 isActive
-                                  ? 'text-orange-500'
-                                  : 'text-gray-400 group-hover:text-gray-500'
+                                  ? 'text-orange-500 dark:text-orange-400'
+                                  : 'text-gray-400 group-hover:text-gray-500 dark:text-slate-500 dark:group-hover:text-slate-300'
                               }
                             />
                             <span>{item.name}</span>
@@ -182,9 +186,9 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <SidebarMenuButton
                   onClick={logout}
                   tooltip="Sair"
-                  className="text-gray-700 hover:bg-gray-100"
+                  className="text-gray-700 hover:bg-gray-100 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                 >
-                  <LogOut className="text-gray-400" />
+                  <LogOut className="text-gray-400 group-hover:dark:text-slate-300 dark:text-slate-500" />
                   <span>Sair</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -198,7 +202,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         {/* Conteúdo principal */}
         <SidebarInset className="flex flex-1 flex-col">
           {/* Cabeçalho */}
-          <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 border-b border-gray-200 bg-white">
+          <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 border-b border-gray-200 bg-white dark:bg-slate-900 dark:border-slate-800">
             <div className="flex flex-1 items-center px-4">
               {/* Trigger do Sidebar (Mobile) */}
               <div className="md:hidden mr-2">
@@ -214,25 +218,28 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <input
                     type="text"
                     placeholder="Buscar..."
-                    className="block w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    className="block w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 dark:placeholder-gray-400"
                   />
                 </div>
               </div>
 
               {/* Área direita do header */}
               <div className="ml-4 flex items-center md:ml-6">
+                {/* Theme Toggle */}
+                <ThemeToggle />
+
                 {/* Notificações */}
                 <NotificationBell />
 
                 {/* Perfil */}
                 <div className="relative ml-3">
                   <div className="flex items-center">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-sm font-medium text-orange-600">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-sm font-medium text-orange-600 dark:bg-orange-900/50 dark:text-orange-400">
                       {user ? getUserInitials(user.nome) : 'U'}
                     </div>
                     <div className="ml-2 hidden md:block">
-                      <div className="text-sm font-medium text-gray-700">{user?.nome || 'Usuário'}</div>
-                      <div className="text-xs text-gray-500">{user?.role || 'Role'}</div>
+                      <div className="text-sm font-medium text-gray-700 dark:text-gray-200">{user?.nome || 'Usuário'}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{user?.role || 'Role'}</div>
                     </div>
                     <ChevronDown size={16} className="ml-1 hidden text-gray-400 md:block" />
                   </div>
@@ -242,7 +249,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
 
           {/* Conteúdo da página */}
-          <main className="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-6">
+          <main className="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-6 dark:bg-slate-950">
             {children}
           </main>
         </SidebarInset>

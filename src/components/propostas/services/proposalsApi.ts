@@ -46,6 +46,7 @@ export interface Proposal {
     pdf_path?: string;
     observacoes?: string;
     condicoes?: string;
+    modelo_id?: number;
 }
 
 export interface PaginatedResponse<T> {

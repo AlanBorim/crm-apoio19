@@ -11,8 +11,8 @@ interface FunnelChartProps {
 
 export function FunnelChart({ data, title }: FunnelChartProps) {
   return (
-    <div className="rounded-lg bg-white p-6 shadow-sm">
-      <h3 className="mb-4 text-lg font-medium text-gray-900">{title}</h3>
+    <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-slate-900 dark:border dark:border-slate-800">
+      <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-slate-50">{title}</h3>
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -30,11 +30,12 @@ export function FunnelChart({ data, title }: FunnelChartProps) {
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip 
+            <Tooltip
               formatter={(value) => [`${value} leads`, 'Quantidade']}
-              contentStyle={{ 
-                backgroundColor: '#fff',
-                border: '1px solid #e5e7eb',
+              contentStyle={{
+                backgroundColor: 'var(--tooltip-bg, #fff)',
+                borderColor: 'var(--tooltip-border, #e5e7eb)',
+                color: 'var(--tooltip-text, #000)',
                 borderRadius: '0.375rem',
                 boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
               }}

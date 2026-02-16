@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { 
-  Send, 
-  Paperclip, 
-  Smile, 
-  Phone, 
-  Video, 
+import {
+  Send,
+  Paperclip,
+  Smile,
+  Phone,
+  Video,
   MoreVertical,
   Search,
   ArrowLeft,
@@ -98,9 +98,9 @@ export function ChatInterface({ selectedContact, onBackToContacts }: ChatInterfa
 
     // Simular envio
     setTimeout(() => {
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === newMessage.id 
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === newMessage.id
             ? { ...msg, status: 'enviada' }
             : msg
         )
@@ -159,10 +159,10 @@ export function ChatInterface({ selectedContact, onBackToContacts }: ChatInterfa
           <div className="text-gray-400 mb-4">
             <Send size={48} />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <h3 className="text-lg font-medium text-gray-900 mb-2 dark:text-gray-100">
             Selecione uma conversa
           </h3>
-          <p className="text-gray-500">
+          <p className="text-gray-500 dark:text-gray-400">
             Escolha um contato para começar a conversar
           </p>
         </div>
@@ -171,62 +171,62 @@ export function ChatInterface({ selectedContact, onBackToContacts }: ChatInterfa
   }
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-900">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50 dark:bg-slate-900 dark:border-slate-800">
         <div className="flex items-center">
           <button
             onClick={onBackToContacts}
-            className="mr-3 p-1 rounded-full hover:bg-gray-200 lg:hidden"
+            className="mr-3 p-1 rounded-full hover:bg-gray-200 lg:hidden dark:hover:bg-slate-800"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={20} className="dark:text-gray-400" />
           </button>
-          
+
           <div className="flex items-center">
             <div className="relative">
-              <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center dark:bg-orange-900/30">
                 {selectedContact.avatar ? (
-                  <img 
-                    src={selectedContact.avatar} 
+                  <img
+                    src={selectedContact.avatar}
                     alt={selectedContact.nome}
                     className="h-10 w-10 rounded-full object-cover"
                   />
                 ) : (
-                  <span className="text-sm font-medium text-orange-600">
+                  <span className="text-sm font-medium text-orange-600 dark:text-orange-400">
                     {selectedContact.nome.charAt(0).toUpperCase()}
                   </span>
                 )}
               </div>
               {selectedContact.status === 'online' && (
-                <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
+                <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-900"></div>
               )}
             </div>
-            
+
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-gray-900">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 {selectedContact.nome}
               </h3>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {selectedContact.numero}
               </p>
               {isTyping && (
-                <p className="text-xs text-green-600">digitando...</p>
+                <p className="text-xs text-green-600 dark:text-green-400">digitando...</p>
               )}
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-full hover:bg-gray-200">
+          <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-800 dark:text-gray-400">
             <Search size={18} />
           </button>
-          <button className="p-2 rounded-full hover:bg-gray-200">
+          <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-800 dark:text-gray-400">
             <Phone size={18} />
           </button>
-          <button className="p-2 rounded-full hover:bg-gray-200">
+          <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-800 dark:text-gray-400">
             <Video size={18} />
           </button>
-          <button className="p-2 rounded-full hover:bg-gray-200">
+          <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-800 dark:text-gray-400">
             <MoreVertical size={18} />
           </button>
         </div>
@@ -240,26 +240,24 @@ export function ChatInterface({ selectedContact, onBackToContacts }: ChatInterfa
             className={`flex ${msg.direcao === 'enviada' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                msg.direcao === 'enviada'
+              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${msg.direcao === 'enviada'
                   ? 'bg-orange-500 text-white'
-                  : 'bg-gray-100 text-gray-900'
-              }`}
+                  : 'bg-gray-100 text-gray-900 dark:bg-slate-800 dark:text-gray-200'
+                }`}
             >
               <p className="text-sm">{msg.conteudo}</p>
-              <div className={`flex items-center justify-end mt-1 gap-1 ${
-                msg.direcao === 'enviada' ? 'text-orange-100' : 'text-gray-500'
-              }`}>
+              <div className={`flex items-center justify-end mt-1 gap-1 ${msg.direcao === 'enviada' ? 'text-orange-100' : 'text-gray-500 dark:text-gray-400'
+                }`}>
                 <span className="text-xs">{formatTime(msg.timestamp)}</span>
                 {msg.direcao === 'enviada' && getMessageStatusIcon(msg.status)}
               </div>
             </div>
           </div>
         ))}
-        
+
         {isTyping && (
           <div className="flex justify-start">
-            <div className="bg-gray-100 px-4 py-2 rounded-lg">
+            <div className="bg-gray-100 px-4 py-2 rounded-lg dark:bg-slate-800">
               <div className="flex space-x-1">
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -268,17 +266,17 @@ export function ChatInterface({ selectedContact, onBackToContacts }: ChatInterfa
             </div>
           </div>
         )}
-        
+
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200 bg-white">
+      <div className="p-4 border-t border-gray-200 bg-white dark:bg-slate-900 dark:border-slate-800">
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-full hover:bg-gray-100">
-            <Paperclip size={20} className="text-gray-500" />
+          <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800">
+            <Paperclip size={20} className="text-gray-500 dark:text-gray-400" />
           </button>
-          
+
           <div className="flex-1 relative">
             <input
               type="text"
@@ -286,17 +284,17 @@ export function ChatInterface({ selectedContact, onBackToContacts }: ChatInterfa
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder="Digite uma mensagem..."
-              className="w-full rounded-full border border-gray-300 px-4 py-2 pr-12 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              className="w-full rounded-full border border-gray-300 px-4 py-2 pr-12 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 dark:placeholder-gray-400"
             />
-            <button className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100">
-              <Smile size={18} className="text-gray-500" />
+            <button className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700">
+              <Smile size={18} className="text-gray-500 dark:text-gray-400" />
             </button>
           </div>
-          
+
           <button
             onClick={handleSendMessage}
             disabled={!message.trim()}
-            className="p-2 rounded-full bg-orange-500 text-white hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="p-2 rounded-full bg-orange-500 text-white hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed dark:disabled:bg-slate-700 dark:disabled:text-gray-500"
           >
             <Send size={18} />
           </button>

@@ -75,35 +75,35 @@ export function TaskForm({ isOpen, onClose, onSubmit, initialData, isLoading }: 
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+            <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-slate-900 dark:border dark:border-slate-800">
                 <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-800">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
                         {initialData ? 'Editar Tarefa' : 'Nova Tarefa'}
                     </h2>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                         <X size={24} />
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">Título</label>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Título</label>
                         <input
                             type="text"
                             required
                             value={formData.titulo}
                             onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                            className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:outline-none"
+                            className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:outline-none dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                             placeholder="Ex: Reunião com cliente"
                         />
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">Descrição</label>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Descrição</label>
                         <textarea
                             value={formData.descricao}
                             onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                            className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:outline-none"
+                            className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:outline-none dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                             rows={3}
                             placeholder="Detalhes da tarefa..."
                         />
@@ -111,24 +111,24 @@ export function TaskForm({ isOpen, onClose, onSubmit, initialData, isLoading }: 
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">Vencimento</label>
+                            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Vencimento</label>
                             <div className="relative">
                                 <input
                                     type="datetime-local"
                                     value={formData.data_vencimento}
                                     onChange={(e) => setFormData({ ...formData, data_vencimento: e.target.value })}
-                                    className="w-full rounded-md border border-gray-300 p-2 pl-8 focus:border-blue-500 focus:outline-none"
+                                    className="w-full rounded-md border border-gray-300 p-2 pl-8 focus:border-blue-500 focus:outline-none dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                                 />
                                 <Calendar size={16} className="absolute left-2.5 top-3 text-gray-400" />
                             </div>
                         </div>
 
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">Prioridade</label>
+                            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Prioridade</label>
                             <select
                                 value={formData.prioridade}
                                 onChange={(e) => setFormData({ ...formData, prioridade: e.target.value as any })}
-                                className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:outline-none"
+                                className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:outline-none dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                             >
                                 <option value="baixa">Baixa</option>
                                 <option value="media">Média</option>
@@ -139,11 +139,11 @@ export function TaskForm({ isOpen, onClose, onSubmit, initialData, isLoading }: 
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">Status</label>
+                            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
                             <select
                                 value={formData.status}
                                 onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                                className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:outline-none"
+                                className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:outline-none dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                             >
                                 <option value="pendente">Pendente</option>
                                 <option value="em_andamento">Em Andamento</option>
@@ -152,12 +152,12 @@ export function TaskForm({ isOpen, onClose, onSubmit, initialData, isLoading }: 
                         </div>
 
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">Vincular Lead (Opcional)</label>
+                            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Vincular Lead (Opcional)</label>
                             <div className="relative">
                                 <select
                                     value={formData.lead_id || ''}
                                     onChange={(e) => setFormData({ ...formData, lead_id: e.target.value ? Number(e.target.value) : undefined })}
-                                    className="w-full rounded-md border border-gray-300 p-2 pl-8 focus:border-blue-500 focus:outline-none"
+                                    className="w-full rounded-md border border-gray-300 p-2 pl-8 focus:border-blue-500 focus:outline-none dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                                     disabled={loadingLeads}
                                 >
                                     <option value="">Nenhum lead vinculado</option>
@@ -176,7 +176,7 @@ export function TaskForm({ isOpen, onClose, onSubmit, initialData, isLoading }: 
                         <button
                             type="button"
                             onClick={onClose}
-                            className="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                            className="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-800"
                             disabled={isLoading}
                         >
                             Cancelar

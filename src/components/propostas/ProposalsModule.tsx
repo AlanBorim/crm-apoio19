@@ -57,12 +57,31 @@ export function ProposalsModule() {
   };
 
 
-  const handleSave = async (proposalData: any) => {
+  const handleSave = async (proposalData: any, shouldSend?: boolean) => {
     try {
+      let savedProposal;
+
       if (selectedProposal) {
-        await proposalsApi.update(selectedProposal.id, proposalData);
+        savedProposal = await proposalsApi.update(selectedProposal.id, proposalData);
       } else {
-        await proposalsApi.create(proposalData);
+        savedProposal = await proposalsApi.create(proposalData);
+      }
+
+      if (shouldSend && savedProposal && savedProposal.id) {
+        if (confirm('Deseja enviar a proposta por e-mail agora?')) {
+          try {
+            await proposalsApi.sendProposal(savedProposal.id);
+            alert('Proposta salva e enviada com sucesso!');
+          } catch (sendErr: any) {
+            console.error('Erro ao enviar e-mail:', sendErr);
+            alert('Proposta salva, mas houve um erro ao enviar o e-mail: ' + (sendErr.message || 'Erro desconhecido'));
+          }
+        } else {
+          alert('Proposta salva com sucesso!');
+        }
+      } else if (shouldSend) {
+        // Fallback if no ID (should not happen)
+        alert('Proposta salva, mas não foi possível enviar (ID não retornado).');
       }
 
       await loadProposals();
@@ -191,8 +210,8 @@ export function ProposalsModule() {
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Propostas Comerciais</h1>
-          <p className="text-gray-600">Gerencie suas propostas comerciais</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Propostas Comerciais</h1>
+          <p className="text-gray-600 dark:text-gray-400">Gerencie suas propostas comerciais</p>
         </div>
         {activeView === 'list' && (
           <button

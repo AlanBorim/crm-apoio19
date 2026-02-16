@@ -488,10 +488,10 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
               id={`dynamic_${field.id}`}
               checked={fieldValue === true || fieldValue === 'true' || fieldValue === 1}
               onChange={(e) => handleDynamicFieldChange(field.id, e.target.checked)}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:checked:bg-blue-600"
               disabled={loading}
             />
-            <label htmlFor={`dynamic_${field.id}`} className="ml-2 text-sm text-gray-700">
+            <label htmlFor={`dynamic_${field.id}`} className="ml-2 text-sm text-gray-700 dark:text-gray-300">
               {field.label}
               {field.required && ' *'}
             </label>
@@ -504,14 +504,14 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
       case 'select':
         return (
           <div key={field.id}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
               {field.label}
               {field.required && ' *'}
             </label>
             <select
               value={fieldValue}
               onChange={(e) => handleDynamicFieldChange(field.id, e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${fieldError ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:text-gray-100 ${fieldError ? 'border-red-300 dark:border-red-800' : 'border-gray-300 dark:border-slate-700'
                 }`}
               disabled={loading}
             >
@@ -763,22 +763,22 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
       )}
 
       {/* Informações Básicas */}
-      <div className="bg-white p-6 rounded-lg border">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+      <div className="bg-white p-6 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
+        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2 dark:text-gray-100">
           <User size={20} />
           Informações Básicas
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
               Nome *
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.name ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:text-gray-100 ${errors.name ? 'border-red-300 dark:border-red-800' : 'border-gray-300 dark:border-slate-700'
                 }`}
               placeholder="Nome completo do lead"
               disabled={loading}
@@ -789,14 +789,14 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
               Empresa *
             </label>
             <input
               type="text"
               value={formData.company}
               onChange={(e) => handleInputChange('company', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.company ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:text-gray-100 ${errors.company ? 'border-red-300 dark:border-red-800' : 'border-gray-300 dark:border-slate-700'
                 }`}
               placeholder="Nome da empresa"
               disabled={loading}
@@ -807,14 +807,14 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
               Email
             </label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.email ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:text-gray-100 ${errors.email ? 'border-red-300 dark:border-red-800' : 'border-gray-300 dark:border-slate-700'
                 }`}
               placeholder="email@exemplo.com"
               disabled={loading}
@@ -825,14 +825,14 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
               Telefone
             </label>
             <input
               type="tel"
               value={formData.phone}
               onChange={(e) => handleInputChange('phone', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.phone ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:text-gray-100 ${errors.phone ? 'border-red-300 dark:border-red-800' : 'border-gray-300 dark:border-slate-700'
                 }`}
               placeholder="(11) 99999-9999"
               disabled={loading}
@@ -843,27 +843,27 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
               Cargo
             </label>
             <input
               type="text"
               value={formData.position}
               onChange={(e) => handleInputChange('position', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
               placeholder="Cargo na empresa"
               disabled={loading}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
               Origem
             </label>
             <select
               value={formData.source}
               onChange={(e) => handleInputChange('source', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
               disabled={loading || loadingSources}
             >
               <option value="">Selecione a origem</option>
@@ -874,15 +874,15 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
               ))}
             </select>
             {loadingSources && (
-              <p className="mt-1 text-sm text-gray-500">Carregando origens...</p>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Carregando origens...</p>
             )}
           </div>
         </div>
 
         {/* Campos extras dinâmicos da origem */}
         {selectedSourceConfig?.meta_config && (
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
-            <h4 className="text-md font-medium text-gray-900 mb-4">
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg border dark:bg-slate-800/50 dark:border-slate-800">
+            <h4 className="text-md font-medium text-gray-900 mb-4 dark:text-gray-100">
               Informações Adicionais - {selectedSourceConfig.value}
             </h4>
 
@@ -890,7 +890,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
               {/* Campo legacy (compatibilidade) */}
               {selectedSourceConfig.meta_config.extra_field && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                     {selectedSourceConfig.meta_config.extra_field.label}
                     {selectedSourceConfig.meta_config.extra_field.required && ' *'}
                   </label>
@@ -898,7 +898,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
                     type={selectedSourceConfig.meta_config.extra_field.type}
                     value={dynamicFieldValues.legacy_field || ''}
                     onChange={(e) => handleDynamicFieldChange('legacy_field', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.dynamic_legacy_field ? 'border-red-300' : 'border-gray-300'
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:text-gray-100 ${errors.dynamic_legacy_field ? 'border-red-300 dark:border-red-800' : 'border-gray-300 dark:border-slate-700'
                       }`}
                     placeholder={selectedSourceConfig.meta_config.extra_field.placeholder}
                     disabled={loading}
@@ -918,14 +918,14 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
         )}
 
         <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
             Interesse
           </label>
           <textarea
             value={formData.interest}
             onChange={(e) => handleInputChange('interest', e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
             placeholder="Descreva o interesse do lead..."
             disabled={loading}
           />
@@ -933,21 +933,21 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
       </div>
 
       {/* Informações Comerciais */}
-      <div className="bg-white p-6 rounded-lg border">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+      <div className="bg-white p-6 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
+        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2 dark:text-gray-100">
           <DollarSign size={20} />
           Informações Comerciais
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
               Estágio
             </label>
             <select
               value={formData.stage}
               onChange={(e) => handleInputChange('stage', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
               disabled={loading}
             >
               <option value="novo">Novo</option>
@@ -960,14 +960,14 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2 dark:text-gray-300">
               <Thermometer size={16} />
               Temperatura
             </label>
             <select
               value={formData.temperature}
               onChange={(e) => handleInputChange('temperature', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
               disabled={loading}
             >
               <option value="frio">🧊 Frio</option>
@@ -977,14 +977,14 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
               Valor Estimado *
             </label>
             <input
               type="text"
               value={formData.value}
               onChange={(e) => handleInputChange('value', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.value ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:text-gray-100 ${errors.value ? 'border-red-300 dark:border-red-800' : 'border-gray-300 dark:border-slate-700'
                 }`}
               placeholder="0,00"
               disabled={loading}
@@ -995,14 +995,14 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
               Data de Próximo Contato *
             </label>
             <input
               type="date"
               value={formData.next_contact}
               onChange={(e) => handleInputChange('next_contact', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.next_contact ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:text-gray-100 ${errors.next_contact ? 'border-red-300 dark:border-red-800' : 'border-gray-300 dark:border-slate-700'
                 }`}
               disabled={loading}
             />
@@ -1012,13 +1012,13 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
               Responsável
             </label>
             <select
               value={formData.assigned_to}
               onChange={(e) => handleInputChange('assigned_to', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
               disabled={loading || loadingUsers}
             >
               <option value="">Selecione um responsável</option>
@@ -1029,29 +1029,29 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
               ))}
             </select>
             {loadingUsers && (
-              <p className="mt-1 text-sm text-gray-500">Carregando usuários...</p>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Carregando usuários...</p>
             )}
           </div>
         </div>
       </div>
 
       {/* Endereço */}
-      <div className="bg-white p-6 rounded-lg border">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+      <div className="bg-white p-6 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
+        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2 dark:text-gray-100">
           <MapPin size={20} />
           Endereço
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
               Endereço *
             </label>
             <input
               type="text"
               value={formData.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.address ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:text-gray-100 ${errors.address ? 'border-red-300 dark:border-red-800' : 'border-gray-300 dark:border-slate-700'
                 }`}
               placeholder="Rua, número, complemento"
               disabled={loading}
@@ -1062,14 +1062,14 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
               Cidade *
             </label>
             <input
               type="text"
               value={formData.city}
               onChange={(e) => handleInputChange('city', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.city ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:text-gray-100 ${errors.city ? 'border-red-300 dark:border-red-800' : 'border-gray-300 dark:border-slate-700'
                 }`}
               placeholder="Cidade"
               disabled={loading}
@@ -1080,13 +1080,13 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
               Estado *
             </label>
             <select
               value={formData.state}
               onChange={(e) => handleInputChange('state', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.state ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:text-gray-100 ${errors.state ? 'border-red-300 dark:border-red-800' : 'border-gray-300 dark:border-slate-700'
                 }`}
               disabled={loading}
             >
@@ -1125,7 +1125,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
               CEP *
             </label>
             <input
@@ -1138,7 +1138,7 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
                   buscarCep(val);
                 }
               }}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.cep ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:text-gray-100 ${errors.cep ? 'border-red-300 dark:border-red-800' : 'border-gray-300 dark:border-slate-700'
                 }`}
               placeholder="00000-000"
               maxLength={9}
@@ -1152,11 +1152,11 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
       </div>
 
       {/* Botões de ação */}
-      <div className="flex justify-end gap-3 pt-6 border-t">
+      <div className="flex justify-end gap-3 pt-6 border-t dark:border-slate-800">
         <button
           type="button"
           onClick={handleCancel}
-          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50"
+          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-800"
           disabled={loading}
         >
           <X size={20} />
@@ -1182,9 +1182,9 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
   if (isModal) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto dark:bg-slate-900 dark:border dark:border-slate-800">
           <div className="p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 dark:text-gray-100">
               {isEditing ? 'Editar Lead' : 'Novo Lead'}
             </h2>
             {formContent}
@@ -1197,10 +1197,10 @@ const LeadForm: React.FC<Props> = ({ leadId = null, lead, onSave, onCancel, isMo
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
           {isEditing ? 'Editar Lead' : 'Novo Lead'}
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-400">
           {isEditing ? 'Atualize as informações do lead' : 'Preencha as informações do novo lead'}
         </p>
       </div>

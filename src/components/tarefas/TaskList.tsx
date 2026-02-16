@@ -21,7 +21,7 @@ export function TaskList({ tasks, onEdit, onDelete, isLoading }: TaskListProps) 
 
     if (!tasks || tasks.length === 0) {
         return (
-            <div className="flex h-64 flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-gray-500">
+            <div className="flex h-64 flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-gray-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-400">
                 <CheckCircle size={48} className="mb-2 text-gray-400" />
                 <p className="text-lg font-medium">Nenhuma tarefa encontrada</p>
                 <p className="text-sm">Crie uma nova tarefa para começar.</p>
@@ -31,19 +31,19 @@ export function TaskList({ tasks, onEdit, onDelete, isLoading }: TaskListProps) 
 
     const getPriorityColor = (priority: string) => {
         switch (priority) {
-            case 'alta': return 'bg-red-100 text-red-800';
-            case 'media': return 'bg-yellow-100 text-yellow-800';
-            case 'baixa': return 'bg-green-100 text-green-800';
-            default: return 'bg-gray-100 text-gray-800';
+            case 'alta': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+            case 'media': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+            case 'baixa': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+            default: return 'bg-gray-100 text-gray-800 dark:bg-slate-700 dark:text-gray-300';
         }
     };
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'concluida': return 'bg-green-100 text-green-800';
-            case 'em_andamento': return 'bg-blue-100 text-blue-800';
-            case 'pendente': return 'bg-gray-100 text-gray-800';
-            default: return 'bg-gray-100 text-gray-800';
+            case 'concluida': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+            case 'em_andamento': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+            case 'pendente': return 'bg-gray-100 text-gray-800 dark:bg-slate-700 dark:text-gray-300';
+            default: return 'bg-gray-100 text-gray-800 dark:bg-slate-700 dark:text-gray-300';
         }
     };
 
@@ -83,9 +83,9 @@ export function TaskList({ tasks, onEdit, onDelete, isLoading }: TaskListProps) 
             </div>
 
             {/* Tabela de tarefas (Desktop) */}
-            <div className="hidden md:block overflow-hidden rounded-lg border border-gray-200 bg-white shadow">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+            <div className="hidden md:block overflow-hidden rounded-lg border border-gray-200 bg-white shadow dark:bg-slate-900 dark:border-slate-800">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-800">
+                    <thead className="bg-gray-50 dark:bg-slate-900">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Tarefa</th>
                             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Prioridade</th>
@@ -96,14 +96,14 @@ export function TaskList({ tasks, onEdit, onDelete, isLoading }: TaskListProps) 
                             <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Ações</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
+                    <tbody className="divide-y divide-gray-200 bg-white dark:bg-slate-900 dark:divide-slate-800">
                         {tasks.map((task) => (
-                            <tr key={task.id} className="hover:bg-gray-50">
+                            <tr key={task.id} className="hover:bg-gray-50 dark:hover:bg-slate-800">
                                 <td className="px-6 py-4">
                                     <div className="flex flex-col">
-                                        <span className="text-sm font-medium text-gray-900">{task.titulo}</span>
+                                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{task.titulo}</span>
                                         {task.descricao && (
-                                            <span className="text-xs text-gray-500 line-clamp-1">{task.descricao}</span>
+                                            <span className="text-xs text-gray-500 line-clamp-1 dark:text-gray-400">{task.descricao}</span>
                                         )}
                                     </div>
                                 </td>
@@ -118,7 +118,7 @@ export function TaskList({ tasks, onEdit, onDelete, isLoading }: TaskListProps) 
                                         {formatStatus(task.status)}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                     {task.data_vencimento ? (
                                         <div className="flex items-center">
                                             <Calendar size={14} className="mr-1 text-gray-400" />
@@ -128,24 +128,24 @@ export function TaskList({ tasks, onEdit, onDelete, isLoading }: TaskListProps) 
                                         <span className="text-gray-400">-</span>
                                     )}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                     {task.usuario_nome || <span className="text-gray-400">-</span>}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                     {task.lead_nome || <span className="text-gray-400">-</span>}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div className="flex justify-end space-x-2">
                                         <button
                                             onClick={() => onEdit(task)}
-                                            className="text-blue-600 hover:text-blue-900"
+                                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                                             title="Editar"
                                         >
                                             <Edit size={18} />
                                         </button>
                                         <button
                                             onClick={() => onDelete(task.id)}
-                                            className="text-red-600 hover:text-red-900"
+                                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                                             title="Excluir"
                                         >
                                             <Trash2 size={18} />

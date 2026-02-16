@@ -46,15 +46,15 @@ export function AddColumnModal({ isOpen, onClose, onSubmit }: AddColumnModalProp
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 animate-fadeIn">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 animate-fadeIn dark:bg-slate-900">
                 {/* Header */}
-                <div className="flex justify-between items-center border-b border-gray-200 px-6 py-4">
-                    <h2 className="text-xl font-semibold text-gray-800">
+                <div className="flex justify-between items-center border-b border-gray-200 px-6 py-4 dark:border-slate-800">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
                         Nova Coluna Kanban
                     </h2>
                     <button
                         onClick={onClose}
-                        className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                        className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors dark:hover:text-gray-200 dark:hover:bg-slate-800"
                     >
                         <X size={20} />
                     </button>
@@ -64,7 +64,7 @@ export function AddColumnModal({ isOpen, onClose, onSubmit }: AddColumnModalProp
                 <form onSubmit={handleSubmit} className="p-6 space-y-5">
                     {/* Nome da Coluna */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                             Nome da Coluna *
                         </label>
                         <input
@@ -72,7 +72,7 @@ export function AddColumnModal({ isOpen, onClose, onSubmit }: AddColumnModalProp
                             value={nome}
                             onChange={(e) => setNome(e.target.value)}
                             placeholder="Ex: Em Andamento, Revisão..."
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-shadow"
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-shadow dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 dark:placeholder-gray-500"
                             required
                             autoFocus
                         />
@@ -80,7 +80,7 @@ export function AddColumnModal({ isOpen, onClose, onSubmit }: AddColumnModalProp
 
                     {/* Cor da Coluna */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-3 dark:text-gray-300">
                             Cor da Coluna
                         </label>
                         <div className="grid grid-cols-6 gap-3">
@@ -90,8 +90,8 @@ export function AddColumnModal({ isOpen, onClose, onSubmit }: AddColumnModalProp
                                     type="button"
                                     onClick={() => setCor(color.value)}
                                     className={`relative h-10 rounded-lg transition-all transform hover:scale-110 ${cor === color.value
-                                            ? 'ring-2 ring-offset-2 ring-gray-800 scale-110'
-                                            : 'ring-1 ring-gray-200 hover:ring-gray-300'
+                                        ? 'ring-2 ring-offset-2 ring-gray-800 scale-110 dark:ring-gray-200 dark:ring-offset-slate-900'
+                                        : 'ring-1 ring-gray-200 hover:ring-gray-300 dark:ring-slate-700 dark:hover:ring-slate-600'
                                         }`}
                                     style={{ backgroundColor: color.hex }}
                                     title={color.name}
@@ -124,7 +124,7 @@ export function AddColumnModal({ isOpen, onClose, onSubmit }: AddColumnModalProp
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                            className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-800"
                         >
                             Cancelar
                         </button>

@@ -48,19 +48,19 @@ export function ActivityLogPanel({ logs, users, className = '', isLoading = fals
   const getActionColor = (action: ActivityLog['action']) => {
     switch (action) {
       case 'create':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
       case 'update':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
       case 'delete':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
       case 'move':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
       case 'comment':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300';
       case 'assign':
-        return 'bg-indigo-100 text-indigo-800';
+        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 dark:bg-slate-700 dark:text-gray-300';
     }
   };
 
@@ -111,7 +111,7 @@ export function ActivityLogPanel({ logs, users, className = '', isLoading = fals
 
   if (isLoading) {
     return (
-      <div className={`bg-white rounded-lg border border-gray-200 ${className}`}>
+      <div className={`bg-white rounded-lg border border-gray-200 ${className} dark:bg-slate-900 dark:border-slate-800`}>
         <div className="p-4">
           <div className="animate-pulse space-y-3">
             <div className="h-4 bg-gray-200 rounded w-1/4"></div>
@@ -127,21 +127,21 @@ export function ActivityLogPanel({ logs, users, className = '', isLoading = fals
   }
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 ${className}`}>
-      <div className="p-4 border-b border-gray-200">
+    <div className={`bg-white rounded-lg border border-gray-200 ${className} dark:bg-slate-900 dark:border-slate-800`}>
+      <div className="p-4 border-b border-gray-200 dark:border-slate-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Clock size={20} className="text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-900">
+            <Clock size={20} className="text-gray-600 dark:text-gray-400" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Log de Atividades
             </h3>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
               ({filteredLogs.length} {filteredLogs.length === 1 ? 'atividade' : 'atividades'})
             </span>
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            className="flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors dark:text-gray-300 dark:hover:text-gray-100 dark:border-slate-700 dark:hover:bg-slate-800"
           >
             <Filter size={14} />
             <span>Filtros</span>
@@ -152,13 +152,13 @@ export function ActivityLogPanel({ logs, users, className = '', isLoading = fals
         {showFilters && (
           <div className="mt-4 grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                 Usuário
               </label>
               <select
                 value={filterUser}
                 onChange={(e) => setFilterUser(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
               >
                 <option value="">Todos os usuários</option>
                 {users.map(user => (
@@ -169,13 +169,13 @@ export function ActivityLogPanel({ logs, users, className = '', isLoading = fals
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                 Ação
               </label>
               <select
                 value={filterAction}
                 onChange={(e) => setFilterAction(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
               >
                 <option value="">Todas as ações</option>
                 <option value="create">Criação</option>
@@ -208,7 +208,7 @@ export function ActivityLogPanel({ logs, users, className = '', isLoading = fals
             }}
           >
             {displayLogs.map((log) => (
-              <div key={log.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+              <div key={log.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg dark:bg-slate-800">
                 <div className="flex-shrink-0 mt-0.5">
                   {getActionIcon(log.action)}
                 </div>
@@ -218,20 +218,20 @@ export function ActivityLogPanel({ logs, users, className = '', isLoading = fals
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getActionColor(log.action)}`}>
                       {getActionLabel(log.action)}
                     </span>
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-200">
                       {log.user.nome}
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
                       {formatDate(log.createdAt)}
                     </span>
                   </div>
 
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
                     {log.description}
                   </p>
 
                   {(log.oldValue || log.newValue) && (
-                    <div className="mt-2 text-xs text-gray-500">
+                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                       {log.oldValue && (
                         <div>
                           <span className="font-medium">Valor anterior:</span> {JSON.stringify(log.oldValue)}
@@ -254,7 +254,7 @@ export function ActivityLogPanel({ logs, users, className = '', isLoading = fals
           <div className="mt-4 text-center">
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="inline-flex items-center space-x-2 px-4 py-2 text-sm text-orange-600 hover:text-orange-800 border border-orange-300 rounded-md hover:bg-orange-50 transition-colors"
+              className="inline-flex items-center space-x-2 px-4 py-2 text-sm text-orange-600 hover:text-orange-800 border border-orange-300 rounded-md hover:bg-orange-50 transition-colors dark:text-orange-400 dark:hover:text-orange-300 dark:border-orange-700 dark:hover:bg-orange-900/20"
             >
               <span>
                 {isExpanded ? 'Mostrar menos' : `Ver todas (${filteredLogs.length - 2} restantes)`}

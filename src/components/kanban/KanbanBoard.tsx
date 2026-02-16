@@ -477,10 +477,10 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
 
   if (loading && columns.length === 0) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen dark:bg-slate-950">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p>Carregando quadro Kanban...</p>
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 dark:text-blue-500" />
+          <p className="dark:text-gray-300">Carregando quadro Kanban...</p>
         </div>
       </div>
     );
@@ -488,12 +488,12 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
 
   if (error && columns.length === 0) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center text-red-600">
+      <div className="flex items-center justify-center h-screen dark:bg-slate-950">
+        <div className="text-center text-red-600 dark:text-red-400">
           <p className="mb-4">{error}</p>
           <button
             onClick={loadBoard}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
           >
             Tentar Novamente
           </button>
@@ -506,15 +506,15 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="h-screen flex flex-col bg-gray-50">
+      <div className="h-screen flex flex-col bg-gray-50 dark:bg-slate-950">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="bg-white border-b border-gray-200 px-6 py-4 dark:bg-slate-900 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-gray-900">Quadro Kanban</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Quadro Kanban</h1>
               <button
                 onClick={loadBoard}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-slate-800 dark:text-gray-400"
                 title="Recarregar"
               >
                 <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
@@ -530,7 +530,7 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
                   placeholder="Buscar tarefas..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 dark:placeholder-gray-500"
                 />
               </div>
 
@@ -538,8 +538,8 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
               <button
                 onClick={() => setShowFilter(!showFilter)}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${showFilter
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ? 'bg-blue-600 text-white dark:bg-blue-700'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-700'
                   }`}
               >
                 <Filter className="w-4 h-4" />
@@ -550,7 +550,7 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
               {/* Activity Log Button */}
               <button
                 onClick={() => setShowActivityLog(!showActivityLog)}
-                className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors dark:bg-slate-800 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-700"
               >
                 <Activity className="w-4 h-4" />
                 <span>Atividades</span>
@@ -559,7 +559,7 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
               {/* Add Column Button */}
               <button
                 onClick={() => setShowAddColumnModal(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors dark:bg-blue-700 dark:hover:bg-blue-600"
               >
                 <Plus className="w-4 h-4" />
                 <span>Nova Coluna</span>

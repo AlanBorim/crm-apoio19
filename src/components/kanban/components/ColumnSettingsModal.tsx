@@ -60,22 +60,22 @@ export function ColumnSettingsModal({ isOpen, column, onClose, onSave, onDelete 
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent>
+      <DialogContent className="dark:bg-slate-900 dark:border-slate-800">
         <DialogHeader>
-          <DialogTitle>Configurações da Coluna</DialogTitle>
+          <DialogTitle className="dark:text-gray-100">Configurações da Coluna</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nome da coluna</label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nome da coluna" />
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Nome da coluna</label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nome da coluna" className="dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100" />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cor</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Cor</label>
             <div className="flex items-center gap-2 mb-2">
-              <Palette size={16} className="text-gray-500" />
-              <Input value={color} onChange={(e) => setColor(e.target.value)} placeholder="Ex.: blue, orange ou #FF6B00" />
+              <Palette size={16} className="text-gray-500 dark:text-gray-400" />
+              <Input value={color} onChange={(e) => setColor(e.target.value)} placeholder="Ex.: blue, orange ou #FF6B00" className="dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100" />
             </div>
             <div className="grid grid-cols-8 gap-2">
               {presetColors.map((c) => {

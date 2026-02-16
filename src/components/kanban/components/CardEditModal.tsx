@@ -115,14 +115,14 @@ export function CardEditModal({
           className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
           onClick={onClose}
         />
-        
-        <div className="relative w-full max-w-4xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all">
+
+        <div className="relative w-full max-w-4xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all dark:bg-slate-900">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-            <h2 className="text-lg font-semibold text-gray-900">Editar Card</h2>
+          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-slate-800">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Editar Card</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors dark:hover:text-gray-200"
             >
               <X size={24} />
             </button>
@@ -134,28 +134,28 @@ export function CardEditModal({
               <div className="space-y-6">
                 {/* Title */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                     Título
                   </label>
                   <input
                     type="text"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                     placeholder="Digite o título do card"
                   />
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                     Descrição
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                     placeholder="Digite a descrição do card"
                   />
                 </div>
@@ -163,14 +163,14 @@ export function CardEditModal({
                 {/* Priority and Due Date */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                       <AlertCircle size={16} className="inline mr-1" />
                       Prioridade
                     </label>
                     <select
                       value={formData.priority}
                       onChange={(e) => setFormData({ ...formData, priority: e.target.value as KanbanPriority })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                     >
                       <option value="baixa">Baixa</option>
                       <option value="media">Média</option>
@@ -179,7 +179,7 @@ export function CardEditModal({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                       <Calendar size={16} className="inline mr-1" />
                       Data de Vencimento
                     </label>
@@ -187,9 +187,8 @@ export function CardEditModal({
                       type="date"
                       value={formData.dueDate}
                       onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
-                        isOverdue() ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-slate-800 dark:text-gray-100 ${isOverdue() ? 'border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-800' : 'border-gray-300 dark:border-slate-700'
+                        }`}
                     />
                     {isOverdue() && (
                       <p className="text-xs text-red-600 mt-1">Esta tarefa está atrasada</p>
@@ -199,7 +198,7 @@ export function CardEditModal({
 
                 {/* Assigned Users */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                     <User size={16} className="inline mr-1" />
                     Responsáveis
                   </label>
@@ -213,7 +212,7 @@ export function CardEditModal({
 
                 {/* Tags */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                     <Tag size={16} className="inline mr-1" />
                     Tags (separadas por vírgula)
                   </label>
@@ -221,7 +220,7 @@ export function CardEditModal({
                     type="text"
                     value={formData.tags}
                     onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                     placeholder="tag1, tag2, tag3"
                   />
                 </div>
@@ -229,9 +228,9 @@ export function CardEditModal({
             </div>
 
             {/* Sidebar - Comments */}
-            <div className="w-80 border-l border-gray-200 bg-gray-50">
+            <div className="w-80 border-l border-gray-200 bg-gray-50 dark:bg-slate-950 dark:border-slate-800">
               <div className="p-4">
-                <h3 className="text-sm font-medium text-gray-900 mb-4">
+                <h3 className="text-sm font-medium text-gray-900 mb-4 dark:text-gray-100">
                   <MessageSquare size={16} className="inline mr-2" />
                   Comentários ({card.comments?.length || 0})
                 </h3>
@@ -243,7 +242,7 @@ export function CardEditModal({
                     onChange={(e) => setNewComment(e.target.value)}
                     placeholder="Adicionar comentário..."
                     rows={3}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 dark:placeholder-gray-500"
                   />
                   <button
                     onClick={handleAddComment}
@@ -257,7 +256,7 @@ export function CardEditModal({
                 {/* Comments List */}
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {card.comments?.map((comment) => (
-                    <div key={comment.id} className="bg-white p-3 rounded-md shadow-sm">
+                    <div key={comment.id} className="bg-white p-3 rounded-md shadow-sm dark:bg-slate-900">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center">
@@ -265,11 +264,11 @@ export function CardEditModal({
                               {comment.user.nome.charAt(0).toUpperCase()}
                             </span>
                           </div>
-                          <span className="text-xs font-medium text-gray-900">
+                          <span className="text-xs font-medium text-gray-900 dark:text-gray-200">
                             {comment.user.nome}
                           </span>
                         </div>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           {new Date(comment.createdAt).toLocaleDateString('pt-BR')}
                         </span>
                       </div>
@@ -280,7 +279,7 @@ export function CardEditModal({
                             value={editCommentContent}
                             onChange={(e) => setEditCommentContent(e.target.value)}
                             rows={2}
-                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500"
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                           />
                           <div className="flex space-x-2 mt-2">
                             <button
@@ -299,7 +298,7 @@ export function CardEditModal({
                         </div>
                       ) : (
                         <div>
-                          <p className="text-sm text-gray-700">{comment.content}</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">{comment.content}</p>
                           {(currentUser.id === comment.userId || currentUser.role === 'admin') && (
                             <div className="flex space-x-2 mt-2">
                               <button
@@ -326,8 +325,8 @@ export function CardEditModal({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4 bg-gray-50">
-            <div className="flex items-center space-x-4 text-sm text-gray-500">
+          <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4 bg-gray-50 dark:bg-slate-950 dark:border-slate-800">
+            <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
               <span>Criado por {card.createdBy.nome}</span>
               <span>em {new Date(card.createdAt).toLocaleDateString('pt-BR')}</span>
               {card.updatedAt !== card.createdAt && (
@@ -337,7 +336,7 @@ export function CardEditModal({
             <div className="flex space-x-3">
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors dark:bg-slate-800 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-700"
               >
                 Cancelar
               </button>

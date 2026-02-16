@@ -87,26 +87,26 @@ export function WhatsAppModule() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200 bg-white">
+      <div className="p-6 border-b border-gray-200 bg-white dark:bg-slate-900 dark:border-slate-800">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center dark:text-gray-100">
               <MessageSquare size={28} className="mr-3" />
               WhatsApp
             </h1>
-            <p className="text-gray-600">Gerencie conversas e campanhas do WhatsApp</p>
+            <p className="text-gray-600 dark:text-gray-400">Gerencie conversas e campanhas do WhatsApp</p>
           </div>
 
           {/* Selected Phone Indicator */}
           <div className="flex items-center space-x-3">
             <button
               onClick={handleChangePhone}
-              className="flex items-center space-x-2 px-4 py-2 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700"
             >
-              <Phone size={18} className="text-orange-600" />
+              <Phone size={18} className="text-orange-600 dark:text-orange-400" />
               <div className="text-left">
-                <div className="text-xs text-gray-500">Número ativo</div>
-                <div className="text-sm font-semibold text-gray-900">{selectedPhone.name}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Número ativo</div>
+                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{selectedPhone.name}</div>
               </div>
               <ChevronDown size={16} className="text-gray-400" />
             </button>
@@ -115,17 +115,17 @@ export function WhatsAppModule() {
 
         {/* Navigation */}
         <div className="mt-6">
-          <nav className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+          <nav className="flex space-x-1 bg-gray-100 rounded-lg p-1 dark:bg-slate-800">
             {views.map((view) => (
               <button
                 key={view.id}
                 onClick={() => setActiveView(view.id)}
                 className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors ${activeView === view.id
-                  ? 'bg-white text-orange-600 shadow-sm'
-                  : 'text-gray-700 hover:text-gray-900'
+                  ? 'bg-white text-orange-600 shadow-sm dark:bg-slate-800 dark:text-orange-400'
+                  : 'text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                   }`}
               >
-                <div className={`mr-2 ${activeView === view.id ? 'text-orange-500' : 'text-gray-400'}`}>
+                <div className={`mr-2 ${activeView === view.id ? 'text-orange-500 dark:text-orange-400' : 'text-gray-400'}`}>
                   {view.icon}
                 </div>
                 <span className="hidden sm:inline">{view.name}</span>
@@ -147,35 +147,35 @@ export function WhatsAppModule() {
 function WhatsAppAnalytics() {
   return (
     <div className="p-6">
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:bg-slate-900 dark:border-slate-800">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center dark:text-gray-100">
           <BarChart3 size={24} className="mr-2" />
           Relatórios WhatsApp
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-blue-50 p-6 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">1,234</div>
-            <div className="text-sm text-gray-600">Mensagens Enviadas</div>
-            <div className="text-xs text-green-600 mt-1">+12% este mês</div>
+          <div className="bg-blue-50 p-6 rounded-lg dark:bg-blue-900/20">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">1,234</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Mensagens Enviadas</div>
+            <div className="text-xs text-green-600 mt-1 dark:text-green-400">+12% este mês</div>
           </div>
 
-          <div className="bg-green-50 p-6 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">89%</div>
-            <div className="text-sm text-gray-600">Taxa de Entrega</div>
-            <div className="text-xs text-green-600 mt-1">+3% este mês</div>
+          <div className="bg-green-50 p-6 rounded-lg dark:bg-green-900/20">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">89%</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Taxa de Entrega</div>
+            <div className="text-xs text-green-600 mt-1 dark:text-green-400">+3% este mês</div>
           </div>
 
-          <div className="bg-purple-50 p-6 rounded-lg">
-            <div className="text-2xl font-bold text-purple-600">67%</div>
-            <div className="text-sm text-gray-600">Taxa de Leitura</div>
-            <div className="text-xs text-red-600 mt-1">-2% este mês</div>
+          <div className="bg-purple-50 p-6 rounded-lg dark:bg-purple-900/20">
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">67%</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Taxa de Leitura</div>
+            <div className="text-xs text-red-600 mt-1 dark:text-red-400">-2% este mês</div>
           </div>
 
-          <div className="bg-orange-50 p-6 rounded-lg">
-            <div className="text-2xl font-bold text-orange-600">156</div>
-            <div className="text-sm text-gray-600">Novos Contatos</div>
-            <div className="text-xs text-green-600 mt-1">+8% este mês</div>
+          <div className="bg-orange-50 p-6 rounded-lg dark:bg-orange-900/20">
+            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">156</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Novos Contatos</div>
+            <div className="text-xs text-green-600 mt-1 dark:text-green-400">+8% este mês</div>
           </div>
         </div>
 

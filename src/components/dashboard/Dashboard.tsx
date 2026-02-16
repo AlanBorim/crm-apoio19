@@ -100,8 +100,8 @@ export function Dashboard() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500">Bem-vindo ao CRM Apoio19. Aqui está o resumo do seu dia.</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-50">Dashboard</h1>
+        <p className="text-sm text-gray-500 dark:text-slate-400">Bem-vindo ao CRM Apoio19. Aqui está o resumo do seu dia.</p>
       </div>
 
       {/* Cards de Resumo */}

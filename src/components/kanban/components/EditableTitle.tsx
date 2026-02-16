@@ -9,12 +9,12 @@ interface EditableTitleProps {
   placeholder?: string;
 }
 
-export function EditableTitle({ 
-  title, 
-  onSave, 
-  canEdit, 
-  className = '', 
-  placeholder = 'Digite o título...' 
+export function EditableTitle({
+  title,
+  onSave,
+  canEdit,
+  className = '',
+  placeholder = 'Digite o título...'
 }: EditableTitleProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(title);
@@ -67,19 +67,19 @@ export function EditableTitle({
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={handleSave}
-          className="flex-1 px-2 py-1 text-sm border border-orange-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          className="flex-1 px-2 py-1 text-sm border border-orange-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-slate-800 dark:border-orange-700 dark:text-gray-100"
           placeholder={placeholder}
         />
         <button
           onClick={handleSave}
-          className="p-1 text-green-600 hover:text-green-800 transition-colors"
+          className="p-1 text-green-600 hover:text-green-800 transition-colors dark:text-green-400 dark:hover:text-green-300"
           title="Salvar"
         >
           <Check size={14} />
         </button>
         <button
           onClick={handleCancel}
-          className="p-1 text-red-600 hover:text-red-800 transition-colors"
+          className="p-1 text-red-600 hover:text-red-800 transition-colors dark:text-red-400 dark:hover:text-red-300"
           title="Cancelar"
         >
           <X size={14} />
@@ -89,15 +89,15 @@ export function EditableTitle({
   }
 
   return (
-    <div 
+    <div
       className={`group flex items-center space-x-2 ${canEdit ? 'cursor-pointer' : ''} ${className}`}
       onClick={handleStartEdit}
     >
       <span className="flex-1">{title}</span>
       {canEdit && (
-        <Edit2 
-          size={14} 
-          className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-orange-500 transition-all duration-200" 
+        <Edit2
+          size={14}
+          className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-orange-500 transition-all duration-200 dark:text-gray-500 dark:hover:text-orange-400"
         />
       )}
     </div>

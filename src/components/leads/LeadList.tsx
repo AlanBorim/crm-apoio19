@@ -166,7 +166,7 @@ const LeadList: React.FC<LeadListProps> = ({
             <input
               type="text"
               placeholder="Buscar leads..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100 dark:placeholder-gray-400"
               onChange={(e) => handleSearch(e.target.value)}
             />
           </div>
@@ -175,7 +175,7 @@ const LeadList: React.FC<LeadListProps> = ({
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 dark:border-slate-600 dark:text-gray-200 dark:hover:bg-slate-800"
           >
             <Filter size={20} />
             <span className="hidden sm:inline">Filtros</span>
@@ -201,7 +201,7 @@ const LeadList: React.FC<LeadListProps> = ({
 
       {/* Filtros expandidos */}
       {showFilters && (
-        <div className="bg-white p-4 rounded-lg border space-y-4">
+        <div className="bg-white p-4 rounded-lg border space-y-4 dark:bg-slate-900 dark:border-slate-800">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -210,7 +210,7 @@ const LeadList: React.FC<LeadListProps> = ({
               <select
                 value={filters.stage || ''}
                 onChange={(e) => handleFilterChange({ stage: e.target.value as LeadStage })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
               >
                 <option value="">Todos os estágios</option>
                 <option value="novo">Novo</option>
@@ -229,7 +229,7 @@ const LeadList: React.FC<LeadListProps> = ({
               <select
                 value={filters.temperature || ''}
                 onChange={(e) => handleFilterChange({ temperature: e.target.value as LeadTemperature })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
               >
                 <option value="">Todas as temperaturas</option>
                 <option value="frio">🧊 Frio</option>
@@ -245,7 +245,7 @@ const LeadList: React.FC<LeadListProps> = ({
               <select
                 value={filters.source || ''}
                 onChange={(e) => handleFilterChange({ source: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
               >
                 <option value="">Todas as origens</option>
                 <option value="Website">Website</option>
@@ -265,7 +265,7 @@ const LeadList: React.FC<LeadListProps> = ({
               <select
                 value={filters.assigned_to || ''}
                 onChange={(e) => handleFilterChange({ assigned_to: e.target.value ? parseInt(e.target.value) : undefined })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
               >
                 <option value="">Todos os responsáveis</option>
                 <option value="1">João Silva</option>
@@ -298,20 +298,20 @@ const LeadList: React.FC<LeadListProps> = ({
 
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white p-4 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total de Leads</p>
-              <p className="text-2xl font-bold text-gray-900">{safeLeads.length}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Total de Leads</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{safeLeads.length}</p>
             </div>
             <Users className="text-gray-400" size={24} />
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white p-4 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Novos</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Novos</p>
               <p className="text-2xl font-bold text-blue-600">
                 {safeLeads.filter(lead => lead.stage === 'novo').length}
               </p>
@@ -322,10 +322,10 @@ const LeadList: React.FC<LeadListProps> = ({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white p-4 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Em Andamento</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Em Andamento</p>
               <p className="text-2xl font-bold text-yellow-600">
                 {safeLeads.filter(lead => ['contatado', 'reuniao', 'proposta'].includes(lead.stage || '')).length}
               </p>
@@ -336,10 +336,10 @@ const LeadList: React.FC<LeadListProps> = ({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white p-4 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Fechados</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Fechados</p>
               <p className="text-2xl font-bold text-green-600">
                 {safeLeads.filter(lead => lead.stage === 'fechado').length}
               </p>
@@ -383,41 +383,41 @@ const LeadList: React.FC<LeadListProps> = ({
       </div>
 
       {/* Tabela de leads (Desktop) */}
-      <div className="hidden md:block bg-white rounded-lg border overflow-hidden">
+      <div className="hidden md:block bg-white rounded-lg border overflow-hidden dark:bg-slate-900 dark:border-slate-800">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-gray-50 border-b dark:bg-slate-950 dark:border-slate-800">
               <tr>
                 <th className="px-4 py-3 text-left">
                   <input
                     type="checkbox"
                     checked={selectedLeads.length === safeLeads.length && safeLeads.length > 0}
                     onChange={handleSelectAll}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800"
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
                   Lead
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
                   Empresa
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
                   Origem
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
                   Estágio
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
                   Temperatura
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
                   Valor
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
                   Data
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
                   Ações
                 </th>
               </tr>
@@ -440,7 +440,7 @@ const LeadList: React.FC<LeadListProps> = ({
                 </tr>
               ) : (
                 safeLeads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-gray-50">
+                  <tr key={lead.id} className="hover:bg-gray-50 border-b border-gray-100 dark:border-slate-800 dark:hover:bg-slate-800/50">
                     <td className="px-4 py-3">
                       <input
                         type="checkbox"
@@ -451,26 +451,26 @@ const LeadList: React.FC<LeadListProps> = ({
                     </td>
                     <td className="px-4 py-3">
                       <div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-gray-900 dark:text-gray-100">
                           {lead.name || lead.nome}
                         </div>
                         {lead.email && (
                           <div className="text-sm text-gray-500">{lead.email}</div>
                         )}
                         {(lead.phone || lead.telefone) && (
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
                             {lead.phone || lead.telefone}
                           </div>
                         )}
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-gray-900 dark:text-gray-200">
                         {lead.company || lead.empresa}
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="text-sm text-gray-900">{lead.source}</div>
+                      <div className="text-sm text-gray-900 dark:text-gray-200">{lead.source}</div>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStageColor(lead.stage || 'novo')}`}>
@@ -486,12 +486,12 @@ const LeadList: React.FC<LeadListProps> = ({
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="text-sm font-medium text-green-600">
+                      <div className="text-sm font-medium text-green-600 dark:text-green-400">
                         {formatCurrency(lead.value || 0)}
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-gray-900 dark:text-gray-200">
                         {formatDate(lead.created_at || lead.dataCriacao || '')}
                       </div>
                     </td>
@@ -499,21 +499,21 @@ const LeadList: React.FC<LeadListProps> = ({
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => onViewDetail(lead.id)}
-                          className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                          className="p-1 text-gray-400 hover:text-blue-600 transition-colors dark:text-gray-500 dark:hover:text-blue-400"
                           title="Ver detalhes"
                         >
                           <Eye size={16} />
                         </button>
                         <button
                           onClick={() => onEditLead(lead)}
-                          className="p-1 text-gray-400 hover:text-yellow-600 transition-colors"
+                          className="p-1 text-gray-400 hover:text-yellow-600 transition-colors dark:text-gray-500 dark:hover:text-yellow-400"
                           title="Editar"
                         >
                           <Edit size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(lead.id)}
-                          className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                          className="p-1 text-gray-400 hover:text-red-600 transition-colors dark:text-gray-500 dark:hover:text-red-400"
                           title="Excluir"
                         >
                           <Trash2 size={16} />
@@ -537,20 +537,20 @@ const LeadList: React.FC<LeadListProps> = ({
 
       {/* Estatísticas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white p-4 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total de Leads</p>
-              <p className="text-2xl font-bold text-gray-900">{safeLeads.length}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total de Leads</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{safeLeads.length}</p>
             </div>
             <Users className="text-blue-600" size={24} />
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white p-4 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Leads Quentes</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Leads Quentes</p>
               <p className="text-2xl font-bold text-red-600">
                 {safeLeads.filter(lead => lead.temperature === 'quente').length}
               </p>
@@ -559,10 +559,10 @@ const LeadList: React.FC<LeadListProps> = ({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white p-4 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Leads Mornos</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Leads Mornos</p>
               <p className="text-2xl font-bold text-yellow-600">
                 {safeLeads.filter(lead => lead.temperature === 'morno').length}
               </p>
@@ -571,10 +571,10 @@ const LeadList: React.FC<LeadListProps> = ({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white p-4 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Leads Frios</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Leads Frios</p>
               <p className="text-2xl font-bold text-blue-600">
                 {safeLeads.filter(lead => lead.temperature === 'frio').length}
               </p>
@@ -583,10 +583,10 @@ const LeadList: React.FC<LeadListProps> = ({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white p-4 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Fechados</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Fechados</p>
               <p className="text-2xl font-bold text-green-600">
                 {safeLeads.filter(lead => lead.stage === 'fechado').length}
               </p>
@@ -595,15 +595,15 @@ const LeadList: React.FC<LeadListProps> = ({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white p-4 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Valor Total</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Valor Total</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {formatCurrency(safeLeads.reduce((sum, lead) => sum + lead.value, 0))}
               </p>
             </div>
-            <Download className="text-gray-600" size={24} />
+            <Download className="text-gray-600 dark:text-gray-400" size={24} />
           </div>
         </div>
       </div>

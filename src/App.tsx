@@ -16,6 +16,7 @@ import { ConfigurationsModule } from './components/configuracoes/ConfigurationsM
 import { WhatsAppModule } from './components/whatsapp/WhatsAppModule';
 import { WhatsAppConversations } from './components/whatsapp/WhatsAppConversations';
 import { TasksModule } from './components/tarefas/TasksModule';
+import { ClientsModule } from './components/clients/ClientsModule';
 import { setupActivityListeners } from './utils/activityTracker';
 import { isUserInactive } from './utils/activityTracker';
 import { isTokenExpired, refreshToken } from './utils/auth';
@@ -24,6 +25,7 @@ import { UserProvider } from './hooks/useCurrentUser';
 import { Toaster } from './components/ui/sonner';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { WhatsAppPhoneProvider } from './contexts/WhatsAppPhoneContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -76,90 +78,100 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <div className="App">
-        <Routes>
-          {/* Rota de login - SEM NotificationProvider */}
-          <Route path="/login" element={<LoginForm />} />
-          {/* Rotas de recuperação de senha */}
-          <Route path="/forgot-password" element={<ForgotPasswordForm />} />
-          <Route path="/password-reset-sent" element={<PasswordResetSent />} />
-          <Route path="/reset-password" element={<ResetPasswordForm />} />
-          <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
-          <Route path="/acesso-negado" element={<AccessDenied />} />
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <Router>
+        <div className="App dark:bg-gray-900 min-h-screen">
+          <Routes>
+            {/* Rota de login - SEM NotificationProvider */}
+            <Route path="/login" element={<LoginForm />} />
+            {/* ... routes ... */}
+            {/* Rotas de recuperação de senha */}
+            <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+            <Route path="/password-reset-sent" element={<PasswordResetSent />} />
+            <Route path="/reset-password" element={<ResetPasswordForm />} />
+            <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
+            <Route path="/acesso-negado" element={<AccessDenied />} />
 
-          {/* Todas as rotas protegidas envolvidas pelo NotificationProvider */}
-          <Route path="/*" element={
-            isAuthenticated ? (
-              <Routes>
-                <Route path="/dashboard" element={
-                  <AuthGuard>
-                    <ProtectedRoute resource="dashboard" action="view">
-                      <Dashboard />
-                    </ProtectedRoute>
-                  </AuthGuard>
-                } />
-                <Route path="/leads" element={
-                  <AuthGuard>
-                    <ProtectedRoute resource="leads" action="view">
-                      <LeadsModule />
-                    </ProtectedRoute>
-                  </AuthGuard>
-                } />
-                <Route path="/kanban" element={
-                  <AuthGuard>
-                    <ProtectedRoute resource="kanban" action="view">
-                      <KanbanBoard />
-                    </ProtectedRoute>
-                  </AuthGuard>
-                } />
-                <Route path="/propostas" element={
-                  <AuthGuard>
-                    <ProtectedRoute resource="proposals" action="view">
-                      <ProposalsModule />
-                    </ProtectedRoute>
-                  </AuthGuard>
-                } />
-                <Route path="/configuracoes" element={
-                  <AuthGuard>
-                    <ProtectedRoute resource="configuracoes" action="view">
-                      <ConfigurationsModule />
-                    </ProtectedRoute>
-                  </AuthGuard>
-                } />
-                <Route path="/whatsapp" element={
-                  <AuthGuard>
-                    <ProtectedRoute resource="whatsapp" action="view">
-                      <WhatsAppPhoneProvider>
-                        <WhatsAppModule />
-                      </WhatsAppPhoneProvider>
-                    </ProtectedRoute>
-                  </AuthGuard>
-                } />
-                <Route path="/conversas" element={
-                  <AuthGuard>
-                    <ProtectedRoute resource="whatsapp" action="view">
-                      <WhatsAppConversations />
-                    </ProtectedRoute>
-                  </AuthGuard>
-                } />
-                <Route path="/tarefas" element={
-                  <AuthGuard>
-                    <ProtectedRoute resource="tasks" action="view">
-                      <TasksModule />
-                    </ProtectedRoute>
-                  </AuthGuard>
-                } />
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          } />
-        </Routes>
-        <Toaster />
-      </div>
-    </Router>
+            {/* Todas as rotas protegidas envolvidas pelo NotificationProvider */}
+            <Route path="/*" element={
+              isAuthenticated ? (
+                <Routes>
+                  <Route path="/dashboard" element={
+                    <AuthGuard>
+                      <ProtectedRoute resource="dashboard" action="view">
+                        <Dashboard />
+                      </ProtectedRoute>
+                    </AuthGuard>
+                  } />
+                  <Route path="/leads" element={
+                    <AuthGuard>
+                      <ProtectedRoute resource="leads" action="view">
+                        <LeadsModule />
+                      </ProtectedRoute>
+                    </AuthGuard>
+                  } />
+                  <Route path="/clientes" element={
+                    <AuthGuard>
+                      <ProtectedRoute resource="clients" action="view">
+                        <ClientsModule />
+                      </ProtectedRoute>
+                    </AuthGuard>
+                  } />
+                  <Route path="/kanban" element={
+                    <AuthGuard>
+                      <ProtectedRoute resource="kanban" action="view">
+                        <KanbanBoard />
+                      </ProtectedRoute>
+                    </AuthGuard>
+                  } />
+                  <Route path="/propostas" element={
+                    <AuthGuard>
+                      <ProtectedRoute resource="proposals" action="view">
+                        <ProposalsModule />
+                      </ProtectedRoute>
+                    </AuthGuard>
+                  } />
+                  <Route path="/configuracoes" element={
+                    <AuthGuard>
+                      <ProtectedRoute resource="configuracoes" action="view">
+                        <ConfigurationsModule />
+                      </ProtectedRoute>
+                    </AuthGuard>
+                  } />
+                  <Route path="/whatsapp" element={
+                    <AuthGuard>
+                      <ProtectedRoute resource="whatsapp" action="view">
+                        <WhatsAppPhoneProvider>
+                          <WhatsAppModule />
+                        </WhatsAppPhoneProvider>
+                      </ProtectedRoute>
+                    </AuthGuard>
+                  } />
+                  <Route path="/conversas" element={
+                    <AuthGuard>
+                      <ProtectedRoute resource="whatsapp" action="view">
+                        <WhatsAppConversations />
+                      </ProtectedRoute>
+                    </AuthGuard>
+                  } />
+                  <Route path="/tarefas" element={
+                    <AuthGuard>
+                      <ProtectedRoute resource="tasks" action="view">
+                        <TasksModule />
+                      </ProtectedRoute>
+                    </AuthGuard>
+                  } />
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            } />
+          </Routes>
+          <Toaster />
+        </div>
+      </Router>
+    </ThemeProvider>
   );
 }
 

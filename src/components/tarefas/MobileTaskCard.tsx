@@ -22,13 +22,13 @@ export const MobileTaskCard: React.FC<MobileTaskCardProps> = ({
     formatStatus
 }) => {
     return (
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm mb-4">
+        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:bg-slate-900 dark:border-slate-800">
             {/* Header com Título e Status */}
-            <div className="flex items-start justify-between mb-3">
+            <div className="mb-3 flex items-start justify-between">
                 <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 text-base mb-1">{task.titulo}</h3>
+                    <h3 className="font-semibold text-gray-900 text-base mb-1 dark:text-gray-100">{task.titulo}</h3>
                     {task.descricao && (
-                        <p className="text-sm text-gray-600 line-clamp-2">{task.descricao}</p>
+                        <p className="text-sm text-gray-500 line-clamp-2 mt-1 dark:text-gray-400">{task.descricao}</p>
                     )}
                 </div>
             </div>
@@ -46,17 +46,6 @@ export const MobileTaskCard: React.FC<MobileTaskCardProps> = ({
 
             {/* Informações */}
             <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
-                <div className="flex flex-col">
-                    <span className="text-gray-500 text-xs mb-1">Vencimento</span>
-                    {task.data_vencimento ? (
-                        <div className="flex items-center text-gray-700">
-                            <Calendar size={14} className="mr-1 text-gray-400" />
-                            <span>{new Date(task.data_vencimento).toLocaleDateString('pt-BR')}</span>
-                        </div>
-                    ) : (
-                        <span className="text-gray-400">-</span>
-                    )}
-                </div>
                 <div className="flex flex-col">
                     <span className="text-gray-500 text-xs mb-1">Usuário</span>
                     {task.usuario_nome ? (

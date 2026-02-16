@@ -410,14 +410,14 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
         <div className="flex items-center gap-4">
           <button
             onClick={onBack}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-slate-800 dark:text-gray-200"
           >
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{lead.name || lead.nome}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{lead.name || lead.nome}</h1>
             {(lead.company || lead.empresa) && (
-              <p className="text-gray-600 flex items-center gap-1">
+              <p className="text-gray-600 flex items-center gap-1 dark:text-gray-400">
                 <Building size={16} />
                 {lead.company || lead.empresa}
               </p>
@@ -440,8 +440,8 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
         {/* Coluna Principal */}
         <div className="lg:col-span-2 space-y-6">
           {/* Informações de Contato */}
-          <div className="bg-white p-6 rounded-lg border">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="bg-white p-6 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 dark:text-gray-100">
               <User size={20} />
               Informações de Contato
             </h2>
@@ -449,30 +449,30 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">Email</label>
                   <div className="flex items-center gap-2">
                     <Mail size={16} className="text-gray-400" />
                     {lead.email ? (
                       <a
                         href={`mailto:${lead.email}`}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                       >
                         {lead.email}
                       </a>
                     ) : (
-                      <span className="text-gray-500">-</span>
+                      <span className="text-gray-500 dark:text-gray-500">-</span>
                     )}
                   </div>
                 </div>
 
                 {(lead.phone || lead.telefone) && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Telefone</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">Telefone</label>
                     <div className="flex items-center gap-2">
                       <Phone size={16} className="text-gray-400" />
                       <a
                         href={`tel:${lead.phone || lead.telefone}`}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                       >
                         {lead.phone || lead.telefone}
                       </a>
@@ -482,22 +482,22 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
 
                 {(lead.position || lead.cargo) && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Cargo</label>
-                    <p className="font-medium">{lead.position || lead.cargo}</p>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">Cargo</label>
+                    <p className="font-medium dark:text-gray-200">{lead.position || lead.cargo}</p>
                   </div>
                 )}
               </div>
 
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Data de Criação</label>
-                  <p className="font-medium">{formatDate(lead.created_at || lead.dataCriacao || '')}</p>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">Data de Criação</label>
+                  <p className="font-medium dark:text-gray-200">{formatDate(lead.created_at || lead.dataCriacao || '')}</p>
                 </div>
 
                 {lead.source && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Origem</label>
-                    <p className="font-medium">{lead.source}</p>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">Origem</label>
+                    <p className="font-medium dark:text-gray-200">{lead.source}</p>
                   </div>
                 )}
               </div>
@@ -506,17 +506,17 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
 
           {/* Endereço */}
           {((lead.address || lead.endereco) || (lead.city || lead.cidade) || (lead.state || lead.estado)) && (
-            <div className="bg-white p-6 rounded-lg border">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-white p-6 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 dark:text-gray-100">
                 <MapPin size={20} />
                 Endereço
               </h2>
 
               <div className="space-y-2">
                 {(lead.address || lead.endereco) && (
-                  <p className="text-gray-700">{lead.address || lead.endereco}</p>
+                  <p className="text-gray-700 dark:text-gray-300">{lead.address || lead.endereco}</p>
                 )}
-                <p className="text-gray-700">
+                <p className="text-gray-700 dark:text-gray-300">
                   {[(lead.city || lead.cidade), (lead.state || lead.estado), lead.cep]
                     .filter(Boolean)
                     .join(', ')}
@@ -527,14 +527,14 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
 
           {/* Observações/Interesse com Informações Extras Integradas */}
           {((lead.interest || lead.observacoes) || (sourceConfig?.meta_config && Object.keys(dynamicFieldValues).length > 0)) && (
-            <div className="bg-white p-6 rounded-lg border">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-white p-6 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 dark:text-gray-100">
                 Interesse/Observações
               </h2>
 
               {/* Interesse/Observações principais */}
               {(lead.interest || lead.observacoes) && (
-                <div className="text-gray-700 whitespace-pre-wrap">
+                <div className="text-gray-700 whitespace-pre-wrap dark:text-gray-300">
                   {lead.interest || lead.observacoes}
                 </div>
               )}
@@ -545,9 +545,9 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
           )}
 
           {/* Interações */}
-          <div className="bg-white p-6 rounded-lg border">
+          <div className="bg-white p-6 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 dark:text-gray-100">
                 <MessageSquare size={20} />
                 Interações
               </h2>
@@ -561,16 +561,16 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
             </div>
 
             {showAddInteraction && (
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg dark:bg-slate-800">
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                       Tipo de Interação
                     </label>
                     <select
                       value={newInteraction.tipo}
                       onChange={(e) => setNewInteraction(prev => ({ ...prev, tipo: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                     >
                       <option value="">Selecione o tipo</option>
                       <option value="ligacao">Ligação</option>
@@ -583,20 +583,20 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                       Descrição
                     </label>
                     <textarea
                       value={newInteraction.descricao}
                       onChange={(e) => setNewInteraction(prev => ({ ...prev, descricao: e.target.value }))}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
                       placeholder="Descreva a interação..."
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                       Sentimento do Cliente (Temperatura)
                     </label>
                     <div className="flex gap-4">
@@ -608,9 +608,9 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
                             value={temp}
                             checked={newInteraction.temperatura === temp}
                             onChange={(e) => setNewInteraction(prev => ({ ...prev, temperatura: e.target.value }))}
-                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-600"
                           />
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1 dark:text-gray-300">
                             {getTemperatureIcon(temp as LeadTemperature)}
                             <span className="capitalize">{temp}</span>
                           </span>
@@ -628,7 +628,7 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
                     </button>
                     <button
                       onClick={() => setShowAddInteraction(false)}
-                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-900"
                     >
                       Cancelar
                     </button>
@@ -639,15 +639,15 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
 
             <div className="space-y-3">
               {interactions.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">
+                <p className="text-gray-500 text-center py-4 dark:text-gray-400">
                   Nenhuma interação registrada
                 </p>
               ) : (
                 interactions.map((interaction) => (
-                  <div key={interaction.id} className="border-l-4 border-blue-200 pl-4 py-2">
+                  <div key={interaction.id} className="border-l-4 border-blue-200 pl-4 py-2 dark:border-blue-900">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-blue-600 capitalize">
+                        <span className="font-medium text-blue-600 capitalize dark:text-blue-400">
                           {interaction.tipo || interaction.acao}
                         </span>
                         {interaction.temperatura && (
@@ -656,15 +656,15 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
                           </span>
                         )}
                       </div>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
                         {formatDate(interaction.data_interacao || interaction.data_acao || '')}
                       </span>
                     </div>
-                    <p className="text-gray-700 mt-1">
+                    <p className="text-gray-700 mt-1 dark:text-gray-300">
                       {interaction.descricao || interaction.detalhes}
                     </p>
                     {interaction.usuario && (
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 mt-1 dark:text-gray-500">
                         por {interaction.usuario}
                       </p>
                     )}
@@ -678,8 +678,8 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Ações */}
-          <div className="bg-white p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Ações</h3>
+          <div className="bg-white p-6 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 dark:text-gray-100">Ações</h3>
             <div className="space-y-2">
               <button
                 onClick={() => onEdit(lead)}
@@ -700,30 +700,30 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
           </div>
 
           {/* Informações Comerciais */}
-          <div className="bg-white p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="bg-white p-6 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 dark:text-gray-100">
               <DollarSign size={20} />
               Informações Comerciais
             </h3>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Valor Estimado</label>
-                <p className="font-medium text-lg text-green-600">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">Valor Estimado</label>
+                <p className="font-medium text-lg text-green-600 dark:text-green-400">
                   {formatCurrency(lead.value || 0)}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Responsável</label>
-                <p className="font-medium">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">Responsável</label>
+                <p className="font-medium dark:text-gray-200">
                   {(lead.responsavelNome || lead.responsavel?.name) || '-'}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Próximo Contato</label>
-                <p className="font-medium">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">Próximo Contato</label>
+                <p className="font-medium dark:text-gray-200">
                   {(lead.next_contact || lead.proximoContato) ? formatDate(lead.next_contact || lead.proximoContato || '') : '-'}
                 </p>
               </div>
@@ -731,13 +731,13 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
           </div>
 
           {/* Ações Rápidas */}
-          <div className="bg-white p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Ações Rápidas</h3>
+          <div className="bg-white p-6 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 dark:text-gray-100">Ações Rápidas</h3>
             <div className="space-y-2">
               {(lead.phone || lead.telefone) && (
                 <a
                   href={`tel:${lead.phone || lead.telefone}`}
-                  className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-800"
                 >
                   <Phone size={16} />
                   Ligar
@@ -747,7 +747,7 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
               {lead.email && (
                 <a
                   href={`mailto:${lead.email}`}
-                  className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-800"
                 >
                   <Mail size={16} />
                   Enviar Email
@@ -759,7 +759,7 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
                   href={`https://wa.me/55${(lead.phone || lead.telefone || '').replace(/\D/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-800"
                 >
                   <MessageSquare size={16} />
                   WhatsApp
@@ -770,30 +770,30 @@ const LeadDetail: React.FC<LeadDetailProps> = ({ leadId, onEdit, onBack, onDelet
           </div>
 
           {/* Estatísticas */}
-          <div className="bg-white p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="bg-white p-6 rounded-lg border dark:bg-slate-900 dark:border-slate-800">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2 dark:text-gray-100">
               <Clock size={20} />
               Estatísticas
             </h3>
 
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">Dias desde criação:</span>
-                <span className="font-medium">
+                <span className="text-gray-600 dark:text-gray-400">Dias desde criação:</span>
+                <span className="font-medium dark:text-gray-200">
                   {getDaysSinceCreation(lead.created_at || lead.dataCriacao || '')}
                 </span>
               </div>
 
               <div className="flex justify-between">
-                <span className="text-gray-600">Última atualização:</span>
-                <span className="font-medium">
+                <span className="text-gray-600 dark:text-gray-400">Última atualização:</span>
+                <span className="font-medium dark:text-gray-200">
                   {formatDate(lead.updated_at || lead.dataAtualizacao || '')}
                 </span>
               </div>
 
               <div className="flex justify-between">
-                <span className="text-gray-600">Interações:</span>
-                <span className="font-medium">{interactions.length}</span>
+                <span className="text-gray-600 dark:text-gray-400">Interações:</span>
+                <span className="font-medium dark:text-gray-200">{interactions.length}</span>
               </div>
             </div>
           </div>

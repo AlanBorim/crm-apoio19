@@ -8,13 +8,13 @@ import {
   FileText,
   Send
 } from 'lucide-react';
-import { Proposal as ApiProposal, leadsApi, templatesApi, ProposalTemplate } from './services/proposalsApi';
+import { Proposal as ApiProposal, leadsApi, templatesApi, ProposalTemplate, proposalsApi } from './services/proposalsApi';
 import { ProposalStatus } from './types/proposal';
 import type { ProposalItem } from './types/proposal';
 
 interface ProposalFormProps {
   proposal?: ApiProposal | null;
-  onSave: (proposal: any) => void;
+  onSave: (proposal: any, shouldSend?: boolean) => void;
   onCancel: () => void;
 }
 
@@ -122,6 +122,33 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
     loadLeadData();
   }, [formData.lead_id, leads]);
 
+  // Carregar detalhes completos da proposta (itens, etc) quando editando
+  useEffect(() => {
+    if (proposal?.id) {
+      proposalsApi.getById(proposal.id)
+        .then(response => {
+          const { itens, proposta } = response;
+          setFormData(prev => ({
+            ...prev,
+            // Preencher dados que podem não vir da listagem
+            data_validade: proposta.data_validade || prev.data_validade,
+            condicoes: proposta.condicoes || prev.condicoes,
+            observacoes: proposta.observacoes || prev.observacoes,
+            modelo_id: proposta.modelo_id || prev.modelo_id,
+            // Mapear itens
+            itens: itens.map(item => ({
+              id: String(item.id),
+              descricao: item.descricao,
+              quantidade: Number(item.quantidade),
+              valorUnitario: Number(item.valor_unitario),
+              valorTotal: Number(item.valor_total)
+            }))
+          }));
+        })
+        .catch(err => console.error("Erro ao carregar detalhes da proposta", err));
+    }
+  }, [proposal]);
+
   const handleAddItem = () => {
     const newItem: ProposalItem = {
       id: Date.now().toString(),
@@ -193,7 +220,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
     // Transformar itens de camelCase para snake_case
     const transformedData = {
       ...formData,
-      status: ProposalStatus.PENDENTE as const,
+      status: ProposalStatus.RASCUNHO as const,
       itens: formData.itens?.map((item: any) => ({
         descricao: item.descricao,
         quantidade: item.quantidade,
@@ -201,117 +228,102 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
       })) || []
     };
 
-    onSave(transformedData);
+    onSave(transformedData, true);
   };
 
   return (
     <div className="space-y-6">
-      {/* Cabeçalho */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
             <FileText size={24} className="mr-2" />
             {proposal ? 'Editar Proposta' : 'Nova Proposta'}
           </h2>
-          <p className="text-gray-600">
-            {proposal ? `Editando proposta #${proposal.id}` : 'Criar nova proposta comercial'}
+          <p className="text-gray-600 dark:text-gray-400">
+            Preencha os dados abaixo para criar uma proposta comercial.
           </p>
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => setShowPreview(!showPreview)}
-            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            <Eye size={16} className="mr-2" />
-            {showPreview ? 'Ocultar' : 'Preview'}
-          </button>
-          <button
+            type="button"
             onClick={onCancel}
-            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-800"
           >
-            <X size={16} className="mr-2" />
             Cancelar
           </button>
           <button
+            type="button"
             onClick={handleSave}
-            className="inline-flex items-center rounded-md bg-gray-500 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600"
+            className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 flex items-center gap-2"
           >
-            <Save size={16} className="mr-2" />
+            <Save size={18} />
             Salvar
           </button>
           <button
+            type="button"
             onClick={handleSend}
-            className="inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
           >
-            <Send size={16} className="mr-2" />
+            <Send size={18} />
             Salvar e Enviar
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Formulário */}
-        <div className="space-y-6">
-          {/* Informações Básicas */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Informações Básicas</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Form */}
+        <div className="lg:col-span-2 space-y-6">
 
+          {/* Basic Data */}
+          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 dark:text-gray-100">Dados da Proposta</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Título da Proposta
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Título da Proposta</label>
                 <input
                   type="text"
                   value={formData.titulo}
                   onChange={(e) => setFormData(prev => ({ ...prev, titulo: e.target.value }))}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  className="block w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                   placeholder="Ex: Desenvolvimento de Sistema CRM"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Template
-                </label>
-                <select
-                  value={formData.modelo_id || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, modelo_id: e.target.value ? Number(e.target.value) : null }))}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                  disabled={loadingTemplates}
-                >
-                  <option value="">{loadingTemplates ? 'Carregando templates...' : 'Selecione um template (opcional)'}</option>
-                  {templates.map(template => (
-                    <option key={template.id} value={template.id}>
-                      {template.nome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Data de Vencimento
-                </label>
-                <input
-                  type="date"
-                  value={formData.dataVencimento}
-                  onChange={(e) => setFormData(prev => ({ ...prev, dataVencimento: e.target.value }))}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Template</label>
+                  <select
+                    value={formData.modelo_id || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, modelo_id: e.target.value ? Number(e.target.value) : null }))}
+                    className="block w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
+                    disabled={loadingTemplates}
+                  >
+                    <option value="">{loadingTemplates ? 'Carregando templates...' : 'Selecione um template (opcional)'}</option>
+                    {templates.map(template => (
+                      <option key={template.id} value={template.id}>{template.nome}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Data de Vencimento</label>
+                  <input
+                    type="date"
+                    value={formData.data_validade || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, data_validade: e.target.value }))}
+                    className="block w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Informações do Cliente */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Informações do Cliente</h3>
+          {/* Client Info */}
+          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 dark:text-gray-100">Informações do Cliente</h3>
 
-            {/* Lead Selection Dropdown */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Selecionar Lead
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Selecionar Lead</label>
               <select
                 value={formData.lead_id || ''}
                 onChange={(e) => {
@@ -319,7 +331,6 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                   if (leadId) {
                     const selectedLead = leads.find(lead => String(lead.id) === leadId);
                     if (selectedLead) {
-                      // Preencher lead_id e os campos do cliente (flat fields)
                       setFormData(prev => ({
                         ...prev,
                         lead_id: Number(leadId),
@@ -332,7 +343,6 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                         lead_state: selectedLead.state || '',
                         lead_address: selectedLead.address || ''
                       }));
-                      // Também atualizar leadInfo para mostrar no card (redundant but keeping for safety if used elsewhere)
                       setLeadInfo({
                         nome: selectedLead.name,
                         empresa: selectedLead.company || 'N/A',
@@ -341,7 +351,6 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                       });
                     }
                   } else {
-                    // Limpar tanto o lead_id quanto os campos do cliente
                     setFormData(prev => ({
                       ...prev,
                       lead_id: null,
@@ -357,353 +366,282 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                     setLeadInfo(null);
                   }
                 }}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                className="block w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                 disabled={loadingLeads}
               >
-                <option value="">
-                  {loadingLeads ? 'Carregando leads...' : 'Selecione um lead'}
-                </option>
+                <option value="">{loadingLeads ? 'Carregando leads...' : 'Selecione um lead'}</option>
                 {leads.map((lead) => (
-                  <option key={lead.id} value={lead.id}>
-                    {lead.name} {lead.company ? `- ${lead.company}` : ''}
-                  </option>
+                  <option key={lead.id} value={lead.id}>{lead.name} {lead.company ? `- ${lead.company}` : ''}</option>
                 ))}
               </select>
             </div>
 
-            {/* Campos de Dados do Lead */}
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600">
-                {formData.lead_id ? 'Dados do lead selecionado:' : 'Preencha os dados do cliente:'}
-              </p>
-
-              {formData.lead_id ? (
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <span className="block text-xs font-medium text-gray-500">Nome</span>
-                      <span className="block text-sm text-gray-900 font-medium">{formData.lead_name || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="block text-xs font-medium text-gray-500">Empresa</span>
-                      <span className="block text-sm text-gray-900">{formData.lead_company || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="block text-xs font-medium text-gray-500">E-mail</span>
-                      <span className="block text-sm text-gray-900">{formData.lead_email || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="block text-xs font-medium text-gray-500">Telefone</span>
-                      <span className="block text-sm text-gray-900">{formData.lead_phone || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="block text-xs font-medium text-gray-500">Endereço</span>
-                      <span className="block text-sm text-gray-900">
-                        {[
-                          formData.lead_address,
-                          formData.lead_city,
-                          formData.lead_state,
-                          formData.lead_cep
-                        ].filter(Boolean).join(', ') || 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex justify-end">
-                    <button
-                      onClick={() => {
-                        setFormData(prev => ({
-                          ...prev,
-                          lead_id: null,
-                          lead_name: '',
-                          lead_email: '',
-                          lead_phone: '',
-                          lead_company: '',
-                          lead_cep: '',
-                          lead_city: '',
-                          lead_state: '',
-                          lead_address: ''
-                        }));
-                        setLeadInfo(null);
-                      }}
-                      className="text-xs text-orange-600 hover:text-orange-800 font-medium"
-                    >
-                      Limpar seleção e criar novo lead
-                    </button>
-                  </div>
-                </div>
-              ) : (
+            {formData.lead_id ? (
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nome *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.lead_name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, lead_name: e.target.value }))}
-                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                      placeholder="Nome do cliente"
-                      required
-                    />
+                    <span className="block text-xs font-medium text-gray-500 dark:text-gray-400">Nome</span>
+                    <span className="block text-sm text-gray-900 font-medium dark:text-gray-200">{formData.lead_name || 'N/A'}</span>
                   </div>
-
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Empresa *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.lead_company}
-                      onChange={(e) => setFormData(prev => ({ ...prev, lead_company: e.target.value }))}
-                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                      placeholder="Nome da empresa"
-                      required
-                    />
+                    <span className="block text-xs font-medium text-gray-500 dark:text-gray-400">Empresa</span>
+                    <span className="block text-sm text-gray-900 dark:text-gray-200">{formData.lead_company || 'N/A'}</span>
                   </div>
-
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      E-mail
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.lead_email}
-                      onChange={(e) => setFormData(prev => ({ ...prev, lead_email: e.target.value }))}
-                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                      placeholder="email@exemplo.com"
-                    />
+                    <span className="block text-xs font-medium text-gray-500 dark:text-gray-400">E-mail</span>
+                    <span className="block text-sm text-gray-900 dark:text-gray-200">{formData.lead_email || 'N/A'}</span>
                   </div>
-
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Telefone
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.lead_phone}
-                      onChange={(e) => setFormData(prev => ({ ...prev, lead_phone: e.target.value }))}
-                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                      placeholder="(11) 99999-9999"
-                    />
+                    <span className="block text-xs font-medium text-gray-500 dark:text-gray-400">Telefone</span>
+                    <span className="block text-sm text-gray-900 dark:text-gray-200">{formData.lead_phone || 'N/A'}</span>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      CEP
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.lead_cep}
-                      onChange={(e) => setFormData(prev => ({ ...prev, lead_cep: e.target.value }))}
-                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                      placeholder="00000-000"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Cidade
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.lead_city}
-                      onChange={(e) => setFormData(prev => ({ ...prev, lead_city: e.target.value }))}
-                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                      placeholder="Cidade"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Estado
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.lead_state}
-                      onChange={(e) => setFormData(prev => ({ ...prev, lead_state: e.target.value }))}
-                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                      placeholder="SP"
-                      maxLength={2}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Endereço
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.lead_address}
-                      onChange={(e) => setFormData(prev => ({ ...prev, lead_address: e.target.value }))}
-                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                      placeholder="Endereço completo"
-                    />
+                  <div className="md:col-span-2">
+                    <span className="block text-xs font-medium text-gray-500 dark:text-gray-400">Endereço</span>
+                    <span className="block text-sm text-gray-900 dark:text-gray-200">
+                      {[formData.lead_address, formData.lead_city, formData.lead_state, formData.lead_cep].filter(Boolean).join(', ') || 'N/A'}
+                    </span>
                   </div>
                 </div>
-              )}
-            </div>
-
-          </div>
-        </div>
-
-        {/* Itens da Proposta */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Itens da Proposta</h3>
-            <button
-              onClick={handleAddItem}
-              className="inline-flex items-center rounded-md bg-orange-500 px-3 py-1 text-sm font-medium text-white hover:bg-orange-600"
-            >
-              <Plus size={14} className="mr-1" />
-              Adicionar Item
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {formData.itens?.map((item, index) => (
-              <div key={item.id} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-gray-700">Item {index + 1}</span>
+                <div className="mt-4 flex justify-end">
                   <button
-                    onClick={() => handleRemoveItem(item.id)}
-                    className="text-red-500 hover:text-red-600"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        lead_id: null,
+                        lead_name: '',
+                        lead_email: '',
+                        lead_phone: '',
+                        lead_company: '',
+                        lead_cep: '',
+                        lead_city: '',
+                        lead_state: '',
+                        lead_address: ''
+                      }));
+                      setLeadInfo(null);
+                    }}
+                    className="text-xs text-orange-600 hover:text-orange-800 font-medium dark:text-orange-400 dark:hover:text-orange-300"
                   >
-                    <Trash2 size={14} />
+                    Limpar seleção e criar novo lead
                   </button>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Descrição
-                    </label>
-                    <input
-                      type="text"
-                      value={item.descricao}
-                      onChange={(e) => handleItemChange(item.id, 'descricao', e.target.value)}
-                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                      placeholder="Descrição do item"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Quantidade
-                    </label>
-                    <input
-                      type="number"
-                      value={item.quantidade}
-                      onChange={(e) => handleItemChange(item.id, 'quantidade', parseFloat(e.target.value) || 0)}
-                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Valor Unitário
-                    </label>
-                    <input
-                      type="number"
-                      value={item.valorUnitario}
-                      onChange={(e) => handleItemChange(item.id, 'valorUnitario', parseFloat(e.target.value) || 0)}
-                      className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-3 text-right">
-                  <span className="text-sm font-medium text-gray-700">
-                    Total: R$ {item.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
               </div>
-            ))}
-
-            {(!formData.itens || formData.itens.length === 0) && (
-              <div className="text-center py-8 text-gray-500">
-                <FileText size={32} className="mx-auto mb-2 text-gray-400" />
-                <p>Nenhum item adicionado</p>
-                <p className="text-sm">Clique em "Adicionar Item" para começar</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Preencha os dados do cliente:</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Nome *</label>
+                  <input
+                    type="text"
+                    value={formData.lead_name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, lead_name: e.target.value }))}
+                    className="block w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Empresa *</label>
+                  <input
+                    type="text"
+                    value={formData.lead_company}
+                    onChange={(e) => setFormData(prev => ({ ...prev, lead_company: e.target.value }))}
+                    className="block w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Email</label>
+                  <input
+                    type="email"
+                    value={formData.lead_email}
+                    onChange={(e) => setFormData(prev => ({ ...prev, lead_email: e.target.value }))}
+                    className="block w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Telefone</label>
+                  <input
+                    type="tel"
+                    value={formData.lead_phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, lead_phone: e.target.value }))}
+                    className="block w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">CEP</label>
+                  <input
+                    type="text"
+                    value={formData.lead_cep}
+                    onChange={(e) => setFormData(prev => ({ ...prev, lead_cep: e.target.value }))}
+                    className="block w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Cidade</label>
+                  <input
+                    type="text"
+                    value={formData.lead_city}
+                    onChange={(e) => setFormData(prev => ({ ...prev, lead_city: e.target.value }))}
+                    className="block w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Estado</label>
+                  <input
+                    type="text"
+                    value={formData.lead_state}
+                    onChange={(e) => setFormData(prev => ({ ...prev, lead_state: e.target.value }))}
+                    className="block w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Endereço</label>
+                  <input
+                    type="text"
+                    value={formData.lead_address}
+                    onChange={(e) => setFormData(prev => ({ ...prev, lead_address: e.target.value }))}
+                    className="block w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
+                  />
+                </div>
               </div>
             )}
           </div>
 
-          {formData.itens && formData.itens.length > 0 && (
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-medium text-gray-900">Valor Total:</span>
-                <span className="text-xl font-bold text-orange-600">
-                  R$ {formData.valor_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
+          {/* Itens */}
+          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Itens</h3>
+              <button
+                type="button"
+                onClick={handleAddItem}
+                className="inline-flex items-center text-sm font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
+              >
+                <Plus size={16} className="mr-1" />
+                Adicionar Item
+              </button>
             </div>
-          )}
+
+            <div className="space-y-4">
+              {(formData.itens || []).map((item: any) => (
+                <div key={item.id} className="flex gap-4 items-start p-4 bg-gray-50 rounded-lg dark:bg-slate-800">
+                  <div className="flex-1 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1 dark:text-gray-400">Descrição</label>
+                        <input
+                          type="text"
+                          value={item.descricao}
+                          onChange={(e) => handleItemChange(item.id, 'descricao', e.target.value)}
+                          className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-gray-100"
+                          placeholder="Descrição do item"
+                        />
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-500 mb-1 dark:text-gray-400">Qtd</label>
+                          <input
+                            type="number"
+                            value={item.quantidade}
+                            onChange={(e) => handleItemChange(item.id, 'quantidade', Number(e.target.value))}
+                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-gray-100"
+                            min="1"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-500 mb-1 dark:text-gray-400">Unitário</label>
+                          <input
+                            type="number"
+                            value={item.valorUnitario}
+                            onChange={(e) => handleItemChange(item.id, 'valorUnitario', Number(e.target.value))}
+                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-gray-100"
+                            step="0.01"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-500 mb-1 dark:text-gray-400">Total</label>
+                          <div className="py-2 px-3 bg-gray-100 rounded-md text-sm text-gray-700 text-right dark:bg-slate-900 dark:text-gray-300">
+                            R$ {((Number(item.quantidade) || 0) * (Number(item.valorUnitario) || 0)).toFixed(2)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveItem(item.id)}
+                    className="text-red-500 hover:text-red-700 p-1 dark:text-red-400 dark:hover:text-red-300"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
+              {(!formData.itens || formData.itens.length === 0) && (
+                <p className="text-center text-gray-500 py-4 dark:text-gray-400">Nenhum item adicionado.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Condições */}
+          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 dark:text-gray-100">Condições da Proposta</h3>
+            <textarea
+              value={formData.condicoes}
+              onChange={(e) => setFormData(prev => ({ ...prev, condicoes: e.target.value }))}
+              rows={4}
+              className="block w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
+              placeholder="Condições de pagamento, prazos, etc..."
+            />
+          </div>
+
+          {/* Observações */}
+          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 dark:text-gray-100">Observações Internas</h3>
+            <textarea
+              value={formData.observacoes}
+              onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
+              rows={3}
+              className="block w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
+              placeholder="Observações internas, não visíveis na proposta..."
+            />
+          </div>
         </div>
 
-        {/* Condições da Proposta */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Condições da Proposta</h3>
-          <textarea
-            value={formData.condicoes}
-            onChange={(e) => setFormData(prev => ({ ...prev, condicoes: e.target.value }))}
-            rows={4}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-            placeholder="Condições de pagamento, prazos, etc..."
-          />
+        {/* Sidebar Summary */}
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm dark:bg-slate-900 dark:border-slate-800 sticky top-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4 dark:text-gray-100">Resumo</h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
+                >
+                  <option value="rascunho">Rascunho</option>
+                  <option value="enviada">Enviada</option>
+                  <option value="aceita">Aceita</option>
+                  <option value="rejeitada">Rejeitada</option>
+                  <option value="negociacao">Em Negociação</option>
+                </select>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200 dark:border-slate-700">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600 dark:text-gray-400">Itens</span>
+                  <span className="font-medium dark:text-gray-200">{(formData.itens || []).length}</span>
+                </div>
+                <div className="flex justify-between items-center text-lg font-bold text-orange-600 dark:text-orange-400">
+                  <span>Total</span>
+                  <span>R$ {(formData.itens || []).reduce((sum: number, item: any) => sum + ((Number(item.quantidade) || 0) * (Number(item.valorUnitario) || 0)), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Preview */}
-      {showPreview && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Preview da Proposta</h3>
-          <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-            <div className="text-center border-b border-gray-200 pb-4">
-              <h1 className="text-2xl font-bold text-gray-900">{formData.titulo || 'Título da Proposta'}</h1>
-              <p className="text-gray-600">Proposta Comercial</p>
-            </div>
-
-            <div>
-              <h4 className="font-medium text-gray-900 mb-2">Cliente:</h4>
-              <p className="text-gray-700">{formData.cliente?.nome || 'Nome do Cliente'}</p>
-              <p className="text-gray-700">{formData.cliente?.empresa || 'Empresa'}</p>
-              <p className="text-gray-700">{formData.cliente?.email || 'email@exemplo.com'}</p>
-            </div>
-
-            {formData.itens && formData.itens.length > 0 && (
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Itens:</h4>
-                <div className="space-y-2">
-                  {formData.itens.map((item, index) => (
-                    <div key={item.id} className="flex justify-between text-sm">
-                      <span>{index + 1}. {item.descricao || 'Descrição do item'}</span>
-                      <span>R$ {item.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="border-t border-gray-300 mt-4 pt-2">
-                  <div className="flex justify-between font-medium">
-                    <span>Total:</span>
-                    <span>R$ {formData.valor_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {formData.condicoes && (
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Condições:</h4>
-                <p className="text-gray-700 text-sm">{formData.condicoes}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
-

@@ -796,17 +796,17 @@ const LeadImportCSV: React.FC<LeadImportCSVProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-7xl h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+      <div className="bg-white rounded-lg w-full max-w-7xl h-[90vh] flex flex-col dark:bg-slate-900 dark:border dark:border-slate-800">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b flex-shrink-0">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+        <div className="flex items-center justify-between p-6 border-b flex-shrink-0 dark:border-slate-800">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 dark:text-gray-100">
             <Upload size={24} />
             Importar Leads via CSV
           </h2>
           <button
             onClick={onCancel}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-slate-800 dark:text-gray-400"
             disabled={isImporting}
           >
             <X size={20} />
@@ -819,18 +819,18 @@ const LeadImportCSV: React.FC<LeadImportCSVProps> = ({
           {step === 'upload' && (
             <div className="space-y-6">
               <div className="text-center">
-                <div className="mx-auto w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                  <FileText size={32} className="text-blue-600" />
+                <div className="mx-auto w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mb-4 dark:bg-blue-900/20">
+                  <FileText size={32} className="text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 dark:text-gray-100">
                   Selecione o arquivo CSV
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-gray-600 mb-6 dark:text-gray-400">
                   Faça upload do arquivo CSV contendo os dados dos leads para importação
                 </p>
               </div>
 
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors dark:border-slate-700 dark:hover:border-blue-500">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -838,29 +838,29 @@ const LeadImportCSV: React.FC<LeadImportCSVProps> = ({
                   onChange={handleFileUpload}
                   className="hidden"
                 />
-                <Upload size={48} className="mx-auto text-gray-400 mb-4" />
-                <p className="text-lg font-medium text-gray-700 mb-2">
+                <Upload size={48} className="mx-auto text-gray-400 mb-4 dark:text-gray-500" />
+                <p className="text-lg font-medium text-gray-700 mb-2 dark:text-gray-200">
                   Clique para selecionar ou arraste o arquivo aqui
                 </p>
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="text-sm text-gray-500 mb-4 dark:text-gray-400">
                   Apenas arquivos CSV são aceitos
                 </p>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium dark:bg-blue-700 dark:hover:bg-blue-600"
                 >
                   Selecionar Arquivo
                 </button>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-900/10 dark:border-blue-900/30">
                 <div className="flex items-start gap-3">
-                  <Info size={20} className="text-blue-600 mt-0.5" />
+                  <Info size={20} className="text-blue-600 mt-0.5 dark:text-blue-400" />
                   <div>
-                    <h4 className="font-medium text-blue-900 mb-2">
+                    <h4 className="font-medium text-blue-900 mb-2 dark:text-blue-200">
                       Dicas para importação:
                     </h4>
-                    <ul className="text-sm text-blue-800 space-y-1">
+                    <ul className="text-sm text-blue-800 space-y-1 dark:text-blue-300">
                       <li>• <strong>Separadores suportados:</strong> vírgula (,) ou ponto e vírgula (;)</li>
                       <li>• <strong>Codificações suportadas:</strong> UTF-8, ISO-8859-1 (Latin-1), ASCII</li>
                       <li>• Campos obrigatórios: Nome, Empresa, Endereço, Cidade, Estado, CEP, Valor, Próximo Contato</li>
@@ -876,7 +876,7 @@ const LeadImportCSV: React.FC<LeadImportCSVProps> = ({
               <div className="text-center">
                 <button
                   onClick={downloadTemplate}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 mx-auto"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 mx-auto dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-800"
                 >
                   <Download size={16} />
                   Baixar Template CSV
@@ -889,16 +889,16 @@ const LeadImportCSV: React.FC<LeadImportCSVProps> = ({
           {step === 'mapping' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 dark:text-gray-100">
                   Mapeamento de Campos
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-400">
                   Associe as colunas do seu CSV aos campos do sistema
                 </p>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div className="bg-gray-50 rounded-lg p-4 dark:bg-slate-800/50">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-300">
                   <p><strong>Arquivo:</strong> {csvData.length} linhas encontradas</p>
                   <p><strong>Separador:</strong> {detectedSeparator === ',' ? 'vírgula' : detectedSeparator === ';' ? 'ponto e vírgula' : detectedSeparator}</p>
                   <p><strong>Codificação:</strong> {detectedEncoding}</p>
@@ -907,8 +907,8 @@ const LeadImportCSV: React.FC<LeadImportCSVProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
                 {csvHeaders.map(header => (
-                  <div key={header} className="border rounded-lg p-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div key={header} className="border rounded-lg p-4 dark:border-slate-800">
+                    <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
                       Coluna CSV: <strong>{header}</strong>
                     </label>
                     <select
@@ -917,7 +917,7 @@ const LeadImportCSV: React.FC<LeadImportCSVProps> = ({
                         ...prev,
                         [header]: e.target.value
                       }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-700 dark:text-gray-100"
                     >
                       <option value="">Não mapear</option>
                       {availableFields.map(field => (
@@ -936,39 +936,39 @@ const LeadImportCSV: React.FC<LeadImportCSVProps> = ({
           {step === 'preview' && validationResults && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 dark:text-gray-100">
                   Prévia da Importação
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-400">
                   Revise os dados antes de confirmar a importação
                 </p>
               </div>
 
               {/* Resumo */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center dark:bg-blue-900/10 dark:border-blue-800">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {validationResults.total}
                   </div>
-                  <div className="text-sm text-blue-800">Total</div>
+                  <div className="text-sm text-blue-800 dark:text-blue-300">Total</div>
                 </div>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center dark:bg-green-900/10 dark:border-green-800">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {validationResults.valid}
                   </div>
-                  <div className="text-sm text-green-800">Válidos</div>
+                  <div className="text-sm text-green-800 dark:text-green-300">Válidos</div>
                 </div>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-red-600">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center dark:bg-red-900/10 dark:border-red-800">
+                  <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                     {validationResults.invalid}
                   </div>
-                  <div className="text-sm text-red-800">Inválidos</div>
+                  <div className="text-sm text-red-800 dark:text-red-300">Inválidos</div>
                 </div>
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-yellow-600">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center dark:bg-yellow-900/10 dark:border-yellow-800">
+                  <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                     {validationResults.duplicates}
                   </div>
-                  <div className="text-sm text-yellow-800">Duplicados</div>
+                  <div className="text-sm text-yellow-800 dark:text-yellow-300">Duplicados</div>
                 </div>
               </div>
 
@@ -1010,15 +1010,15 @@ const LeadImportCSV: React.FC<LeadImportCSVProps> = ({
               )}
 
               {/* Preview dos dados */}
-              <div className="border rounded-lg">
-                <div className="flex items-center justify-between p-4 border-b bg-gray-50">
-                  <h4 className="font-medium text-gray-900">
+              <div className="border rounded-lg dark:border-slate-800">
+                <div className="flex items-center justify-between p-4 border-b bg-gray-50 dark:bg-slate-950 dark:border-slate-800">
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">
                     Prévia dos Dados
                   </h4>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowPreview(!showPreview)}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 flex items-center gap-1"
+                      className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 flex items-center gap-1 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-800"
                     >
                       {showPreview ? <EyeOff size={14} /> : <Eye size={14} />}
                       {showPreview ? 'Ocultar' : 'Mostrar'} Prévia
@@ -1027,7 +1027,7 @@ const LeadImportCSV: React.FC<LeadImportCSVProps> = ({
                       <select
                         value={previewRows}
                         onChange={(e) => setPreviewRows(parseInt(e.target.value))}
-                        className="px-2 py-1 text-sm border border-gray-300 rounded"
+                        className="px-2 py-1 text-sm border border-gray-300 rounded dark:bg-slate-800 dark:border-slate-700 dark:text-gray-200"
                       >
                         <option value={5}>5 linhas</option>
                         <option value={10}>10 linhas</option>
@@ -1043,10 +1043,10 @@ const LeadImportCSV: React.FC<LeadImportCSVProps> = ({
                       <thead>
                         <tr className="border-b">
                           {Object.keys(fieldMappings).map(header => (
-                            <th key={header} className="text-left p-2 font-medium text-gray-700">
+                            <th key={header} className="text-left p-2 font-medium text-gray-700 dark:text-gray-300">
                               {header}
                               <br />
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-gray-500 dark:text-gray-500">
                                 → {availableFields.find(f => f.key === fieldMappings[header])?.label || 'Não mapeado'}
                               </span>
                             </th>
@@ -1055,9 +1055,9 @@ const LeadImportCSV: React.FC<LeadImportCSVProps> = ({
                       </thead>
                       <tbody>
                         {csvData.slice(0, previewRows).map((row, index) => (
-                          <tr key={index} className="border-b hover:bg-gray-50">
+                          <tr key={index} className="border-b hover:bg-gray-50 dark:border-slate-800 dark:hover:bg-slate-800/50">
                             {Object.keys(fieldMappings).map(header => (
-                              <td key={header} className="p-2 text-gray-900">
+                              <td key={header} className="p-2 text-gray-900 dark:text-gray-200">
                                 {row[header] || '-'}
                               </td>
                             ))}
@@ -1152,7 +1152,7 @@ const LeadImportCSV: React.FC<LeadImportCSVProps> = ({
         </div>
 
         {/* Footer - FIXO */}
-        <div className="flex items-center justify-between p-6 border-t bg-gray-50 flex-shrink-0">
+        <div className="flex items-center justify-between p-6 border-t bg-gray-50 flex-shrink-0 dark:bg-slate-950 dark:border-slate-800">
           <div className="flex items-center gap-2">
             {step !== 'upload' && step !== 'importing' && step !== 'complete' && (
               <button
@@ -1199,7 +1199,7 @@ const LeadImportCSV: React.FC<LeadImportCSVProps> = ({
             ) : (
               <button
                 onClick={onCancel}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-800"
               >
                 Cancelar
               </button>

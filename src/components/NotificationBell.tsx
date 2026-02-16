@@ -1,23 +1,23 @@
 // NotificationBell.tsx - Versão com Exports Corretos
 
-import React, { 
-  useState, 
-  useEffect, 
-  useCallback, 
-  useMemo, 
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
   useRef,
   KeyboardEvent
 } from 'react';
-import { 
-  X, 
-  Bell, 
-  BellRing, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
-  Info, 
-  Eye, 
-  EyeOff, 
+import {
+  X,
+  Bell,
+  BellRing,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Info,
+  Eye,
+  EyeOff,
   Trash2,
   RefreshCw,
   AlertTriangle,
@@ -34,7 +34,7 @@ interface NotificationBellProps {
 }
 
 // COMPONENTE PRINCIPAL - EXPORT NOMEADO
-export function NotificationBell({ 
+export function NotificationBell({
   className = '',
   size = 25,
   showBadge = true,
@@ -43,23 +43,23 @@ export function NotificationBell({
   const [showPanel, setShowPanel] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(0);
-  
+
   // Refs para gerenciamento de foco e elementos
   const bellButtonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  
-  const { 
-    notifications, 
-    unreadCount, 
+
+  const {
+    notifications,
+    unreadCount,
     loading,
     error,
     isServiceAvailable,
-    markAsRead, 
-    deleteNotification, 
-    markAllAsRead, 
+    markAsRead,
+    deleteNotification,
+    markAllAsRead,
     clearAllNotifications,
-    refreshNotifications 
+    refreshNotifications
   } = useNotifications();
 
   // Função para validar e formatar data das notificações - ROBUSTA
@@ -72,7 +72,7 @@ export function NotificationBell({
 
       // Tentar criar data
       const date = new Date(dateString);
-      
+
       // Verificar se a data é válida
       if (isNaN(date.getTime())) {
         return 'Data inválida';
@@ -81,23 +81,23 @@ export function NotificationBell({
       // Verificar se a data não é muito antiga ou futura
       const now = new Date();
       const diffInMs = now.getTime() - date.getTime();
-      
+
       // Se a data for futura ou muito antiga (mais de 10 anos), considerar inválida
       if (diffInMs < 0 || diffInMs > 10 * 365 * 24 * 60 * 60 * 1000) {
         return date.toLocaleDateString('pt-BR');
       }
 
       const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-      
+
       if (diffInMinutes < 1) return 'Agora';
       if (diffInMinutes < 60) return `${diffInMinutes}m atrás`;
-      
+
       const diffInHours = Math.floor(diffInMinutes / 60);
       if (diffInHours < 24) return `${diffInHours}h atrás`;
-      
+
       const diffInDays = Math.floor(diffInHours / 24);
       if (diffInDays < 7) return `${diffInDays}d atrás`;
-      
+
       // Para datas mais antigas, mostrar data formatada
       return date.toLocaleDateString('pt-BR', {
         day: '2-digit',
@@ -184,7 +184,7 @@ export function NotificationBell({
   // Função para refresh com indicador visual
   const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
-    
+
     setIsRefreshing(true);
     setLastRefreshTime(Date.now());
     try {
@@ -217,7 +217,7 @@ export function NotificationBell({
       const firstFocusable = panelRef.current.querySelector(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       ) as HTMLElement;
-      
+
       if (firstFocusable) {
         firstFocusable.focus();
       }
@@ -248,8 +248,8 @@ export function NotificationBell({
   const displayNotifications = useMemo(() => {
     return notifications
       .slice(0, maxNotificationsDisplay)
-      .filter(notification => 
-        notification && 
+      .filter(notification =>
+        notification &&
         typeof notification.id === 'number' &&
         typeof notification.title === 'string' &&
         typeof notification.message === 'string'
@@ -261,7 +261,7 @@ export function NotificationBell({
     const total = displayNotifications.length;
     const read = displayNotifications.filter(n => n.is_read).length;
     const unread = total - read;
-    
+
     return { total, read, unread };
   }, [displayNotifications]);
 
@@ -276,9 +276,9 @@ export function NotificationBell({
   // Badge de contagem
   const countBadge = useMemo(() => {
     if (!showBadge || unreadCount === 0) return null;
-    
+
     return (
-      <span 
+      <span
         className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white animate-pulse"
         aria-label={`${unreadCount} notificações não lidas`}
       >
@@ -286,14 +286,14 @@ export function NotificationBell({
       </span>
     );
   }, [showBadge, unreadCount]);
-console.log(loading, error, isServiceAvailable, notifications, unreadCount);
+  console.log(loading, error, isServiceAvailable, notifications, unreadCount);
   return (
     <div className={`relative ${className}`}>
       {/* Botão do Sino */}
-      <button 
+      <button
         ref={bellButtonRef}
         onClick={togglePanel}
-        className="relative rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-200"
+        className="relative rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors duration-200 dark:bg-slate-800 dark:text-gray-400 dark:hover:text-gray-200"
         aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
         aria-expanded={showPanel}
         aria-haspopup="dialog"
@@ -306,25 +306,25 @@ console.log(loading, error, isServiceAvailable, notifications, unreadCount);
       {showPanel && (
         <>
           {/* Overlay para fechar ao clicar fora */}
-          <div 
+          <div
             ref={overlayRef}
-            className="fixed inset-0 z-40" 
+            className="fixed inset-0 z-40"
             onClick={handleOverlayClick}
             aria-hidden="true"
           />
-          
+
           {/* Panel */}
-          <div 
+          <div
             ref={panelRef}
-            className="absolute right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+            className="absolute right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg border border-gray-200 z-50 dark:bg-slate-900 dark:border-slate-800"
             role="dialog"
             aria-labelledby="notifications-title"
             aria-describedby="notifications-description"
             onKeyDown={handleKeyDown}
           >
             {/* Cabeçalho do Panel */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-              <h3 id="notifications-title" className="text-lg font-semibold text-gray-900">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg dark:bg-slate-950 dark:border-slate-800">
+              <h3 id="notifications-title" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Notificações
               </h3>
               <div className="flex items-center space-x-2">
@@ -382,14 +382,14 @@ console.log(loading, error, isServiceAvailable, notifications, unreadCount);
 
             {/* Estatísticas */}
             {displayNotifications.length > 0 && (
-              <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
-                <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 dark:bg-slate-950 dark:border-slate-800">
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                   <span>
                     Total: {notificationStats.total} | Lidas: {notificationStats.read}
                   </span>
                   <button
                     onClick={handleClearAll}
-                    className="text-red-600 hover:text-red-700 flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded px-2 py-1"
+                    className="text-red-600 hover:text-red-700 flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded px-2 py-1 dark:text-red-400 dark:hover:text-red-300"
                     disabled={loading}
                     aria-label="Excluir todas as notificações"
                   >
@@ -401,7 +401,7 @@ console.log(loading, error, isServiceAvailable, notifications, unreadCount);
             )}
 
             {/* Lista de Notificações */}
-            <div 
+            <div
               className="max-h-96 overflow-y-auto"
               id="notifications-description"
             >
@@ -421,9 +421,8 @@ console.log(loading, error, isServiceAvailable, notifications, unreadCount);
                   {displayNotifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`p-4 hover:bg-gray-50 transition-colors duration-150 ${
-                        !notification.is_read ? 'bg-blue-50 border-l-4 border-l-blue-400' : ''
-                      }`}
+                      className={`p-4 hover:bg-gray-50 transition-colors duration-150 dark:hover:bg-slate-800 ${!notification.is_read ? 'bg-blue-50 border-l-4 border-l-blue-400 dark:bg-blue-900/10 dark:border-l-blue-500' : 'dark:bg-slate-900'
+                        }`}
                       role="article"
                       aria-labelledby={`notification-title-${notification.id}`}
                       aria-describedby={`notification-content-${notification.id}`}
@@ -434,9 +433,9 @@ console.log(loading, error, isServiceAvailable, notifications, unreadCount);
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <h4 
+                            <h4
                               id={`notification-title-${notification.id}`}
-                              className={`text-sm font-medium ${!notification.is_read ? 'text-gray-900' : 'text-gray-700'}`}
+                              className={`text-sm font-medium ${!notification.is_read ? 'text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300'}`}
                             >
                               {notification.title}
                             </h4>
@@ -448,25 +447,24 @@ console.log(loading, error, isServiceAvailable, notifications, unreadCount);
                             </div>
                           </div>
                           {notification.message && (
-                            <p 
+                            <p
                               id={`notification-content-${notification.id}`}
                               className="text-sm text-gray-600 mt-1"
                             >
                               {notification.message}
                             </p>
                           )}
-                          
+
                           {/* Badge do tipo e ações */}
                           <div className="flex items-center justify-between mt-2">
-                            <span className={`text-xs px-2 py-1 rounded border ${
-                              notification.type === 'success' ? 'bg-green-100 text-green-700 border-green-200' :
-                              notification.type === 'error' ? 'bg-red-100 text-red-700 border-red-200' :
-                              notification.type === 'warning' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
-                              'bg-blue-100 text-blue-700 border-blue-200'
-                            }`}>
+                            <span className={`text-xs px-2 py-1 rounded border ${notification.type === 'success' ? 'bg-green-100 text-green-700 border-green-200' :
+                                notification.type === 'error' ? 'bg-red-100 text-red-700 border-red-200' :
+                                  notification.type === 'warning' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
+                                    'bg-blue-100 text-blue-700 border-blue-200'
+                              }`}>
                               {notification.type}
                             </span>
-                            
+
                             {/* Ações */}
                             <div className="flex items-center space-x-2">
                               <button
@@ -508,10 +506,10 @@ console.log(loading, error, isServiceAvailable, notifications, unreadCount);
 
             {/* Rodapé com informações adicionais */}
             {displayNotifications.length > 0 && (
-              <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 rounded-b-lg">
-                <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 rounded-b-lg dark:bg-slate-950 dark:border-slate-800">
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                   <span>
-                    {displayNotifications.length < notifications.length && 
+                    {displayNotifications.length < notifications.length &&
                       `Mostrando ${displayNotifications.length} de ${notifications.length}`
                     }
                   </span>

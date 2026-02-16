@@ -123,11 +123,11 @@ export function KanbanColumnComponent({
   };
 
   const getColumnBorderClass = () => {
-    return isOver && canDrop ? 'border-orange-300' : 'border-gray-200';
+    return isOver && canDrop ? 'border-orange-300 dark:border-orange-700' : 'border-gray-200 dark:border-slate-800';
   };
 
   const getColumnBgClass = () => {
-    return isOver && canDrop ? 'bg-orange-50' : 'bg-white';
+    return isOver && canDrop ? 'bg-orange-50 dark:bg-orange-900/20' : 'bg-white dark:bg-slate-900';
   };
 
   const isAtLimit = column.limit && column.cards.length >= column.limit;
@@ -139,13 +139,13 @@ export function KanbanColumnComponent({
       style={getColumnStyle()}
       className={`h-full min-h-0 flex flex-col w-72 shrink-0 rounded-lg ${getColumnBgClass()} border ${getColumnBorderClass()} transition-all duration-200 hover:shadow-md`}
     >
-      <div className="p-3 border-b border-gray-200 flex justify-between items-center">
+      <div className="p-3 border-b border-gray-200 flex justify-between items-center dark:border-slate-800">
         <div className="flex-1 mr-2">
           <EditableTitle
             title={column.title}
             onSave={handleTitleSave}
             canEdit={canEdit}
-            className="font-medium text-gray-700"
+            className="font-medium text-gray-700 dark:text-gray-200"
             placeholder="Nome da coluna"
           />
         </div>
@@ -156,8 +156,8 @@ export function KanbanColumnComponent({
             <span className={`text-xs px-2 py-1 rounded-full font-medium transition-colors ${isAtLimit
               ? 'bg-red-100 text-red-800 ring-2 ring-red-300 animate-pulse'
               : isNearLimit
-                ? 'bg-yellow-100 text-yellow-800 ring-1 ring-yellow-300'
-                : 'bg-gray-100 text-gray-600'
+                ? 'bg-yellow-100 text-yellow-800 ring-1 ring-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-400 dark:ring-yellow-700'
+                : 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-gray-400'
               }`}>
               {column.cards.length}{column.limit ? `/${column.limit}` : ''}
             </span>
@@ -173,20 +173,20 @@ export function KanbanColumnComponent({
             <div className="relative">
               <button
                 onClick={() => setShowSettings(true)}
-                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-1 text-gray-400 hover:text-gray-600 transition-colors dark:hover:text-gray-200"
                 title="Editar coluna"
               >
                 <Edit size={16} />
               </button>
               <button
                 onClick={() => setShowMenu(!showMenu)}
-                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-1 text-gray-400 hover:text-gray-600 transition-colors dark:hover:text-gray-200"
               >
                 <MoreVertical size={16} />
               </button>
 
               {showMenu && (
-                <div className="absolute right-0 top-8 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                <div className="absolute right-0 top-8 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10 dark:bg-slate-800 dark:border-slate-700">
                   <div className="py-1">
                     <button
                       onClick={() => {
@@ -195,8 +195,8 @@ export function KanbanColumnComponent({
                       }}
                       disabled={isAtLimit}
                       className={`flex items-center w-full px-4 py-2 text-sm ${isAtLimit
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'text-gray-400 cursor-not-allowed dark:text-gray-600'
+                        : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-slate-700'
                         }`}
                       title={isAtLimit ? `Limite de ${column.limit} cards atingido` : 'Adicionar novo card'}
                     >
@@ -205,14 +205,14 @@ export function KanbanColumnComponent({
                     </button>
                     <button
                       onClick={() => setShowColorPicker(!showColorPicker)}
-                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-slate-700"
                     >
                       <Palette size={16} className="mr-2" />
                       Alterar Cor
                     </button>
                     <button
                       onClick={handleDeleteColumn}
-                      className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                     >
                       <Trash2 size={16} className="mr-2" />
                       Excluir Coluna
@@ -220,7 +220,7 @@ export function KanbanColumnComponent({
                   </div>
 
                   {showColorPicker && (
-                    <div className="border-t border-gray-200 p-3">
+                    <div className="border-t border-gray-200 p-3 dark:border-slate-700">
                       <div className="grid grid-cols-4 gap-2">
                         {colors.map((color) => {
                           const base = colorHexMap[color.value] || '#9CA3AF';
@@ -261,7 +261,7 @@ export function KanbanColumnComponent({
 
         {/* Área de drop quando a coluna está vazia */}
         {column.cards.length === 0 && (
-          <div className="min-h-[100px] flex items-center justify-center border-2 border-dashed border-gray-200 rounded-md p-4">
+          <div className="min-h-[100px] flex items-center justify-center border-2 border-dashed border-gray-200 rounded-md p-4 dark:border-slate-700">
             <p className="text-sm text-gray-400">Arraste um card para aqui</p>
           </div>
         )}
