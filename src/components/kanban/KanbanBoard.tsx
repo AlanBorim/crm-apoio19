@@ -101,6 +101,8 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredColumns, setFilteredColumns] = useState<KanbanColumn[]>([]);
   const [showAddColumnModal, setShowAddColumnModal] = useState(false);
+  const [editMode, setEditMode] = useState<'create' | 'edit'>('edit');
+  const [newCardColumnId, setNewCardColumnId] = useState<string | null>(null);
 
   // Carregar dados do quadro Kanban
   const loadBoard = useCallback(async () => {
@@ -286,32 +288,60 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
     }
   }, [columns, activityLog]);
 
-  const addCard = useCallback(async (columnId: string) => {
+  const addCard = useCallback((columnId: string) => {
+    // Criar um card temporário com ID único negativo para identificação
+    const tempCard: KanbanCard = {
+      id: `temp-${Date.now()}`,
+      title: '',
+      description: '',
+      status: 'pendente',
+      priority: 'media',
+      dueDate: new Date().toISOString().split('T')[0],
+      assignedTo: [],
+      tags: [],
+      comments: [],
+      attachments: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      createdBy: currentUser
+    };
+
+    setEditMode('create');
+    setNewCardColumnId(columnId);
+    setSelectedCard(tempCard);
+  }, [currentUser]);
+
+  const createCard = useCallback(async (columnId: string, cardData: Partial<KanbanCard>) => {
     try {
       const newCardData = {
-        title: 'Novo Card',
-        description: 'Descrição do novo card',
+        title: cardData.title || 'Novo Card',
+        description: cardData.description || '',
         columnId: columnId,
-        priority: 'media' as const,
-        dueDate: new Date().toISOString().split('T')[0],
-        assignedTo: [],
-        tags: []
+        priority: cardData.priority || 'media',
+        dueDate: cardData.dueDate,
+        assignedTo: cardData.assignedTo?.map(u => u.id) || [],
+        tags: cardData.tags || []
       };
 
       const response = await kanbanApi.cards.create(newCardData);
 
       if (response.success && response.data) {
+        // Adicionar card ao estado
         const columnIndex = columns.findIndex(col => col.id === columnId);
         if (columnIndex !== -1) {
           const newColumns = [...columns];
           newColumns[columnIndex].cards.push(response.data);
           setColumns(newColumns);
 
-          const column = columns[columnIndex];
-          activityLog.logCardCreate(response.data, column.title);
+          // Log de criação
+          activityLog.logCardCreate(response.data, columns[columnIndex].title);
 
-          // Abrir card para edição
-          setSelectedCard(response.data);
+          // Adicionar comentários se houver
+          if (cardData.comments && cardData.comments.length > 0) {
+            for (const comment of cardData.comments) {
+              await addComment(response.data.id, comment.content);
+            }
+          }
         }
       }
     } catch (err) {
@@ -319,6 +349,7 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
       setError('Erro ao criar card');
     }
   }, [columns, activityLog]);
+
 
   const updateCard = useCallback(async (cardId: string, updates: Partial<KanbanCard>) => {
     try {
@@ -613,12 +644,31 @@ export function KanbanBoard({ onCardClick }: KanbanBoardProps) {
             users={users}
             currentUser={currentUser}
             isOpen={true}
-            onClose={() => setSelectedCard(null)}
-            onSave={(updates) => {
-              updateCard(selectedCard.id, updates);
+            isNewCard={editMode === 'create'}
+            onClose={() => {
               setSelectedCard(null);
+              setEditMode('edit');
+              setNewCardColumnId(null);
             }}
-            onAddComment={(content) => addComment(selectedCard.id, content)}
+            onSave={async (updates) => {
+              if (editMode === 'create' && newCardColumnId) {
+                // Criar novo card com todos os dados
+                await createCard(newCardColumnId, updates);
+              } else {
+                // Atualizar card existente
+                await updateCard(selectedCard.id, updates);
+              }
+              setSelectedCard(null);
+              setEditMode('edit');
+              setNewCardColumnId(null);
+            }}
+            onAddComment={(content) => {
+              // Se for modo de criação, o comentário será gerenciado pelo CardEditModal
+              // Se for edição, adicionar comentário normalmente
+              if (editMode === 'edit') {
+                addComment(selectedCard.id, content);
+              }
+            }}
             onUpdateComment={(commentId, content) => {
               // TODO: Implementar atualização de comentário
               console.log('Update comment:', commentId, content);

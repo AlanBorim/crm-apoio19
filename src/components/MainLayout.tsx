@@ -17,6 +17,7 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationBell } from './NotificationBell';
+import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 import {
   Sidebar,
   SidebarContent,
@@ -41,6 +42,7 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation();
   const { logout, user } = useAuth();
+  const { config: layoutConfig } = useLayoutConfig();
 
   // Itens do menu principal
   const menuItems = [
@@ -120,13 +122,13 @@ export function MainLayout({ children }: MainLayoutProps) {
           <SidebarHeader className="border-b border-gray-200 h-16 flex items-center justify-center">
             <div className="flex items-center justify-center w-full">
               <img
-                src="/logo.png"
-                alt="CRM Apoio19"
+                src={layoutConfig?.logo ? `${layoutConfig.logo}?t=${Date.now()}` : '/logo.png'}
+                alt={layoutConfig?.nomeEmpresa || 'CRM'}
                 className="h-8 w-auto group-data-[collapsible=icon]:hidden"
               />
               <img
-                src="/logoAP19.png"
-                alt="Apoio19"
+                src={layoutConfig?.logoIcon ? `${layoutConfig.logoIcon}?t=${Date.now()}` : '/logoAP19.png'}
+                alt={layoutConfig?.nomeEmpresa || 'CRM'}
                 className="h-8 w-8 hidden group-data-[collapsible=icon]:block object-contain"
               />
             </div>

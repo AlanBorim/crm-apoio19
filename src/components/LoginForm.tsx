@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -8,12 +8,38 @@ import { useAuth } from '../hooks/useAuth';
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [logoPath, setLogoPath] = useState('/logo.png');
+  const [nomeEmpresa, setNomeEmpresa] = useState('CRM Apoio19');
   const { login, isLoading, error, clearError } = useAuth();
   const navigate = useNavigate();
+
+  // Carregar logo das configurações (sem autenticação)
+  useEffect(() => {
+    const loadLogo = async () => {
+      try {
+        const response = await fetch('/api/settings/layout');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data?.config) {
+            const config = data.data.config;
+            if (config.logo) {
+              setLogoPath(config.logo);
+            }
+            if (config.nomeEmpresa) {
+              setNomeEmpresa(config.nomeEmpresa);
+            }
+          }
+        }
+      } catch (error) {
+        console.log('Usando logo padrão');
+      }
+    };
+    loadLogo();
+  }, []);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
-   
+
     const success = await login(email, senha);
     if (success) {
       navigate('/dashboard');
@@ -26,15 +52,15 @@ export function LoginForm() {
       <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-lg">
         <div className="text-center">
           <img
-            src="/logo.png"
-            alt="CRM Apoio19"
+            src={`${logoPath}?t=${Date.now()}`}
+            alt={nomeEmpresa}
             className="mx-auto h-16 w-auto"
           />
           <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
             Acesse sua conta
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Entre com suas credenciais para acessar o CRM Apoio19
+            Entre com suas credenciais para acessar o {nomeEmpresa}
           </p>
         </div>
 
@@ -62,8 +88,8 @@ export function LoginForm() {
                 <Label htmlFor="senha" className="block text-sm font-medium text-gray-700">
                   Senha
                 </Label>
-                <Link 
-                  to="/forgot-password" 
+                <Link
+                  to="/forgot-password"
                   className="text-sm font-medium text-purple-600 hover:text-purple-500 transition-colors duration-200"
                 >
                   Esqueceu a senha?

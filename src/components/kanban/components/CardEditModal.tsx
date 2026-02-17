@@ -8,6 +8,7 @@ interface CardEditModalProps {
   users: UserType[];
   currentUser: UserType;
   isOpen: boolean;
+  isNewCard?: boolean; // Nova prop para identificar modo de criação
   onClose: () => void;
   onSave: (updatedCard: Partial<KanbanCard>) => void;
   onAddComment: (content: string) => void;
@@ -20,6 +21,7 @@ export function CardEditModal({
   users,
   currentUser,
   isOpen,
+  isNewCard = false,
   onClose,
   onSave,
   onAddComment,
@@ -38,6 +40,7 @@ export function CardEditModal({
   const [newComment, setNewComment] = useState('');
   const [editingComment, setEditingComment] = useState<string | null>(null);
   const [editCommentContent, setEditCommentContent] = useState('');
+  const [pendingComments, setPendingComments] = useState<Comment[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -63,13 +66,31 @@ export function CardEditModal({
       assignedTo: formData.assignedTo,
       tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
     };
+
+    // Se for um novo card, incluir os comentários pendentes
+    if (isNewCard) {
+      updatedCard.comments = pendingComments;
+    }
+
     onSave(updatedCard);
-    onClose();
   };
 
   const handleAddComment = () => {
     if (newComment.trim()) {
-      onAddComment(newComment.trim());
+      if (isNewCard) {
+        // Adicionar a lista de comentários pendentes
+        const tempComment: Comment = {
+          id: `temp-${Date.now()}`,
+          cardId: card.id,
+          userId: currentUser.id,
+          user: currentUser,
+          content: newComment.trim(),
+          createdAt: new Date().toISOString()
+        };
+        setPendingComments([...pendingComments, tempComment]);
+      } else {
+        onAddComment(newComment.trim());
+      }
       setNewComment('');
     }
   };
@@ -232,7 +253,7 @@ export function CardEditModal({
               <div className="p-4">
                 <h3 className="text-sm font-medium text-gray-900 mb-4 dark:text-gray-100">
                   <MessageSquare size={16} className="inline mr-2" />
-                  Comentários ({card.comments?.length || 0})
+                  Comentários ({(card.comments?.length || 0) + pendingComments.length})
                 </h3>
 
                 {/* Add Comment */}
@@ -255,6 +276,7 @@ export function CardEditModal({
 
                 {/* Comments List */}
                 <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {/* Comentários existentes */}
                   {card.comments?.map((comment) => (
                     <div key={comment.id} className="bg-white p-3 rounded-md shadow-sm dark:bg-slate-900">
                       <div className="flex items-center justify-between mb-2">
@@ -317,6 +339,32 @@ export function CardEditModal({
                           )}
                         </div>
                       )}
+                    </div>
+                  ))}
+
+                  {/* Comentários pendentes (apenas para cards novos) */}
+                  {isNewCard && pendingComments.map((comment) => (
+                    <div key={comment.id} className="bg-yellow-50 p-3 rounded-md shadow-sm dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center">
+                            <span className="text-xs font-medium text-orange-600">
+                              {comment.user.nome.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <span className="text-xs font-medium text-gray-900 dark:text-gray-200">
+                            {comment.user.nome}
+                          </span>
+                          <span className="text-xs text-yellow-700 dark:text-yellow-400">(Pendente)</span>
+                        </div>
+                        <button
+                          onClick={() => setPendingComments(pendingComments.filter(c => c.id !== comment.id))}
+                          className="text-xs text-red-600 hover:text-red-800"
+                        >
+                          Remover
+                        </button>
+                      </div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">{comment.content}</p>
                     </div>
                   ))}
                 </div>

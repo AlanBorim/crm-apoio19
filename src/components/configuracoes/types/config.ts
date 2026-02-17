@@ -222,6 +222,7 @@ export function hasAnyPermission(user: User | null, permissions: string[]): bool
 export interface LayoutConfig {
   nomeEmpresa: string;
   logo: string;
+  logoIcon: string;
   corPrimaria: string;
   tema: 'light' | 'dark';
   configuracoesDashboard: {

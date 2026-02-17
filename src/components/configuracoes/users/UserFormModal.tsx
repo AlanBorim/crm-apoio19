@@ -325,21 +325,21 @@ export function UserFormModal({
       <div className="flex min-h-screen items-center justify-center p-4">
         {/* Overlay */}
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity backdrop-blur-sm"
           onClick={onClose}
         />
 
         {/* Modal */}
-        <div className="relative w-full max-w-2xl bg-white rounded-lg shadow-xl">
+        <div className="relative w-full max-w-2xl bg-white rounded-lg shadow-xl dark:bg-slate-800 dark:border dark:border-slate-700">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center dark:text-gray-100">
               <UserIcon size={24} className="mr-2" />
               {isEditing ? 'Editar Usuário' : 'Novo Usuário'}
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors dark:text-gray-500 dark:hover:text-gray-300"
               disabled={isSubmitting}
             >
               <X size={24} />
@@ -350,10 +350,10 @@ export function UserFormModal({
           <form onSubmit={handleSubmit} className="p-6">
             {/* Erro geral */}
             {errors.general && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md dark:bg-red-900/20 dark:border-red-900/50">
                 <div className="flex items-center">
-                  <AlertCircle size={16} className="text-red-500 mr-2" />
-                  <span className="text-red-700 text-sm">{errors.general}</span>
+                  <AlertCircle size={16} className="text-red-500 mr-2 dark:text-red-400" />
+                  <span className="text-red-700 text-sm dark:text-red-400">{errors.general}</span>
                 </div>
               </div>
             )}
@@ -361,83 +361,83 @@ export function UserFormModal({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Nome */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                   Nome completo *
                 </label>
                 <input
                   type="text"
                   value={formData.nome}
                   onChange={(e) => handleInputChange('nome', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.nome ? 'border-red-300' : 'border-gray-300'
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-900 dark:text-gray-100 ${errors.nome ? 'border-red-300 dark:border-red-900/50' : 'border-gray-300 dark:border-slate-700'
                     }`}
                   placeholder="Digite o nome completo"
                   disabled={isSubmitting}
                 />
                 {errors.nome && (
-                  <p className="mt-1 text-sm text-red-600">{errors.nome}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.nome}</p>
                 )}
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                   Email *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail size={16} className="text-gray-400" />
+                    <Mail size={16} className="text-gray-400 dark:text-gray-500" />
                   </div>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.email ? 'border-red-300' : 'border-gray-300'
+                    className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-900 dark:text-gray-100 ${errors.email ? 'border-red-300 dark:border-red-900/50' : 'border-gray-300 dark:border-slate-700'
                       }`}
                     placeholder="usuario@exemplo.com"
                     disabled={isSubmitting}
                   />
                 </div>
                 {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
                 )}
               </div>
 
               {/* Telefone */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                   Telefone
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Phone size={16} className="text-gray-400" />
+                    <Phone size={16} className="text-gray-400 dark:text-gray-500" />
                   </div>
                   <input
                     type="text"
                     value={formData.telefone}
                     onChange={(e) => handlePhoneChange(e.target.value)}
-                    className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.telefone ? 'border-red-300' : 'border-gray-300'
+                    className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-900 dark:text-gray-100 ${errors.telefone ? 'border-red-300 dark:border-red-900/50' : 'border-gray-300 dark:border-slate-700'
                       }`}
                     placeholder="(11) 99999-9999"
                     disabled={isSubmitting}
                   />
                 </div>
                 {errors.telefone && (
-                  <p className="mt-1 text-sm text-red-600">{errors.telefone}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.telefone}</p>
                 )}
               </div>
 
               {/* Função */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                   Função *
                   {!canEditPermissions && (
-                    <span className="ml-2 text-xs text-gray-500">(somente admin pode alterar)</span>
+                    <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">(somente admin pode alterar)</span>
                   )}
                 </label>
                 <select
                   value={formData.funcao}
                   onChange={(e) => handleInputChange('funcao', e.target.value as User['funcao'])}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${!canEditPermissions ? 'bg-gray-100 cursor-not-allowed' : ''
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100 ${!canEditPermissions ? 'bg-gray-100 cursor-not-allowed dark:bg-slate-700' : ''
                     }`}
                   disabled={isSubmitting || !canEditPermissions}
                 >
@@ -452,7 +452,7 @@ export function UserFormModal({
 
               {/* Status */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                   Status
                 </label>
                 <div className="flex items-center space-x-4">
@@ -485,16 +485,16 @@ export function UserFormModal({
 
               {/* Senha */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                   Senha {!isEditing && '*'}
-                  {isEditing && <span className="text-gray-500 text-xs">(deixe em branco para manter atual)</span>}
+                  {isEditing && <span className="text-gray-500 text-xs dark:text-gray-400">(deixe em branco para manter atual)</span>}
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={formData.senha}
                     onChange={(e) => handleInputChange('senha', e.target.value)}
-                    className={`w-full px-3 py-2 pr-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.senha ? 'border-red-300' : 'border-gray-300'
+                    className={`w-full px-3 py-2 pr-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-900 dark:text-gray-100 ${errors.senha ? 'border-red-300 dark:border-red-900/50' : 'border-gray-300 dark:border-slate-700'
                       }`}
                     placeholder={isEditing ? 'Nova senha (opcional)' : 'Digite a senha'}
                     disabled={isSubmitting}
@@ -505,20 +505,20 @@ export function UserFormModal({
                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   >
                     {showPassword ? (
-                      <EyeOff size={16} className="text-gray-400" />
+                      <EyeOff size={16} className="text-gray-400 dark:text-gray-500" />
                     ) : (
-                      <Eye size={16} className="text-gray-400" />
+                      <Eye size={16} className="text-gray-400 dark:text-gray-500" />
                     )}
                   </button>
                 </div>
                 {errors.senha && (
-                  <p className="mt-1 text-sm text-red-600">{errors.senha}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.senha}</p>
                 )}
               </div>
 
               {/* Confirmar Senha */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                   Confirmar senha {!isEditing && '*'}
                 </label>
                 <div className="relative">
@@ -526,7 +526,7 @@ export function UserFormModal({
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={formData.confirmarSenha}
                     onChange={(e) => handleInputChange('confirmarSenha', e.target.value)}
-                    className={`w-full px-3 py-2 pr-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.confirmarSenha ? 'border-red-300' : 'border-gray-300'
+                    className={`w-full px-3 py-2 pr-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-900 dark:text-gray-100 ${errors.confirmarSenha ? 'border-red-300 dark:border-red-900/50' : 'border-gray-300 dark:border-slate-700'
                       }`}
                     placeholder="Confirme a senha"
                     disabled={isSubmitting}
@@ -537,14 +537,14 @@ export function UserFormModal({
                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   >
                     {showConfirmPassword ? (
-                      <EyeOff size={16} className="text-gray-400" />
+                      <EyeOff size={16} className="text-gray-400 dark:text-gray-500" />
                     ) : (
-                      <Eye size={16} className="text-gray-400" />
+                      <Eye size={16} className="text-gray-400 dark:text-gray-500" />
                     )}
                   </button>
                 </div>
                 {errors.confirmarSenha && (
-                  <p className="mt-1 text-sm text-red-600">{errors.confirmarSenha}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirmarSenha}</p>
                 )}
               </div>
             </div>
@@ -552,18 +552,18 @@ export function UserFormModal({
             {/* Permissões */}
             <div className="mt-6">
               <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   <Shield size={16} className="inline mr-1" />
                   Permissões *
                   {!canEditPermissions && (
-                    <span className="ml-2 text-xs text-gray-500">(somente admin pode alterar)</span>
+                    <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">(somente admin pode alterar)</span>
                   )}
                 </label>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={selectAllPermissions}
-                    className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-900/30 dark:hover:bg-blue-900/40 dark:text-blue-300"
                     disabled={isSubmitting || !canEditPermissions}
                   >
                     Selecionar Todas
@@ -571,7 +571,7 @@ export function UserFormModal({
                   <button
                     type="button"
                     onClick={clearAllPermissions}
-                    className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-gray-300"
                     disabled={isSubmitting || !canEditPermissions}
                   >
                     Limpar Todas
@@ -579,7 +579,7 @@ export function UserFormModal({
                 </div>
               </div>
 
-              <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-md p-4 space-y-4">
+              <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-md p-4 space-y-4 dark:border-slate-700 dark:bg-slate-900/50">
                 {/* Group permissions by category */}
                 {Object.entries(
                   DEFAULT_PERMISSIONS.reduce((acc, permission) => {
@@ -590,8 +590,8 @@ export function UserFormModal({
                     return acc;
                   }, {} as Record<string, typeof DEFAULT_PERMISSIONS>)
                 ).map(([category, permissions]) => (
-                  <div key={category} className="border-b border-gray-200 last:border-b-0 pb-4 last:pb-0">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-2 capitalize">
+                  <div key={category} className="border-b border-gray-200 last:border-b-0 pb-4 last:pb-0 dark:border-slate-700">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-2 capitalize dark:text-gray-200">
                       {category === 'usuarios' ? 'Usuários' :
                         category === 'leads' ? 'Leads' :
                           category === 'proposals' ? 'Propostas' :
@@ -612,7 +612,7 @@ export function UserFormModal({
                             className="mr-2 text-orange-600 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={isSubmitting || !canEditPermissions}
                           />
-                          <span className="text-gray-700">{permission.name}</span>
+                          <span className="text-gray-700 dark:text-gray-300">{permission.name}</span>
                         </label>
                       ))}
                     </div>
@@ -621,20 +621,20 @@ export function UserFormModal({
               </div>
 
               {errors.permissoes && (
-                <p className="mt-1 text-sm text-red-600">{errors.permissoes}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.permissoes}</p>
               )}
 
-              <p className="mt-2 text-xs text-gray-500">
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                 {formData.permissoes.length} permissão(ões) selecionada(s)
               </p>
             </div>
 
             {/* Botões */}
-            <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
+            <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-slate-700">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-700 dark:text-gray-300 dark:border-slate-600 dark:hover:bg-slate-600"
                 disabled={isSubmitting}
               >
                 Cancelar
