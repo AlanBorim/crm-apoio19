@@ -10,22 +10,26 @@ import {
   Trash2,
   Plus,
   Filter,
-  Search
+  Search,
+  Settings
 } from 'lucide-react';
 import { whatsappService } from '../../services/whatsappService';
 import { toast } from 'sonner';
 import { CampaignFormModal } from './CampaignFormModal';
 import { CampaignMessagesManager } from './CampaignMessagesManager';
+import { CampaignBuilder } from './CampaignBuilder';
+import { CampaignContactsModal } from './CampaignContactsModal';
 import { useWhatsAppPhone } from '../../contexts/WhatsAppPhoneContext';
 
 interface Campaign {
   id: number;
   name: string;
   description?: string;
-  status: 'draft' | 'scheduled' | 'processing' | 'completed' | 'cancelled';
+  status: 'draft' | 'scheduled' | 'processing' | 'completed' | 'cancelled' | 'paused';
   phone_number_id?: number;
   phone_name?: string;
   phone_number?: string;
+  settings?: any;
   user_name?: string;
   scheduled_at?: string;
   started_at?: string;
@@ -62,6 +66,8 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | undefined>();
   const [viewingMessages, setViewingMessages] = useState<{ id: number; name: string } | null>(null);
+  const [viewingBuilder, setViewingBuilder] = useState<{ id: number; name: string } | null>(null);
+  const [contactsModalCampaignId, setContactsModalCampaignId] = useState<number | null>(null);
 
   useEffect(() => {
     loadCampaigns();
@@ -153,6 +159,33 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
     }
   };
 
+  const handleStartCampaign = async (campaign: Campaign) => {
+    if (
+      campaign.status !== 'draft' &&
+      campaign.status !== 'scheduled' &&
+      campaign.status !== 'paused' &&
+      campaign.status !== 'processing'
+    ) {
+      toast.error('Campanha não pode estar nesse status para iniciar.');
+      return;
+    }
+    if (!confirm('Este botão irá disparar as mensagens REAIS agora. Deseja continuar?')) {
+      return;
+    }
+
+    try {
+      console.log(`[CampaignManager] Iniciando requisição para iniciar campanha ID: ${campaign.id}...`);
+      const response = await whatsappService.startCampaign(campaign.id);
+      console.log(`[CampaignManager] Resposta do backend após iniciar campanha:`, response);
+
+      toast.success('Disparo de campanha iniciado!');
+      loadCampaigns();
+    } catch (error) {
+      console.error('[CampaignManager] Erro fatal (catch) ao iniciar disparo:', error);
+      toast.error('Erro ao iniciar disparo');
+    }
+  };
+
   const handleDeleteCampaign = async (campaignId: number) => {
     if (!confirm('Tem certeza que deseja excluir esta campanha?')) {
       return;
@@ -186,11 +219,28 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
     return Math.round((read / sent) * 100);
   };
 
-  // Calculate overall metrics
-  const totalSent = campaigns.reduce((sum, c) => sum + (c.stats?.sent || c.sent_count || 0), 0);
-  const totalDelivered = campaigns.reduce((sum, c) => sum + (c.stats?.delivered || c.delivered_count || 0), 0);
-  const totalRead = campaigns.reduce((sum, c) => sum + (c.stats?.read || c.read_count || 0), 0);
-  const activeCampaigns = campaigns.filter(c => c.status === 'processing' || c.status === 'scheduled').length;
+  const filteredCampaigns = campaigns.filter(campaign => {
+    // Filtro de Segurança: Garantir que a campanha pertence ao número selecionado
+    if (selectedPhone && campaign.phone_number_id) {
+      const campaignPhoneId = String(campaign.phone_number_id);
+      const selectedPhoneId = String(selectedPhone.phone_number_id);
+      if (campaignPhoneId !== selectedPhoneId) {
+        return false;
+      }
+    }
+
+    if (searchTerm && !campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      !campaign.description?.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    return true;
+  });
+
+  // Calculate overall metrics from filtered campaigns
+  const totalSent = filteredCampaigns.reduce((sum, c) => sum + (c.stats?.sent || c.sent_count || 0), 0);
+  const totalDelivered = filteredCampaigns.reduce((sum, c) => sum + (c.stats?.delivered || c.delivered_count || 0), 0);
+  const totalRead = filteredCampaigns.reduce((sum, c) => sum + (c.stats?.read || c.read_count || 0), 0);
+  const activeCampaigns = filteredCampaigns.filter(c => c.status === 'processing' || c.status === 'scheduled').length;
 
   const deliveryRate = totalSent > 0 ? Math.round((totalDelivered / totalSent) * 100) : 0;
   const readRate = totalDelivered > 0 ? Math.round((totalRead / totalDelivered) * 100) : 0;
@@ -216,6 +266,21 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
     setViewingMessages({ id: campaign.id, name: campaign.name });
   };
 
+  const handleOpenBuilder = (campaign: Campaign) => {
+    setViewingBuilder({ id: campaign.id, name: campaign.name });
+  };
+
+  // If viewing builder, show CampaignBuilder
+  if (viewingBuilder) {
+    return (
+      <CampaignBuilder
+        campaignId={viewingBuilder.id}
+        campaignName={viewingBuilder.name}
+        onBack={() => setViewingBuilder(null)}
+      />
+    );
+  }
+
   // If viewing messages, show CampaignMessagesManager
   if (viewingMessages) {
     return (
@@ -226,26 +291,6 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
       />
     );
   }
-
-  const filteredCampaigns = campaigns.filter(campaign => {
-    // Filtro de Segurança: Garantir que a campanha pertence ao número selecionado
-    // O backend pode retornar tudo se o filtro falhar, então filtramos aqui também.
-    if (selectedPhone && campaign.phone_number_id) {
-      // Converter ambos para string para garantir comparação correta (Meta IDs são grandes)
-      const campaignPhoneId = String(campaign.phone_number_id);
-      const selectedPhoneId = String(selectedPhone.phone_number_id);
-
-      if (campaignPhoneId !== selectedPhoneId) {
-        return false;
-      }
-    }
-
-    if (searchTerm && !campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      !campaign.description?.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-    return true;
-  });
 
   return (
     <div className="p-6 space-y-6">
@@ -276,7 +321,7 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Enviadas</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <p className="2xl font-bold text-gray-900 dark:text-gray-100">
                 {totalSent.toLocaleString()}
               </p>
             </div>
@@ -396,6 +441,56 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
                       <p className="text-sm text-gray-600 mb-4 dark:text-gray-400">{campaign.description}</p>
                     )}
 
+                    {/* Exibir Configurações (Settings) */}
+                    {campaign.settings && (
+                      <div className="mb-4 p-4 border rounded-md dark:border-slate-700 bg-gray-50 dark:bg-slate-900 flex justify-between items-center sm:items-start flex-col sm:flex-row gap-4">
+                        <div>
+                          <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">Configurações Base</h4>
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
+                            {(() => {
+                              let settings: any = {};
+                              try {
+                                settings = typeof campaign.settings === 'string' ? JSON.parse(campaign.settings) : campaign.settings;
+                              } catch (e) { }
+
+                              return (
+                                <div className="space-y-1">
+                                  {settings.template_id && (
+                                    <div>
+                                      <span className="font-semibold text-gray-800 dark:text-gray-200">Template Escolhido (ID):</span> {settings.template_id}
+                                    </div>
+                                  )}
+                                  {settings.responses_config && Object.keys(settings.responses_config).length > 0 && (
+                                    <div>
+                                      <span className="font-semibold text-gray-800 dark:text-gray-200">Mapeamento de Botões:</span>{' '}
+                                      {Object.keys(settings.responses_config).length} ações cadastradas
+                                    </div>
+                                  )}
+                                  <div
+                                    className="cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 p-1 -m-1 rounded transition-colors inline-flex gap-1"
+                                    onClick={() => setContactsModalCampaignId(campaign.id)}
+                                  >
+                                    <span className="font-semibold text-gray-800 dark:text-gray-200">Contatos Cadastrados:</span>
+                                    <span className="text-orange-600 dark:text-orange-400 font-medium underline decoration-dashed underline-offset-2 hover:text-orange-700">{stats.total}</span>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </div>
+
+                        {(campaign.status === 'draft' || campaign.status === 'scheduled' || campaign.status === 'paused' || campaign.status === 'processing') && (
+                          <button
+                            onClick={() => handleStartCampaign(campaign)}
+                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 whitespace-nowrap"
+                          >
+                            <Play size={16} className="mr-2" />
+                            Disparar agora
+                          </button>
+                        )}
+                      </div>
+                    )}
+
                     {/* Métricas da Campanha */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
                       <div className="text-center">
@@ -476,6 +571,14 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
                     </button>
 
                     <button
+                      onClick={() => handleOpenBuilder(campaign)}
+                      className="p-2 text-orange-400 hover:text-orange-600 dark:hover:text-orange-300"
+                      title="Configurar Campanha (Wizard)"
+                    >
+                      <Settings size={16} />
+                    </button>
+
+                    <button
                       onClick={() => handleEditClick(campaign)}
                       className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                       title="Editar"
@@ -505,6 +608,15 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
         onSuccess={handleModalSuccess}
         campaign={selectedCampaign}
       />
+
+      {/* Campaign Contacts Modal */}
+      {contactsModalCampaignId && (
+        <CampaignContactsModal
+          campaignId={contactsModalCampaignId}
+          isOpen={!!contactsModalCampaignId}
+          onClose={() => setContactsModalCampaignId(null)}
+        />
+      )}
     </div>
   );
 }

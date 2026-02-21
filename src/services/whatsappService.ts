@@ -3,6 +3,7 @@ import { apiRequest } from '../lib/api';
 export interface Campaign {
   id: number;
   name: string;
+  phone_number_id?: string;
   description?: string;
   status: 'draft' | 'scheduled' | 'processing' | 'completed' | 'cancelled';
   total_messages: number;
@@ -10,6 +11,7 @@ export interface Campaign {
   delivered_count: number;
   read_count: number;
   failed_count: number;
+  settings?: any;
   created_at: string;
   updated_at: string;
 }
@@ -144,6 +146,16 @@ export const whatsappService = {
     return response.data;
   },
 
+  getAppContacts: async (search?: string): Promise<any> => {
+    const queryParams = new URLSearchParams();
+    if (search) queryParams.append('search', search);
+
+    const response = await apiRequest(`/whatsapp/contacts/all?${queryParams}`, {
+      method: 'GET'
+    });
+    return response.data;
+  },
+
   // Campaign Management
   getCampaignContacts: async (campaignId: number): Promise<any> => {
     const response = await apiRequest(`/whatsapp/campaigns/${campaignId}/contacts`, {
@@ -241,6 +253,60 @@ export const whatsappService = {
 
   resendCampaignMessage: async (campaignId: number, messageId: number): Promise<any> => {
     const response = await apiRequest(`/whatsapp/campaigns/${campaignId}/messages/${messageId}/resend`, {
+      method: 'POST'
+    });
+    return response.data;
+  },
+
+  sendTestTemplate: async (phoneNumber: string, templateName: string, language: string, phoneNumberId?: string): Promise<any> => {
+    const response = await apiRequest('/whatsapp/test-message', {
+      method: 'POST',
+      body: JSON.stringify({
+        phone_number: phoneNumber,
+        template_name: templateName,
+        language: language,
+        phone_number_id: phoneNumberId
+      })
+    });
+    return response.data;
+  },
+
+  addCampaignContacts: async (campaignId: number, data: any): Promise<any> => {
+    if (data instanceof FormData) {
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+      const response = await fetch(`/api/whatsapp/campaigns/${campaignId}/contacts`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: data
+      });
+      if (!response.ok) {
+        let msg = 'Erro ao enviar CSV';
+        try { const err = await response.json(); msg = err.error || msg; } catch (e) { }
+        throw new Error(msg);
+      }
+      return response.json();
+    }
+
+    // Otherwise it's normal JSON
+    const response = await apiRequest(`/whatsapp/campaigns/${campaignId}/contacts`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    return response.data;
+  },
+
+  saveCampaignResponses: async (campaignId: number, data: any): Promise<any> => {
+    const response = await apiRequest(`/whatsapp/campaigns/${campaignId}/responses`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    return response.data;
+  },
+
+  startCampaign: async (id: number): Promise<any> => {
+    const response = await apiRequest(`/whatsapp/campaigns/${id}/start`, {
       method: 'POST'
     });
     return response.data;

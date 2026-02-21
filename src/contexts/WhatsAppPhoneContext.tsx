@@ -34,8 +34,9 @@ export function WhatsAppPhoneProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
       const data = await whatsappService.getPhoneNumbers();
-      setPhoneNumbers(data || []);
-      
+      const activeNumbers = (data || []).filter((phone: any) => phone.status?.toLowerCase() !== 'inactive');
+      setPhoneNumbers(activeNumbers);
+
       // If there's a saved selection, try to restore it
       const savedPhone = localStorage.getItem(STORAGE_KEY);
       if (savedPhone && data) {

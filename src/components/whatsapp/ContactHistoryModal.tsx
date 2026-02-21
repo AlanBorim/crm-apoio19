@@ -25,6 +25,11 @@ interface ChatMessage {
     read_at?: string;
     failed_at?: string;
     failure_message?: string;
+    response_text?: string;
+    response_type?: string;
+    response_received_at?: string;
+    auto_reply_text?: string;
+    auto_reply_received_at?: string;
 }
 
 export function ContactHistoryModal({
@@ -109,55 +114,95 @@ export function ContactHistoryModal({
                         </div>
                     ) : (
                         messages.map((msg) => (
-                            <div
-                                key={msg.id}
-                                className={`flex ${msg.direction === 'outgoing' ? 'justify-end' : 'justify-start'}`}
-                            >
+                            <div key={msg.id} className="space-y-4">
                                 <div
-                                    className={`max-w-[80%] rounded-lg p-3 ${msg.direction === 'outgoing'
-                                        ? 'bg-green-100 text-green-900 rounded-tr-none'
-                                        : 'bg-white text-gray-900 shadow-sm rounded-tl-none border'
-                                        }`}
+                                    className={`flex ${msg.direction === 'outgoing' ? 'justify-end' : 'justify-start'}`}
                                 >
-                                    <div className="text-sm whitespace-pre-wrap">
-                                        {msg.message_content ||
-                                            msg.body ||
-                                            getTemplateBodyText(msg.template_components) ||
-                                            'Mensagem sem conteúdo'}
-                                    </div>
-                                    <div className="flex items-center justify-end gap-1 mt-1">
-                                        <span className="text-[10px] text-gray-500">
-                                            {formatDate(msg.sent_at)}
-                                        </span>
-                                        {msg.direction === 'outgoing' && (
-                                            <span className="flex items-center gap-0.5 text-gray-500">
-                                                {msg.failed_at ? (
-                                                    <span className="text-red-500" title={`Failed: ${msg.failure_message || 'Unknown error'}`}>
-                                                        <XCircle size={12} />
-                                                    </span>
-                                                ) : msg.read_at ? (
-                                                    <span className="text-blue-500" title={`Read at ${formatDate(msg.read_at)}`}>
-                                                        <CheckCircle size={12} />
-                                                        <CheckCircle size={12} className="-ml-2" />
-                                                    </span>
-                                                ) : msg.delivered_at ? (
-                                                    <span className="text-gray-600" title={`Delivered at ${formatDate(msg.delivered_at)}`}>
-                                                        <CheckCircle size={12} />
-                                                        <CheckCircle size={12} className="-ml-2" />
-                                                    </span>
-                                                ) : msg.status === 'sent' ? (
-                                                    <span title="Sent">
-                                                        <Check size={12} />
-                                                    </span>
-                                                ) : (
-                                                    <span title="Pending">
-                                                        <Clock size={12} />
-                                                    </span>
-                                                )}
+                                    <div
+                                        className={`max-w-[80%] rounded-lg p-3 ${msg.direction === 'outgoing'
+                                            ? 'bg-green-100 text-green-900 rounded-tr-none shadow-sm'
+                                            : 'bg-white text-gray-900 shadow-sm rounded-tl-none border'
+                                            }`}
+                                    >
+                                        <div className="text-sm whitespace-pre-wrap">
+                                            {msg.message_content ||
+                                                msg.body ||
+                                                getTemplateBodyText(msg.template_components) ||
+                                                'Mensagem sem conteúdo'}
+                                        </div>
+                                        <div className="flex items-center justify-end gap-1 mt-1">
+                                            <span className="text-[10px] text-gray-500">
+                                                {formatDate(msg.sent_at)}
                                             </span>
-                                        )}
+                                            {msg.direction === 'outgoing' && (
+                                                <span className="flex items-center gap-0.5 text-gray-500">
+                                                    {msg.failed_at ? (
+                                                        <span className="text-red-500" title={`Failed: ${msg.failure_message || 'Unknown error'}`}>
+                                                            <XCircle size={12} />
+                                                        </span>
+                                                    ) : msg.read_at ? (
+                                                        <span className="text-blue-500" title={`Read at ${formatDate(msg.read_at)}`}>
+                                                            <CheckCircle size={12} />
+                                                            <CheckCircle size={12} className="-ml-2" />
+                                                        </span>
+                                                    ) : msg.delivered_at ? (
+                                                        <span className="text-gray-600" title={`Delivered at ${formatDate(msg.delivered_at)}`}>
+                                                            <CheckCircle size={12} />
+                                                            <CheckCircle size={12} className="-ml-2" />
+                                                        </span>
+                                                    ) : msg.status === 'sent' ? (
+                                                        <span title="Sent">
+                                                            <Check size={12} />
+                                                        </span>
+                                                    ) : (
+                                                        <span title="Pending">
+                                                            <Clock size={12} />
+                                                        </span>
+                                                    )}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
+                                {msg.response_text && (
+                                    <div className="flex justify-start">
+                                        <div className="max-w-[80%] rounded-lg p-3 bg-white text-gray-900 shadow-sm rounded-tl-none border">
+                                            <div className="text-xs font-semibold text-orange-600 mb-1 flex items-center gap-1">
+                                                <MessageSquare size={12} />
+                                                Resposta (Botão)
+                                            </div>
+                                            <div className="text-sm whitespace-pre-wrap">
+                                                {msg.response_text}
+                                            </div>
+                                            <div className="flex items-center justify-end gap-1 mt-1">
+                                                <span className="text-[10px] text-gray-500">
+                                                    {formatDate(msg.response_received_at || msg.sent_at)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                {msg.auto_reply_text && (
+                                    <div className="flex justify-end mt-2">
+                                        <div className="max-w-[80%] rounded-lg p-3 bg-green-100 text-green-900 rounded-tr-none shadow-sm">
+                                            <div className="text-xs font-semibold text-green-700 mb-1 flex items-center gap-1">
+                                                <MessageSquare size={12} />
+                                                Resposta Automática
+                                            </div>
+                                            <div className="text-sm whitespace-pre-wrap">
+                                                {msg.auto_reply_text}
+                                            </div>
+                                            <div className="flex items-center justify-end gap-1 mt-1">
+                                                <span className="text-[10px] text-green-700 opacity-80">
+                                                    {formatDate(msg.auto_reply_received_at || msg.response_received_at || msg.sent_at)}
+                                                </span>
+                                                <span title="Sent">
+                                                    <Check size={12} className="text-green-700 opacity-80" />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ))
                     )}

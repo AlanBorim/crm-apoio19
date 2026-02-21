@@ -28,6 +28,7 @@ interface Message {
     created_at: string;
     status: string;
     user_name?: string;
+    source_table?: string;
 }
 
 export function WhatsAppConversations() {
@@ -236,7 +237,7 @@ export function WhatsAppConversations() {
                                                 formatDate(messages[index - 1].created_at) !== formatDate(message.created_at);
 
                                             return (
-                                                <div key={message.id}>
+                                                <div key={`${message.source_table}_${message.id}`}>
                                                     {showDate && (
                                                         <div className="flex justify-center my-4">
                                                             <span className="bg-muted text-muted-foreground text-xs px-3 py-1 rounded-full">
@@ -286,7 +287,7 @@ export function WhatsAppConversations() {
                                         onChange={(e) => setNewMessage(e.target.value)}
                                         placeholder="Digite sua mensagem..."
                                         disabled={sending}
-                                        className="flex-1"
+                                        className="flex-1 bg-background text-foreground"
                                     />
                                     <Button type="submit" disabled={sending || !newMessage.trim()}>
                                         <Send className="h-4 w-4" />

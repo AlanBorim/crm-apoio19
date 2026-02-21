@@ -92,7 +92,8 @@ export function CampaignFormModal({
         try {
             setLoadingPhoneNumbers(true);
             const data = await whatsappService.getPhoneNumbers();
-            setPhoneNumbers(data || []);
+            const activeNumbers = (data || []).filter((phone: any) => phone.status?.toLowerCase() !== 'inactive');
+            setPhoneNumbers(activeNumbers);
         } catch (error) {
             console.error('Erro ao carregar números:', error);
             toast.error('Erro ao carregar números de telefone');
@@ -136,7 +137,7 @@ export function CampaignFormModal({
             const payload: any = {
                 name: formData.name.trim(),
                 description: formData.description.trim() || undefined,
-                phone_number_id: formData.phone_number_id ? parseInt(formData.phone_number_id) : undefined,
+                phone_number_id: formData.phone_number_id || undefined,
                 status: formData.status,
                 scheduled_at: formData.scheduled_at || undefined
             };
@@ -275,7 +276,7 @@ export function CampaignFormModal({
                                     >
                                         <option value="">Selecione um número (opcional)</option>
                                         {phoneNumbers.map((phone) => (
-                                            <option key={phone.id} value={phone.id}>
+                                            <option key={phone.id} value={phone.phone_number_id}>
                                                 {phone.name} - {phone.phone_number}
                                             </option>
                                         ))}
