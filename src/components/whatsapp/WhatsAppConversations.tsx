@@ -24,7 +24,10 @@ interface Contact {
 interface Message {
     id: number;
     direction: 'incoming' | 'outgoing';
+    message_type?: string;
     message_content: string;
+    media_url?: string;
+    reaction_emoji?: string;
     created_at: string;
     status: string;
     user_name?: string;
@@ -141,6 +144,139 @@ export function WhatsAppConversations() {
         }
     };
 
+    const getBackendUrl = (url: string) => {
+        if (!url) return '';
+        if (url.startsWith('http')) return url;
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        // Remove trailing slash from apiUrl and leading slash from url if both exist
+        const formattedApiUrl = apiUrl.replace(/\/$/, '');
+        const formattedUrl = url.startsWith('/') ? url : `/${url}`;
+
+        // As of the backend logic, it saves /uploads/whatsapp/... 
+        // We assume the API base URL serves the public directory or we must point to the frontend public URL
+        return `${window.location.origin}${formattedUrl}`;
+    };
+
+    const renderMessageContent = (message: Message) => {
+        const { message_type, message_content, media_url } = message;
+
+        // Fallback for older messages without message_type
+        const type = message_type || 'text';
+
+        switch (type) {
+            case 'image':
+            case 'sticker':
+                return (
+                    <div className="flex flex-col gap-1">
+                        {media_url ? (
+                            <img
+                                src={getBackendUrl(media_url)}
+                                alt={message_content !== '[Imagem]' && message_content !== '[Sticker]' ? message_content : 'Imagem do WhatsApp'}
+                                className={`rounded-md object-cover ${type === 'sticker' ? 'w-32 h-32 bg-transparent' : 'max-h-60 max-w-full'}`}
+                                loading="lazy"
+                            />
+                        ) : (
+                            <div className="bg-black/10 p-4 rounded-md flex items-center justify-center h-32 w-48 italic">
+                                Mídia não disponível
+                            </div>
+                        )}
+                        {message_content && message_content !== '[Imagem]' && message_content !== '[Sticker]' && (
+                            <p className="text-sm mt-1 whitespace-pre-wrap break-words">{message_content}</p>
+                        )}
+                    </div>
+                );
+            case 'video':
+                return (
+                    <div className="flex flex-col gap-1">
+                        {media_url ? (
+                            <video
+                                src={getBackendUrl(media_url)}
+                                controls
+                                className="max-h-60 max-w-full rounded-md"
+                                preload="metadata"
+                            />
+                        ) : (
+                            <div className="bg-black/10 p-4 rounded-md flex items-center justify-center h-32 w-48 italic">
+                                Vídeo não disponível
+                            </div>
+                        )}
+                        {message_content && message_content !== '[Vídeo]' && (
+                            <p className="text-sm mt-1 whitespace-pre-wrap break-words">{message_content}</p>
+                        )}
+                    </div>
+                );
+            case 'audio':
+                return (
+                    <div className="flex flex-col gap-1">
+                        {media_url ? (
+                            <audio
+                                src={getBackendUrl(media_url)}
+                                controls
+                                className="w-full max-w-[250px]"
+                                preload="metadata"
+                            />
+                        ) : (
+                            <div className="bg-black/10 p-2 rounded-md italic text-sm">
+                                Áudio não disponível
+                            </div>
+                        )}
+                    </div>
+                );
+            case 'document':
+                return (
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2 bg-black/5 p-3 rounded-md border border-black/10">
+                            <span className="text-2xl">📄</span>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate shrink-0">
+                                    {message_content || 'Documento'}
+                                </p>
+                            </div>
+                            {media_url && (
+                                <a
+                                    href={getBackendUrl(media_url)}
+                                    download
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2 bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-opacity"
+                                    title="Baixar documento"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                </a>
+                            )}
+                        </div>
+                    </div>
+                );
+            case 'location':
+                const locationMatch = message_content.match(/\[Localização:\s*([0-9.-]+),\s*([0-9.-]+)\]/);
+                if (locationMatch && locationMatch.length === 3) {
+                    const lat = locationMatch[1];
+                    const lng = locationMatch[2];
+                    return (
+                        <div className="flex flex-col gap-1">
+                            <a
+                                href={`https://maps.google.com/?q=${lat},${lng}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 bg-black/5 p-3 rounded-md hover:bg-black/10 transition-colors"
+                            >
+                                <span className="text-2xl">📍</span>
+                                <span className="text-sm underline">Ver localização no mapa</span>
+                            </a>
+                        </div>
+                    );
+                }
+                return <p className="text-sm whitespace-pre-wrap break-words italic">{message_content}</p>;
+            case 'text':
+            case 'template':
+            default:
+                if (type !== 'text' && type !== 'template') {
+                    return <p className="text-sm whitespace-pre-wrap break-words italic">{message_content}</p>;
+                }
+                return <p className="text-sm whitespace-pre-wrap break-words">{message_content}</p>;
+        }
+    };
+
     return (
         <div className="flex h-[calc(90vh-200px)] gap-4">
             {/* Conversation List */}
@@ -247,17 +383,15 @@ export function WhatsAppConversations() {
                                                     )}
                                                     <div
                                                         className={`flex ${message.direction === 'outgoing' ? 'justify-end' : 'justify-start'
-                                                            }`}
+                                                            } relative mb-2`}
                                                     >
                                                         <div
-                                                            className={`max-w-[70%] rounded-lg px-4 py-2 ${message.direction === 'outgoing'
+                                                            className={`max-w-[85%] sm:max-w-[70%] rounded-lg px-4 py-2 relative ${message.direction === 'outgoing'
                                                                 ? 'bg-primary text-primary-foreground'
                                                                 : 'bg-muted'
                                                                 }`}
                                                         >
-                                                            <p className="text-sm whitespace-pre-wrap break-words">
-                                                                {message.message_content}
-                                                            </p>
+                                                            {renderMessageContent(message)}
                                                             <div className="flex items-center justify-end gap-1 mt-1">
                                                                 <span className="text-xs opacity-70">
                                                                     {formatTime(message.created_at)}
@@ -270,6 +404,14 @@ export function WhatsAppConversations() {
                                                                     </span>
                                                                 )}
                                                             </div>
+                                                            {message.reaction_emoji && (
+                                                                <div
+                                                                    className={`absolute -bottom-3 ${message.direction === 'outgoing' ? 'left-2' : 'right-2'} bg-background border rounded-full px-1.5 py-0.5 text-sm shadow-sm z-10 select-none`}
+                                                                    title="Reação"
+                                                                >
+                                                                    {message.reaction_emoji}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>

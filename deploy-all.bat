@@ -21,7 +21,7 @@ ssh %REMOTE_USER%@%REMOTE_HOST% "mkdir -p %BACKEND_REMOTE_DIR%"
 
 echo Creating backend archive...
 pushd %BACKEND_LOCAL_DIR%
-tar --exclude "vendor" --exclude ".git" --exclude ".env" --exclude "tests" --exclude "deploy_backend.tar.gz" -czf deploy_backend.tar.gz *
+tar --exclude "vendor" --exclude ".git" --exclude ".env" --exclude "tests" --exclude "uploads" --exclude "deploy_backend.tar.gz" -czf deploy_backend.tar.gz *
 echo Uploading backend archive...
 scp deploy_backend.tar.gz %REMOTE_USER%@%REMOTE_HOST%:%BACKEND_REMOTE_DIR%/
 echo Extracting and updating backend...
@@ -41,7 +41,7 @@ tar --exclude "node_modules" --exclude ".git" --exclude "dist" --exclude "deploy
 echo Uploading frontend archive...
 scp deploy_frontend.tar.gz %REMOTE_USER%@%REMOTE_HOST%:%FRONTEND_REMOTE_DIR%/
 echo Extracting and building frontend...
-ssh %REMOTE_USER%@%REMOTE_HOST% "cd %FRONTEND_REMOTE_DIR% && tar -xzf deploy_frontend.tar.gz && rm deploy_frontend.tar.gz && echo 'Loading NVM and Node Latest...' && export NVM_DIR=\"$HOME/.nvm\" && [ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\" && nvm use 24 && echo 'Installing dependencies...' && npm install && echo 'Building project...' && npm run build"
+ssh %REMOTE_USER%@%REMOTE_HOST% "cd %FRONTEND_REMOTE_DIR% && tar -xzf deploy_frontend.tar.gz && rm deploy_frontend.tar.gz && echo 'Loading NVM and Node Latest...' && export NVM_DIR=\"$HOME/.nvm\" && [ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\" && nvm use 24 && echo 'Installing dependencies...' && npm install && echo 'Building project...' && npm run build && echo 'Linking uploads directory...' && rm -rf dist/uploads && ln -sfn ../public/uploads dist/uploads"
 del deploy_frontend.tar.gz
 popd
 
