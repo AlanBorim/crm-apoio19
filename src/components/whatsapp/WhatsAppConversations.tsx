@@ -5,7 +5,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 import { Avatar, AvatarFallback } from '../ui/avatar';
-import { Send, MessageCircle, Phone } from 'lucide-react';
+import { Send, MessageCircle, Phone, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWhatsAppPhone } from '../../contexts/WhatsAppPhoneContext';
 
@@ -42,6 +42,7 @@ export function WhatsAppConversations() {
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [sending, setSending] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -172,8 +173,9 @@ export function WhatsAppConversations() {
                             <img
                                 src={getBackendUrl(media_url)}
                                 alt={message_content !== '[Imagem]' && message_content !== '[Sticker]' ? message_content : 'Imagem do WhatsApp'}
-                                className={`rounded-md object-cover ${type === 'sticker' ? 'w-32 h-32 bg-transparent' : 'max-h-60 max-w-full'}`}
+                                className={`rounded-md object-cover cursor-pointer hover:opacity-90 transition-opacity ${type === 'sticker' ? 'w-32 h-32 bg-transparent' : 'max-h-60 max-w-full'}`}
                                 loading="lazy"
+                                onClick={() => setSelectedImage(getBackendUrl(media_url))}
                             />
                         ) : (
                             <div className="bg-black/10 p-4 rounded-md flex items-center justify-center h-32 w-48 italic">
@@ -447,6 +449,30 @@ export function WhatsAppConversations() {
                     </CardContent>
                 )}
             </Card>
+            {selectedImage && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                    onClick={() => setSelectedImage(null)}
+                >
+                    <div
+                        className="relative max-w-5xl max-h-[90vh] flex flex-col items-center justify-center animate-in fade-in zoom-in duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            className="absolute -top-4 -right-4 text-white hover:text-gray-300 z-[110] bg-black/60 rounded-full p-2 transition-colors"
+                            onClick={() => setSelectedImage(null)}
+                            title="Fechar"
+                        >
+                            <X size={24} />
+                        </button>
+                        <img
+                            src={selectedImage}
+                            alt="Imagem Ampliada"
+                            className="max-w-full max-h-[85vh] object-contain rounded-md shadow-2xl"
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

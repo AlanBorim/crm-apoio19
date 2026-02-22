@@ -10,6 +10,7 @@ import { WhatsAppConversations } from './WhatsAppConversations';
 import { CampaignManager } from './CampaignManager';
 import { PhoneNumberSelector } from './PhoneNumberSelector';
 import { useWhatsAppPhone } from '../../contexts/WhatsAppPhoneContext';
+import { whatsappService } from '../../services/whatsappService';
 
 type WhatsAppView = 'chat' | 'campaigns' | 'analytics';
 
@@ -77,7 +78,7 @@ export function WhatsAppModule() {
         );
 
       case 'analytics':
-        return <WhatsAppAnalytics />;
+        return <WhatsAppAnalytics phoneNumberId={selectedPhone.id?.toString()} />;
 
       default:
         return null;
@@ -144,7 +145,38 @@ export function WhatsAppModule() {
 }
 
 // Componentes placeholder para Analytics e Settings
-function WhatsAppAnalytics() {
+
+function WhatsAppAnalytics({ phoneNumberId }: { phoneNumberId?: string }) {
+  const [metrics, setMetrics] = useState({
+    newContacts: 0,
+    totalSent: 0,
+    deliveryRate: 0,
+    readRate: 0
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      if (!phoneNumberId) return;
+      try {
+        setLoading(true);
+        const data = await whatsappService.getAnalytics(phoneNumberId);
+        if (data) {
+          setMetrics({
+            newContacts: data.new_contacts || 0,
+            totalSent: data.total_sent || 0,
+            deliveryRate: data.delivery_rate || 0,
+            readRate: data.read_rate || 0
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao buscar analytics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAnalytics();
+  }, [phoneNumberId]);
   return (
     <div className="p-6">
       <div className="rounded-lg border border-gray-200 bg-white p-6 dark:bg-slate-900 dark:border-slate-800">
@@ -155,27 +187,35 @@ function WhatsAppAnalytics() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-blue-50 p-6 rounded-lg dark:bg-blue-900/20">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">1,234</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Mensagens Enviadas</div>
-            <div className="text-xs text-green-600 mt-1 dark:text-green-400">+12% este mês</div>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {loading ? '...' : metrics.totalSent}
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Total Enviadas</div>
+            <div className="text-xs text-green-600 mt-1 dark:text-green-400">Métricas gerais do chip</div>
           </div>
 
           <div className="bg-green-50 p-6 rounded-lg dark:bg-green-900/20">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">89%</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+              {loading ? '...' : `${metrics.deliveryRate}%`}
+            </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">Taxa de Entrega</div>
-            <div className="text-xs text-green-600 mt-1 dark:text-green-400">+3% este mês</div>
+            <div className="text-xs text-green-600 mt-1 dark:text-green-400">Métricas gerais do chip</div>
           </div>
 
           <div className="bg-purple-50 p-6 rounded-lg dark:bg-purple-900/20">
-            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">67%</div>
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              {loading ? '...' : `${metrics.readRate}%`}
+            </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">Taxa de Leitura</div>
-            <div className="text-xs text-red-600 mt-1 dark:text-red-400">-2% este mês</div>
+            <div className="text-xs text-red-600 mt-1 dark:text-red-400">Métricas gerais do chip</div>
           </div>
 
           <div className="bg-orange-50 p-6 rounded-lg dark:bg-orange-900/20">
-            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">156</div>
+            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+              {loading ? '...' : metrics.newContacts}
+            </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">Novos Contatos</div>
-            <div className="text-xs text-green-600 mt-1 dark:text-green-400">+8% este mês</div>
+            <div className="text-xs text-green-600 mt-1 dark:text-green-400">Total conectados</div>
           </div>
         </div>
 

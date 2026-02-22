@@ -310,5 +310,22 @@ export const whatsappService = {
       method: 'POST'
     });
     return response.data;
+  },
+
+  getAnalytics: async (phoneNumberId?: string): Promise<{
+    new_contacts: number;
+    total_sent: number;
+    delivery_rate: number;
+    read_rate: number;
+  }> => {
+    const params = new URLSearchParams();
+    if (phoneNumberId) {
+      params.append('phone_number_id', phoneNumberId);
+    }
+    const queryString = params.toString();
+    const url = queryString ? `/whatsapp/analytics?${queryString}` : '/whatsapp/analytics';
+
+    const response = await apiRequest(url, { method: 'GET' });
+    return response.data;
   }
 };
