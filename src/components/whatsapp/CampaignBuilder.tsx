@@ -215,9 +215,28 @@ export function CampaignBuilder({ campaignId, campaignName, onBack }: CampaignBu
         }
     };
 
+    const handleDownloadTemplate = () => {
+        const csvContent = "telefone,nome\n5511999999999,João Silva\n5511888888888,Maria Santos";
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'modelo_contatos_campanha.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        if (!file.name.toLowerCase().endsWith('.csv')) {
+            toast.error('Por favor, selecione um arquivo CSV válido.');
+            if (e.target) e.target.value = '';
+            return;
+        }
 
         try {
             setIsLoading(true);
@@ -335,9 +354,16 @@ export function CampaignBuilder({ campaignId, campaignName, onBack }: CampaignBu
                             <FileText size={32} />
                         </div>
                         <h4 className="font-medium text-gray-900 mb-2 dark:text-white">Importar Lista CSV</h4>
-                        <p className="text-sm text-gray-500 mb-6 dark:text-gray-400">
+                        <p className="text-sm text-gray-500 mb-2 dark:text-gray-400">
                             Envie um arquivo .csv contendo apenas os números de telefone (com DDD).
                         </p>
+                        <button 
+                            onClick={handleDownloadTemplate}
+                            disabled={isLoading}
+                            className="text-sm font-medium text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 underline mb-4"
+                        >
+                            Baixar modelo CSV
+                        </button>
                         <label className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 cursor-pointer dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:hover:bg-slate-600">
                             {isLoading ? 'Importando...' : 'Selecionar Arquivo'}
                             <input type="file" accept=".csv" className="hidden" onChange={handleCsvUpload} disabled={isLoading} />
