@@ -15,6 +15,7 @@ import {
   Briefcase
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { usePermissions } from '../hooks/usePermissions';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationBell } from './NotificationBell';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
@@ -66,49 +67,20 @@ export function MainLayout({ children }: MainLayoutProps) {
       .slice(0, 2);
   };
 
-  // Helper to check permissions
-  const hasPermission = (resource: string, action: string = 'view') => {
-    if (!user) return false;
-    // Admin has full access
-    if (user.funcao?.toLowerCase() === 'admin') return true;
+  // Use the permissions hook for consistent permission checking
+  const { can, canAny } = usePermissions();
 
-    // Check permissions object
-    if (user.permissions) {
-      // Handle array format (old)
-      if (Array.isArray(user.permissions)) {
-        if (user.permissions.includes('all')) return true;
-        // Map 'view' check to 'read' permission in array
-        if (action === 'view' && user.permissions.includes(`${resource}.read`)) return true;
-        return user.permissions.includes(`${resource}.${action}`);
-      }
-
-      // Handle object format (new)
-      if (typeof user.permissions === 'object') {
-        const resourcePerms = (user.permissions as any)[resource];
-        // If resource not in permissions, deny (unless we want to fallback to defaults, but frontend doesn't know defaults easily without duplicating logic)
-        // For now, strict check.
-        if (!resourcePerms) return false;
-
-        const perm = resourcePerms[action];
-        if (perm === true) return true;
-        if (perm === 'own') return true; // 'own' implies view access
-        return false;
-      }
-    }
-
-    return false;
-  };
-
+  // Filter menu items based on user permissions
   const filteredMenuItems = menuItems.filter(item => {
     switch (item.path) {
-      case '/dashboard': return hasPermission('dashboard');
-      case '/leads': return hasPermission('leads');
-      case '/clientes': return hasPermission('clients') || hasPermission('leads'); // Fallback or separate perm
-      case '/kanban': return hasPermission('kanban');
-      case '/tarefas': return hasPermission('tasks');
-      case '/propostas': return hasPermission('proposals');
-      case '/whatsapp': return hasPermission('whatsapp');
-      case '/configuracoes': return hasPermission('configuracoes');
+      case '/dashboard': return can('dashboard', 'view');
+      case '/leads': return canAny('leads');
+      case '/clientes': return canAny('clients');
+      case '/kanban': return canAny('kanban');
+      case '/tarefas': return canAny('tasks');
+      case '/propostas': return canAny('proposals');
+      case '/whatsapp': return canAny('whatsapp');
+      case '/configuracoes': return canAny('configuracoes');
       default: return true;
     }
   });

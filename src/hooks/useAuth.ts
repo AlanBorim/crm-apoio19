@@ -9,13 +9,17 @@ interface ModulePermissions {
 }
 
 interface Permissions {
-  users: ModulePermissions;
+  usuarios: ModulePermissions;
   leads: ModulePermissions;
+  clients: ModulePermissions;
   proposals: ModulePermissions;
   tasks: ModulePermissions;
-  campaigns: ModulePermissions;
+  whatsapp: ModulePermissions;
+  kanban: ModulePermissions;
+  configuracoes: ModulePermissions;
   dashboard: { view: boolean };
-  reports: { view: boolean; export: boolean };
+  relatorios: { view: boolean; export: boolean };
+  [key: string]: any;
 }
 
 interface User {

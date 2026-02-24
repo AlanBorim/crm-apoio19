@@ -9,24 +9,35 @@ export interface ModulePermissions {
     edit: boolean | 'own' | 'team';
     delete: boolean | 'own' | 'team';
     export?: boolean;
+    assign?: boolean;
+    approve?: boolean;
 }
 
 export interface Permissions {
-    users: ModulePermissions;
+    usuarios: ModulePermissions;
     leads: ModulePermissions;
+    clients: ModulePermissions;
     proposals: ModulePermissions;
     tasks: ModulePermissions;
-    campaigns: ModulePermissions;
+    whatsapp: ModulePermissions;
+    kanban: ModulePermissions;
+    configuracoes: ModulePermissions;
     dashboard: { view: boolean };
-    reports: { view: boolean; export: boolean };
+    relatorios: { view: boolean; export: boolean };
+    [key: string]: any; // Allow custom modules from JSON
 }
+
+/**
+ * Valid system roles
+ */
+export type SystemRole = 'admin' | 'gerente' | 'suporte' | 'comercial' | 'financeiro' | 'cliente';
 
 /**
  * Hook for checking user permissions
  * 
  * Usage:
  * ```tsx
- * const { can, isAdmin, permissions } = usePermissions();
+ * const { can, isAdmin, isRole, permissions } = usePermissions();
  * 
  * if (can('leads', 'create')) {
  *   // Show create button
@@ -35,15 +46,33 @@ export interface Permissions {
  * if (isAdmin()) {
  *   // Show admin panel
  * }
+ * 
+ * if (isRole('cliente')) {
+ *   // Show client-only view
+ * }
  * ```
  */
 export function usePermissions() {
     const { user } = useAuth();
 
     /**
+     * Get the current user's role (lowercase)
+     */
+    const getUserRole = (): string => {
+        return (user?.funcao || user?.role || '').toLowerCase();
+    };
+
+    /**
+     * Check if user has a specific role
+     */
+    const isRole = (role: SystemRole): boolean => {
+        return getUserRole() === role;
+    };
+
+    /**
      * Check if user has permission for an action on a resource
      * 
-     * @param resource - Resource name (e.g., 'leads', 'users', 'usuarios')
+     * @param resource - Resource name (e.g., 'leads', 'usuarios', 'clients')
      * @param action - Action name (e.g., 'view', 'create', 'edit', 'delete', 'assign', 'approve')
      * @param ownerId - Optional owner ID for ownership-based permissions
      * @returns boolean indicating if user has permission
@@ -58,7 +87,7 @@ export function usePermissions() {
         }
 
         // Admin always has full access
-        if (user.funcao === 'admin' || user.role?.toLowerCase() === 'admin') {
+        if (getUserRole() === 'admin') {
             return true;
         }
 
@@ -112,7 +141,7 @@ export function usePermissions() {
      * Check if current user is admin
      */
     const isAdmin = (): boolean => {
-        return user?.role?.toLowerCase() === 'admin';
+        return getUserRole() === 'admin';
     };
 
     /**
@@ -132,7 +161,7 @@ export function usePermissions() {
         }
 
         // Admin always has access
-        if (user.funcao === 'admin' || user.role?.toLowerCase() === 'admin') {
+        if (getUserRole() === 'admin') {
             return true;
         }
 
@@ -157,6 +186,8 @@ export function usePermissions() {
     return {
         can,
         isAdmin,
+        isRole,
+        getUserRole,
         permissions: getPermissions(),
         canAny
     };

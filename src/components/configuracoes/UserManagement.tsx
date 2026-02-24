@@ -129,14 +129,14 @@ export function UserManagement({
         return 'bg-red-100 text-red-800';
       case 'gerente':
         return 'bg-blue-100 text-blue-800';
-      case 'vendedor':
+      case 'comercial':
         return 'bg-green-100 text-green-800';
       case 'suporte':
         return 'bg-yellow-100 text-yellow-800';
-      case 'comercial':
-        return 'bg-darkyellow-100 text-darkyellow-800';
       case 'financeiro':
-        return 'bg-lightyellow-100 text-lightyellow-800';
+        return 'bg-purple-100 text-purple-800';
+      case 'cliente':
+        return 'bg-cyan-100 text-cyan-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }

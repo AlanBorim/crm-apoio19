@@ -75,7 +75,7 @@ const MOCK_USERS: User[] = [
         id: '2',
         nome: 'João Silva',
         email: 'joao@crm.com',
-        funcao: 'vendedor',
+        funcao: 'comercial',
         ativo: true,
         telefone: '(11) 88888-8888',
         permissoes: ['leads.read', 'leads.write', 'propostas.read', 'propostas.write'],

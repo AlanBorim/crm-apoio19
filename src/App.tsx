@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
+import { usePermissions } from './hooks/usePermissions';
 import { LoginForm } from './components/LoginForm';
 import { ForgotPasswordForm } from './components/forgotPassword/ForgotPasswordForm';
 import { PasswordResetSent } from './components/forgotPassword/PasswordResetSent';
@@ -27,6 +28,21 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { WhatsAppPhoneProvider } from './contexts/WhatsAppPhoneContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LayoutConfigProvider } from './contexts/LayoutConfigContext';
+
+// Component to redirect based on user role
+function RoleBasedRedirect() {
+  const { getUserRole } = usePermissions();
+  const role = getUserRole();
+
+  switch (role) {
+    case 'cliente':
+      return <Navigate to="/clientes" replace />;
+    case 'financeiro':
+      return <Navigate to="/propostas" replace />;
+    default:
+      return <Navigate to="/dashboard" replace />;
+  }
+}
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -163,7 +179,7 @@ function App() {
                         </ProtectedRoute>
                       </AuthGuard>
                     } />
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/" element={<RoleBasedRedirect />} />
                   </Routes>
                 ) : (
                   <Navigate to="/login" replace />

@@ -60,7 +60,7 @@ export function UserFormModal({
     email: '',
     senha: '',
     confirmarSenha: '',
-    funcao: 'vendedor',
+    funcao: 'comercial',
     telefone: '',
     ativo: true,
     permissoes: []
@@ -121,7 +121,7 @@ export function UserFormModal({
           email: user.email || '',
           senha: '',
           confirmarSenha: '',
-          funcao: user.funcao || 'vendedor',
+          funcao: user.funcao || 'comercial',
           telefone: user.telefone || '',
           ativo: user.ativo ?? true,
           // Flatten permissions from backend object format to array for UI
@@ -134,10 +134,10 @@ export function UserFormModal({
           email: '',
           senha: '',
           confirmarSenha: '',
-          funcao: 'vendedor',
+          funcao: 'comercial',
           telefone: '',
           ativo: true,
-          permissoes: getDefaultPermissionsByRole('vendedor')
+          permissoes: getDefaultPermissionsByRole('comercial')
         });
       }
       setErrors({});
@@ -443,10 +443,10 @@ export function UserFormModal({
                 >
                   <option value="admin">Administrador</option>
                   <option value="gerente">Gerente</option>
-                  <option value="vendedor">Vendedor</option>
-                  <option value="suporte">Suporte</option>
                   <option value="comercial">Comercial</option>
+                  <option value="suporte">Suporte</option>
                   <option value="financeiro">Financeiro</option>
+                  <option value="cliente">Cliente</option>
                 </select>
               </div>
 
