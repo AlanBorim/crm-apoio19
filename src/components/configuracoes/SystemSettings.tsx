@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Database,
   FormInput,
@@ -8,6 +8,7 @@ import {
   Shield
 } from 'lucide-react';
 import { LeadFormFieldsSettings } from './LeadFormFieldsSettings';
+import { useAuth } from '../../hooks/useAuth';
 
 type SystemSection = 'general' | 'leadFields' | 'database' | 'api' | 'security';
 
@@ -269,6 +270,76 @@ function ApiSettings() {
 
 // Componente para configurações de segurança do sistema
 function SystemSecuritySettings() {
+  const { token } = useAuth();
+  const [twofaEnabled, setTwofaEnabled] = useState(false);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<string | null>(null);
+
+  // Carregar configuração atual
+  const fetchConfig = useCallback(async () => {
+    try {
+      const res = await fetch('/api/settings/security', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.data !== undefined) {
+          setTwofaEnabled(Boolean(data.data.twofa_enabled));
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao carregar config de segurança:', e);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchConfig();
+  }, [fetchConfig]);
+
+  // Salvar alteração do toggle
+  const handleToggle = async (value: boolean) => {
+    setTwofaEnabled(value);
+    setIsSaving(true);
+    setStatusMsg(null);
+    try {
+      const res = await fetch('/api/settings/security', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ twofa_enabled: value }),
+      });
+      if (res.ok) {
+        setStatusMsg(value ? '2FA ativado com sucesso.' : '2FA desativado com sucesso.');
+      } else {
+        setTwofaEnabled(!value); // reverter
+        setStatusMsg('Erro ao salvar. Tente novamente.');
+      }
+    } catch (e) {
+      setTwofaEnabled(!value);
+      setStatusMsg('Erro de conexão.');
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => setStatusMsg(null), 3000);
+    }
+  };
+
+  if (isLoadingConfig) {
+    return (
+      <div className="p-6">
+        <p className="text-gray-500 dark:text-gray-400 text-sm">Carregando configurações...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <div className="space-y-6">
@@ -276,6 +347,7 @@ function SystemSecuritySettings() {
           <h3 className="text-lg font-medium text-gray-900 mb-4 dark:text-gray-100">Configurações de Segurança</h3>
 
           <div className="space-y-4">
+            {/* Logs de Auditoria */}
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Logs de Auditoria</h4>
@@ -287,20 +359,36 @@ function SystemSecuritySettings() {
               </label>
             </div>
 
+            {/* 2FA Toggle */}
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Autenticação de Dois Fatores</h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Exigir 2FA para todos os usuários</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Exigir verificação por e-mail para todos os usuários</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" />
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={twofaEnabled}
+                  onChange={e => handleToggle(e.target.checked)}
+                  disabled={isSaving}
+                />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600 dark:bg-slate-700 dark:border-slate-600"></div>
               </label>
             </div>
+
+            {/* Status de feedback */}
+            {statusMsg && (
+              <div className={`rounded-lg px-4 py-2 text-sm ${statusMsg.includes('Erro')
+                  ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300'
+                  : 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300'
+                }`}>
+                {statusMsg}
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
-

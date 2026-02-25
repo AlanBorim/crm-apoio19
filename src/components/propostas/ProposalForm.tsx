@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Save,
   X,
@@ -6,7 +6,9 @@ import {
   Trash2,
   Eye,
   FileText,
-  Send
+  Send,
+  Upload,
+  CheckCircle2
 } from 'lucide-react';
 import { Proposal as ApiProposal, leadsApi, templatesApi, ProposalTemplate, proposalsApi } from './services/proposalsApi';
 import { ProposalStatus } from './types/proposal';
@@ -14,7 +16,7 @@ import type { ProposalItem } from './types/proposal';
 
 interface ProposalFormProps {
   proposal?: ApiProposal | null;
-  onSave: (proposal: any, shouldSend?: boolean) => void;
+  onSave: (proposal: any, shouldSend?: boolean, pdfFile?: File) => void;
   onCancel: () => void;
 }
 
@@ -49,6 +51,10 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
   const [loadingLeads, setLoadingLeads] = useState(false);
   const [templates, setTemplates] = useState<ProposalTemplate[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [pdfUploadError, setPdfUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch templates on component mount
   useEffect(() => {
@@ -201,7 +207,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
 
 
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Transformar itens de camelCase para snake_case
     const transformedData = {
       ...formData,
@@ -213,10 +219,10 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
       })) || []
     };
 
-    onSave(transformedData);
+    await onSave(transformedData, false, pdfFile ?? undefined);
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     // Transformar itens de camelCase para snake_case
     const transformedData = {
       ...formData,
@@ -228,7 +234,7 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
       })) || []
     };
 
-    onSave(transformedData, true);
+    await onSave(transformedData, true, pdfFile ?? undefined);
   };
 
   return (
@@ -639,6 +645,68 @@ export function ProposalForm({ proposal, onSave, onCancel }: ProposalFormProps) 
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* PDF Upload */}
+          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+            <h3 className="text-lg font-medium text-gray-900 mb-1 dark:text-gray-100 flex items-center gap-2">
+              <Upload size={18} className="text-orange-500" />
+              PDF da Proposta
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+              Faça upload de um PDF pré-elaborado. Se não enviado, o sistema gerará um automaticamente ao enviar o e-mail.
+            </p>
+
+            {/* Current uploaded PDF indicator */}
+            {proposal?.uploaded_pdf_path && !pdfFile && (
+              <div className="flex items-center gap-2 mb-3 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <CheckCircle2 size={16} className="text-green-600 dark:text-green-400 shrink-0" />
+                <span className="text-xs text-green-700 dark:text-green-300 truncate">PDF já cadastrado</span>
+              </div>
+            )}
+
+            {/* New file selected indicator */}
+            {pdfFile && (
+              <div className="flex items-center justify-between gap-2 mb-3 p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileText size={16} className="text-orange-500 shrink-0" />
+                  <span className="text-xs text-orange-700 dark:text-orange-300 truncate">{pdfFile.name}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setPdfFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                  className="text-orange-400 hover:text-orange-600 shrink-0"
+                  title="Remover"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+
+            {pdfUploadError && (
+              <p className="text-xs text-red-500 mb-2">{pdfUploadError}</p>
+            )}
+
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingPdf}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:border-orange-400 hover:text-orange-500 dark:hover:border-orange-500 dark:hover:text-orange-400 transition-colors cursor-pointer"
+            >
+              <Upload size={16} />
+              {pdfFile ? 'Trocar arquivo' : 'Selecionar PDF'}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,application/pdf"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                setPdfFile(file);
+                setPdfUploadError(null);
+              }}
+            />
           </div>
         </div>
       </div>

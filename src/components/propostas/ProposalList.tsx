@@ -8,6 +8,7 @@ import {
   Send,
   Download,
   Eye,
+  Files,
   Calendar,
   DollarSign,
   User,
@@ -31,9 +32,10 @@ interface ProposalListProps {
   onSend: (proposal: ApiProposal) => void;
   onNegotiate: (proposal: ApiProposal) => void;
   onRefresh: () => void;
+  onViewPdf: (proposal: ApiProposal) => void;
 }
 
-export function ProposalList({ proposals, loading, error, onView, onEdit, onDelete, onApprove, onReject, onSend, onNegotiate, onRefresh }: ProposalListProps) {
+export function ProposalList({ proposals, loading, error, onView, onEdit, onDelete, onApprove, onReject, onSend, onNegotiate, onRefresh, onViewPdf }: ProposalListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -216,6 +218,14 @@ export function ProposalList({ proposals, loading, error, onView, onEdit, onDele
                       title="Visualizar"
                     >
                       <Eye size={16} />
+                    </button>
+
+                    <button
+                      onClick={() => onViewPdf(proposal)}
+                      className="p-2 text-gray-400 hover:text-orange-500 dark:text-gray-500 dark:hover:text-orange-400"
+                      title="Ver PDF"
+                    >
+                      <Files size={16} />
                     </button>
 
                     <button

@@ -1,4 +1,4 @@
-import { apiRequest } from '../../../lib/api';
+import { apiRequest, authService } from '../../../lib/api';
 
 export interface Lead {
     id: string;
@@ -44,6 +44,7 @@ export interface Proposal {
     data_envio?: string;
     data_validade?: string;
     pdf_path?: string;
+    uploaded_pdf_path?: string;
     observacoes?: string;
     condicoes?: string;
     modelo_id?: number;
@@ -130,6 +131,27 @@ export const proposalsApi = {
             method: 'POST'
         });
         return response;
+    },
+
+    async uploadPdf(id: number, file: File): Promise<{ uploaded_pdf_path: string }> {
+        const token = authService.getToken();
+        const formData = new FormData();
+        formData.append('pdf', file);
+
+        const response = await fetch(`/api/proposals/${id}/upload-pdf`, {
+            method: 'POST',
+            headers: {
+                'Authorization': token ? `Bearer ${token}` : ''
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+            throw new Error(err.error || `Erro ${response.status}`);
+        }
+
+        return response.json();
     }
 };
 

@@ -4,6 +4,7 @@ import { ProposalList } from './ProposalList';
 import { ProposalForm } from './ProposalForm';
 import { ProposalPreviewModal } from './ProposalPreviewModal';
 import { ProposalStatusModal } from './ProposalStatusModal';
+import { PdfViewerModal } from './PdfViewerModal';
 import { proposalsApi } from './services/proposalsApi';
 import type { Proposal as ApiProposal, ProposalItem } from './services/proposalsApi';
 
@@ -26,6 +27,10 @@ export function ProposalsModule() {
   const [statusModalType, setStatusModalType] = useState<'approve' | 'reject'>('approve');
   const [statusProposal, setStatusProposal] = useState<ApiProposal | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  // State for PDF Viewer Modal
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [pdfModalProposal, setPdfModalProposal] = useState<ApiProposal | null>(null);
 
   // Fetch proposals from API
   useEffect(() => {
@@ -57,7 +62,7 @@ export function ProposalsModule() {
   };
 
 
-  const handleSave = async (proposalData: any, shouldSend?: boolean) => {
+  const handleSave = async (proposalData: any, shouldSend?: boolean, pdfFile?: File) => {
     try {
       let savedProposal;
 
@@ -65,6 +70,16 @@ export function ProposalsModule() {
         savedProposal = await proposalsApi.update(selectedProposal.id, proposalData);
       } else {
         savedProposal = await proposalsApi.create(proposalData);
+      }
+
+      // Upload PDF file if provided
+      if (pdfFile && savedProposal && savedProposal.id) {
+        try {
+          await proposalsApi.uploadPdf(savedProposal.id, pdfFile);
+        } catch (uploadErr: any) {
+          console.error('Erro ao fazer upload do PDF:', uploadErr);
+          alert('Proposta salva, mas houve um erro ao enviar o PDF: ' + (uploadErr.message || 'Erro desconhecido'));
+        }
       }
 
       if (shouldSend && savedProposal && savedProposal.id) {
@@ -80,7 +95,6 @@ export function ProposalsModule() {
           alert('Proposta salva com sucesso!');
         }
       } else if (shouldSend) {
-        // Fallback if no ID (should not happen)
         alert('Proposta salva, mas não foi possível enviar (ID não retornado).');
       }
 
@@ -117,7 +131,6 @@ export function ProposalsModule() {
     setPreviewModalOpen(true);
     setLoadingPreview(true);
     try {
-      // Fetch full details including items
       const details = await proposalsApi.getById(proposal.id);
       setPreviewProposal(details.proposta);
       setPreviewItems(details.itens || []);
@@ -127,6 +140,17 @@ export function ProposalsModule() {
     } finally {
       setLoadingPreview(false);
     }
+  };
+
+  const handleViewPdf = async (proposal: ApiProposal) => {
+    // If proposal objects from list may not have pdf paths, fetch fresh details
+    try {
+      const details = await proposalsApi.getById(proposal.id);
+      setPdfModalProposal(details.proposta);
+    } catch {
+      setPdfModalProposal(proposal);
+    }
+    setPdfModalOpen(true);
   };
 
   const handleApprove = (proposal: ApiProposal) => {
@@ -237,6 +261,7 @@ export function ProposalsModule() {
           onSend={handleSend}
           onNegotiate={handleNegotiate}
           onRefresh={loadProposals}
+          onViewPdf={handleViewPdf}
         />
       ) : (
         <ProposalForm
@@ -266,6 +291,13 @@ export function ProposalsModule() {
           loading={updatingStatus}
         />
       )}
+
+      {/* PDF Viewer Modal */}
+      <PdfViewerModal
+        isOpen={pdfModalOpen}
+        onClose={() => { setPdfModalOpen(false); setPdfModalProposal(null); }}
+        proposal={pdfModalProposal}
+      />
     </div>
   );
 }

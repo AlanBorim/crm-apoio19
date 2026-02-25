@@ -37,19 +37,27 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  requires2FA: boolean;
+  pending2FAUserId: number | null;
+  emailHint: string | null;
   login: (email: string, senha: string) => Promise<boolean>;
+  verify2FA: (code: string) => Promise<boolean>;
+  reset2FA: () => void;
   logout: () => void;
   clearError: () => void;
   initializeAuth: () => void;
   refreshUser: () => Promise<boolean>;
 }
 
-export const useAuth = create<AuthState>((set: any) => ({
+export const useAuth = create<AuthState>((set: any, get: any) => ({
   user: null,
   token: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  requires2FA: false,
+  pending2FAUserId: null,
+  emailHint: null,
 
   initializeAuth: () => {
     const token = localStorage.getItem('token');
@@ -71,7 +79,6 @@ export const useAuth = create<AuthState>((set: any) => ({
     set({ isLoading: true, error: null });
 
     try {
-      // Usar URL relativa já que frontend e backend estão no mesmo servidor
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: {
@@ -94,6 +101,19 @@ export const useAuth = create<AuthState>((set: any) => ({
       }
 
       const responseData = await response.json();
+
+      // Verificar se 2FA é requerido
+      if (responseData.requires_2fa) {
+        set({
+          requires2FA: true,
+          pending2FAUserId: responseData.user_id,
+          emailHint: responseData.email_hint ?? null,
+          isLoading: false,
+          error: null,
+        });
+        return true; // retorna true para indicar que o passo seguinte é o 2FA
+      }
+
       const { token, user } = responseData;
 
       localStorage.setItem('token', token);
@@ -114,6 +134,55 @@ export const useAuth = create<AuthState>((set: any) => ({
       set({ error: errorMessage, isLoading: false });
       return false;
     }
+  },
+
+  verify2FA: async (code: string) => {
+    const { pending2FAUserId } = get();
+    if (!pending2FAUserId) return false;
+
+    set({ isLoading: true, error: null });
+
+    try {
+      const response = await fetch('/api/2fa/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ user_id: pending2FAUserId, code }),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(responseData.message || responseData.error || 'Código inválido.');
+      }
+
+      const { token, user } = responseData;
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      set({
+        user,
+        token,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+        requires2FA: false,
+        pending2FAUserId: null,
+        emailHint: null,
+      });
+      return true;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Erro ao verificar código.';
+      set({ error: errorMessage, isLoading: false });
+      return false;
+    }
+  },
+
+  reset2FA: () => {
+    set({ requires2FA: false, pending2FAUserId: null, emailHint: null, error: null });
   },
 
   logout: async () => {

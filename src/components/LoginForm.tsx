@@ -4,13 +4,14 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useAuth } from '../hooks/useAuth';
+import { TwoFactorForm } from './TwoFactorForm';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [logoPath, setLogoPath] = useState('/logo.png');
   const [nomeEmpresa, setNomeEmpresa] = useState('CRM Apoio19');
-  const { login, isLoading, error, clearError } = useAuth();
+  const { login, isLoading, error, clearError, requires2FA } = useAuth();
   const navigate = useNavigate();
 
   // Carregar logo das configurações (sem autenticação)
@@ -36,16 +37,21 @@ export function LoginForm() {
     };
     loadLogo();
   }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
 
     const success = await login(email, senha);
-    if (success) {
+    if (success && !requires2FA) {
       navigate('/dashboard');
     }
-
   };
+
+  // Renderizar tela de 2FA quando requerido (após todos os hooks)
+  if (requires2FA) {
+    return <TwoFactorForm />;
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
