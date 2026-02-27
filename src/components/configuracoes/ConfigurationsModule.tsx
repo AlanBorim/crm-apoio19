@@ -4,16 +4,20 @@ import {
   Users,
   MessageSquare,
   Palette,
-  Database
+  Database,
+  Trash2
 } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { WhatsAppSettings } from './WhatsAppSettings';
 import { LayoutSettings } from './LayoutSettings';
 import { SystemSettings } from './SystemSettings';
+import { TrashSettings } from './TrashSettings';
+import { useAuth } from '../../hooks/useAuth';
 
-type ConfigSection = 'users' | 'whatsapp' | 'layout' | 'system';
+type ConfigSection = 'users' | 'whatsapp' | 'layout' | 'system' | 'trash';
 
 export function ConfigurationsModule() {
+  const { user } = useAuth();
   const [activeSection, setActiveSection] = useState<ConfigSection>('users');
 
   const sections = [
@@ -41,6 +45,12 @@ export function ConfigurationsModule() {
       icon: <Database size={20} />,
       description: 'Configurações gerais do sistema'
     },
+    ...(user?.role === 'admin' ? [{
+      id: 'trash' as ConfigSection,
+      name: 'Lixeira',
+      icon: <Trash2 size={20} />,
+      description: 'Restaurar registros excluídos'
+    }] : []),
   ];
 
   const handleCreateUser = () => {
@@ -68,6 +78,8 @@ export function ConfigurationsModule() {
         return <LayoutSettings />;
       case 'system':
         return <SystemSettings />;
+      case 'trash':
+        return <TrashSettings />;
 
       default:
         return <UserManagement onCreateUser={handleCreateUser} onEditUser={handleEditUser} />;
