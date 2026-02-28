@@ -40,15 +40,9 @@ export function WhatsAppModule() {
     },
     {
       id: 'campaigns' as WhatsAppView,
-      name: 'Campanhas',
+      name: 'Campanhas/Relatórios',
       icon: <Send size={20} />,
-      description: 'Envios em massa'
-    },
-    {
-      id: 'analytics' as WhatsAppView,
-      name: 'Relatórios',
-      icon: <BarChart3 size={20} />,
-      description: 'Métricas e análises'
+      description: 'Envios e relatórios'
     }
   ];
 
