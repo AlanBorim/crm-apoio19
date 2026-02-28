@@ -11,7 +11,10 @@ import {
   Plus,
   Filter,
   Search,
-  Settings
+  Settings,
+  Copy,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { whatsappService } from '../../services/whatsappService';
 import { toast } from 'sonner';
@@ -68,6 +71,20 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
   const [viewingMessages, setViewingMessages] = useState<{ id: number; name: string } | null>(null);
   const [viewingBuilder, setViewingBuilder] = useState<{ id: number; name: string } | null>(null);
   const [contactsModalCampaignId, setContactsModalCampaignId] = useState<number | null>(null);
+  const [expandedCampaigns, setExpandedCampaigns] = useState<Set<number>>(new Set());
+
+  const toggleCampaignExpansion = (campaignId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedCampaigns(prev => {
+      const next = new Set(prev);
+      if (next.has(campaignId)) {
+        next.delete(campaignId);
+      } else {
+        next.add(campaignId);
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     loadCampaigns();
@@ -198,6 +215,23 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
     } catch (error) {
       console.error('Erro ao excluir campanha:', error);
       toast.error('Erro ao excluir campanha');
+    }
+  };
+
+  const handleCloneCampaign = async (campaignId: number) => {
+    if (!confirm('Deseja clonar esta campanha? (Apenas os contatos serão copiados)')) {
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await whatsappService.cloneCampaign(campaignId);
+      toast.success('Campanha clonada com sucesso!');
+      loadCampaigns();
+    } catch (error) {
+      console.error('Erro ao clonar campanha:', error);
+      toast.error('Erro ao clonar campanha');
+      setIsLoading(false);
     }
   };
 
@@ -427,174 +461,217 @@ export function CampaignManager({ onCreateCampaign, onEditCampaign }: CampaignMa
             };
 
             return (
-              <div key={campaign.id} className="rounded-lg border border-gray-200 bg-white p-6 dark:bg-slate-800 dark:border-slate-700">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{campaign.name}</h3>
-                      <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getStatusColor(campaign.status)}`}>
+              <div
+                key={campaign.id}
+                className="rounded-lg border border-gray-200 bg-white dark:bg-slate-800 dark:border-slate-700 overflow-hidden"
+              >
+                {/* Cabeçalho Resumido Clicável */}
+                <div
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+                  onClick={(e) => toggleCampaignExpansion(campaign.id, e)}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-base font-medium text-gray-900 dark:text-gray-100 truncate">{campaign.name}</h3>
+                      <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusColor(campaign.status)}`}>
                         {getStatusText(campaign.status)}
                       </span>
                     </div>
-
                     {campaign.description && (
-                      <p className="text-sm text-gray-600 mb-4 dark:text-gray-400">{campaign.description}</p>
+                      <p className="text-sm text-gray-500 truncate mt-1 dark:text-gray-400">{campaign.description}</p>
                     )}
+                  </div>
 
-                    {/* Exibir Configurações (Settings) */}
-                    {campaign.settings && (
-                      <div className="mb-4 p-4 border rounded-md dark:border-slate-700 bg-gray-50 dark:bg-slate-900 flex justify-between items-center sm:items-start flex-col sm:flex-row gap-4">
-                        <div>
-                          <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">Configurações Base</h4>
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            {(() => {
-                              let settings: any = {};
-                              try {
-                                settings = typeof campaign.settings === 'string' ? JSON.parse(campaign.settings) : campaign.settings;
-                              } catch (e) { }
+                  <div className="flex items-center gap-4 ml-4">
+                    <div className="hidden sm:flex text-sm text-gray-500 dark:text-gray-400 gap-4">
+                      <span className="flex items-center gap-1">
+                        <Users size={14} /> {stats.total}
+                      </span>
+                      <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                        <Send size={14} /> {stats.sent}
+                      </span>
+                    </div>
+                    <div className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                      {expandedCampaigns.has(campaign.id) ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </div>
+                  </div>
+                </div>
 
-                              return (
-                                <div className="space-y-1">
-                                  {settings.template_id && (
-                                    <div>
-                                      <span className="font-semibold text-gray-800 dark:text-gray-200">Template Escolhido (ID):</span> {settings.template_id}
+                {/* Área Expandida */}
+                {expandedCampaigns.has(campaign.id) && (
+                  <div className="p-4 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                    <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
+                      <div className="flex-1 w-full">
+
+                        {campaign.description && (
+                          <p className="text-sm text-gray-600 mb-4 dark:text-gray-400">{campaign.description}</p>
+                        )}
+
+                        {/* Exibir Configurações (Settings) */}
+                        {campaign.settings && (
+                          <div className="mb-4 p-4 border rounded-md dark:border-slate-700 bg-gray-50 dark:bg-slate-900 flex justify-between items-center sm:items-start flex-col sm:flex-row gap-4">
+                            <div>
+                              <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">Configurações Base</h4>
+                              <div className="text-sm text-gray-600 dark:text-gray-400">
+                                {(() => {
+                                  let settings: any = {};
+                                  try {
+                                    settings = typeof campaign.settings === 'string' ? JSON.parse(campaign.settings) : campaign.settings;
+                                  } catch (e) { }
+
+                                  return (
+                                    <div className="space-y-1">
+                                      {settings.template_id && (
+                                        <div>
+                                          <span className="font-semibold text-gray-800 dark:text-gray-200">Template Escolhido (ID):</span> {settings.template_id}
+                                        </div>
+                                      )}
+                                      {settings.responses_config && Object.keys(settings.responses_config).length > 0 && (
+                                        <div>
+                                          <span className="font-semibold text-gray-800 dark:text-gray-200">Mapeamento de Botões:</span>{' '}
+                                          {Object.keys(settings.responses_config).length} ações cadastradas
+                                        </div>
+                                      )}
+                                      <div
+                                        className="cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 p-1 -m-1 rounded transition-colors inline-flex gap-1"
+                                        onClick={() => setContactsModalCampaignId(campaign.id)}
+                                      >
+                                        <span className="font-semibold text-gray-800 dark:text-gray-200">Contatos Cadastrados:</span>
+                                        <span className="text-orange-600 dark:text-orange-400 font-medium underline decoration-dashed underline-offset-2 hover:text-orange-700">{stats.total}</span>
+                                      </div>
                                     </div>
-                                  )}
-                                  {settings.responses_config && Object.keys(settings.responses_config).length > 0 && (
-                                    <div>
-                                      <span className="font-semibold text-gray-800 dark:text-gray-200">Mapeamento de Botões:</span>{' '}
-                                      {Object.keys(settings.responses_config).length} ações cadastradas
-                                    </div>
-                                  )}
-                                  <div
-                                    className="cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 p-1 -m-1 rounded transition-colors inline-flex gap-1"
-                                    onClick={() => setContactsModalCampaignId(campaign.id)}
-                                  >
-                                    <span className="font-semibold text-gray-800 dark:text-gray-200">Contatos Cadastrados:</span>
-                                    <span className="text-orange-600 dark:text-orange-400 font-medium underline decoration-dashed underline-offset-2 hover:text-orange-700">{stats.total}</span>
-                                  </div>
-                                </div>
-                              );
-                            })()}
+                                  );
+                                })()}
+                              </div>
+                            </div>
+
+                            {(campaign.status === 'draft' || campaign.status === 'scheduled' || campaign.status === 'paused' || campaign.status === 'processing') && (
+                              <button
+                                onClick={() => handleStartCampaign(campaign)}
+                                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 whitespace-nowrap"
+                              >
+                                <Play size={16} className="mr-2" />
+                                Disparar agora
+                              </button>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Métricas da Campanha */}
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{stats.total}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Total</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{stats.sent}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Enviadas</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-green-600 dark:text-green-400">{stats.delivered}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Entregues</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-purple-600 dark:text-purple-400">{stats.read}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Lidas</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-red-600 dark:text-red-400">{stats.failed}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Falhas</div>
                           </div>
                         </div>
 
-                        {(campaign.status === 'draft' || campaign.status === 'scheduled' || campaign.status === 'paused' || campaign.status === 'processing') && (
+                        {/* Barra de Progresso */}
+                        {stats.total > 0 && (
+                          <div className="mb-4">
+                            <div className="flex justify-between text-sm text-gray-600 mb-1 dark:text-gray-400">
+                              <span>Progresso</span>
+                              <span>{Math.round((stats.sent / stats.total) * 100)}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-slate-700">
+                              <div
+                                className="bg-orange-500 h-2 rounded-full"
+                                style={{ width: `${(stats.sent / stats.total) * 100}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Taxa de Engajamento */}
+                        <div className="mb-4">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            Taxa de Leitura: <span className="font-medium">{calculateEngagementRate(campaign)}%</span>
+                          </span>
+                        </div>
+
+                        {/* Datas */}
+                        <div className="flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
+                          <div>Criada: {formatDate(campaign.created_at)}</div>
+                          {campaign.scheduled_at && <div>Agendada: {formatDate(campaign.scheduled_at)}</div>}
+                          {campaign.started_at && <div>Iniciada: {formatDate(campaign.started_at)}</div>}
+                          {campaign.completed_at && <div>Concluída: {formatDate(campaign.completed_at)}</div>}
+                          {campaign.user_name && <div>Por: {campaign.user_name}</div>}
+                        </div>
+                      </div>
+
+                      {/* Botões de Ação na Lateral ou Abaixo no Mobile */}
+                      <div className="flex flex-row lg:flex-col items-center gap-2 mt-4 lg:mt-0 w-full lg:w-auto bg-gray-50 dark:bg-slate-900 p-2 rounded-md border border-gray-100 dark:border-slate-800 justify-center">
+                        {(campaign.status === 'processing' || campaign.status === 'draft' || campaign.status === 'scheduled') && (
                           <button
-                            onClick={() => handleStartCampaign(campaign)}
-                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 whitespace-nowrap"
+                            onClick={() => handlePlayPause(campaign)}
+                            className={`p-2 rounded ${campaign.status === 'processing'
+                              ? 'text-yellow-500 hover:text-yellow-600'
+                              : 'text-green-500 hover:text-green-600'
+                              }`}
+                            title={campaign.status === 'processing' ? 'Pausar' : 'Iniciar'}
                           >
-                            <Play size={16} className="mr-2" />
-                            Disparar agora
+                            {campaign.status === 'processing' ? <Pause size={16} /> : <Play size={16} />}
                           </button>
                         )}
-                      </div>
-                    )}
 
-                    {/* Métricas da Campanha */}
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{stats.total}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">Total</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{stats.sent}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">Enviadas</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-green-600 dark:text-green-400">{stats.delivered}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">Entregues</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-purple-600 dark:text-purple-400">{stats.read}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">Lidas</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-red-600 dark:text-red-400">{stats.failed}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">Falhas</div>
-                      </div>
-                    </div>
+                        <button
+                          onClick={() => handleViewMessages(campaign)}
+                          className="p-2 text-blue-400 hover:text-blue-600"
+                          title="Ver Mensagens"
+                        >
+                          <Send size={16} />
+                        </button>
 
-                    {/* Barra de Progresso */}
-                    {stats.total > 0 && (
-                      <div className="mb-4">
-                        <div className="flex justify-between text-sm text-gray-600 mb-1 dark:text-gray-400">
-                          <span>Progresso</span>
-                          <span>{Math.round((stats.sent / stats.total) * 100)}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-slate-700">
-                          <div
-                            className="bg-orange-500 h-2 rounded-full"
-                            style={{ width: `${(stats.sent / stats.total) * 100}%` }}
-                          ></div>
-                        </div>
+                        <button
+                          onClick={() => handleOpenBuilder(campaign)}
+                          className="p-2 text-orange-400 hover:text-orange-600 dark:hover:text-orange-300"
+                          title="Configurar Campanha (Wizard)"
+                        >
+                          <Settings size={16} />
+                        </button>
+
+                        <button
+                          onClick={() => handleEditClick(campaign)}
+                          className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                          title="Editar"
+                        >
+                          <Edit size={16} />
+                        </button>
+
+                        <button
+                          onClick={() => handleCloneCampaign(campaign.id)}
+                          className="p-2 text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300"
+                          title="Clonar Campanha"
+                        >
+                          <Copy size={16} />
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteCampaign(campaign.id)}
+                          className="p-2 text-red-400 hover:text-red-600"
+                          title="Excluir"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
-                    )}
-
-                    {/* Taxa de Engajamento */}
-                    <div className="mb-4">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        Taxa de Leitura: <span className="font-medium">{calculateEngagementRate(campaign)}%</span>
-                      </span>
-                    </div>
-
-                    {/* Datas */}
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400">
-                      <div>Criada: {formatDate(campaign.created_at)}</div>
-                      {campaign.scheduled_at && <div>Agendada: {formatDate(campaign.scheduled_at)}</div>}
-                      {campaign.started_at && <div>Iniciada: {formatDate(campaign.started_at)}</div>}
-                      {campaign.completed_at && <div>Concluída: {formatDate(campaign.completed_at)}</div>}
-                      {campaign.user_name && <div>Por: {campaign.user_name}</div>}
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2 ml-4">
-                    {(campaign.status === 'processing' || campaign.status === 'draft' || campaign.status === 'scheduled') && (
-                      <button
-                        onClick={() => handlePlayPause(campaign)}
-                        className={`p-2 rounded ${campaign.status === 'processing'
-                          ? 'text-yellow-500 hover:text-yellow-600'
-                          : 'text-green-500 hover:text-green-600'
-                          }`}
-                        title={campaign.status === 'processing' ? 'Pausar' : 'Iniciar'}
-                      >
-                        {campaign.status === 'processing' ? <Pause size={16} /> : <Play size={16} />}
-                      </button>
-                    )}
-
-                    <button
-                      onClick={() => handleViewMessages(campaign)}
-                      className="p-2 text-blue-400 hover:text-blue-600"
-                      title="Ver Mensagens"
-                    >
-                      <Send size={16} />
-                    </button>
-
-                    <button
-                      onClick={() => handleOpenBuilder(campaign)}
-                      className="p-2 text-orange-400 hover:text-orange-600 dark:hover:text-orange-300"
-                      title="Configurar Campanha (Wizard)"
-                    >
-                      <Settings size={16} />
-                    </button>
-
-                    <button
-                      onClick={() => handleEditClick(campaign)}
-                      className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                      title="Editar"
-                    >
-                      <Edit size={16} />
-                    </button>
-
-                    <button
-                      onClick={() => handleDeleteCampaign(campaign.id)}
-                      className="p-2 text-red-400 hover:text-red-600"
-                      title="Excluir"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
+                )}
               </div>
             );
           })}

@@ -5,7 +5,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 import { Avatar, AvatarFallback } from '../ui/avatar';
-import { Send, MessageCircle, Phone, X } from 'lucide-react';
+import { Send, MessageCircle, Phone, X, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWhatsAppPhone } from '../../contexts/WhatsAppPhoneContext';
 
@@ -43,6 +43,7 @@ export function WhatsAppConversations() {
     const [loading, setLoading] = useState(false);
     const [sending, setSending] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -157,6 +158,15 @@ export function WhatsAppConversations() {
         // We assume the API base URL serves the public directory or we must point to the frontend public URL
         return `${window.location.origin}${formattedUrl}`;
     };
+
+    const filteredConversations = conversations.filter(contact => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase();
+        return (
+            (contact.name && contact.name.toLowerCase().includes(query)) ||
+            (contact.phone_number && contact.phone_number.includes(query))
+        );
+    });
 
     const renderMessageContent = (message: Message) => {
         const { message_type, message_content, media_url } = message;
@@ -283,21 +293,31 @@ export function WhatsAppConversations() {
         <div className="flex h-[calc(90vh-200px)] gap-4">
             {/* Conversation List */}
             <Card className="w-80 flex flex-col overflow-hidden">
-                <CardHeader className="flex-shrink-0">
+                <CardHeader className="flex-shrink-0 space-y-4">
                     <CardTitle className="flex items-center gap-2">
                         <MessageCircle className="h-5 w-5" />
                         Conversas WhatsApp
                     </CardTitle>
+                    <div className="relative">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="text"
+                            placeholder="Pesquisar..."
+                            className="pl-9 bg-background border-muted"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-hidden p-0">
                     <ScrollArea className="h-full">
-                        <div className="p-4 space-y-2">
-                            {conversations.length === 0 ? (
+                        <div className="p-4 pt-0 space-y-2">
+                            {filteredConversations.length === 0 ? (
                                 <p className="text-sm text-muted-foreground text-center py-8">
-                                    Nenhuma conversa ainda
+                                    {conversations.length > 0 ? 'Nenhuma conversa encontrada' : 'Nenhuma conversa ainda'}
                                 </p>
                             ) : (
-                                conversations.map((contact) => (
+                                filteredConversations.map((contact) => (
                                     <button
                                         key={contact.id}
                                         onClick={() => handleSelectContact(contact)}

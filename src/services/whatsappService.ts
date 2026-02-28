@@ -251,8 +251,15 @@ export const whatsappService = {
     return response.data;
   },
 
-  resendCampaignMessage: async (campaignId: number, messageId: number): Promise<any> => {
-    const response = await apiRequest(`/whatsapp/campaigns/${campaignId}/messages/${messageId}/resend`, {
+  resendCampaignMessage: async (campaignId: number, contactId: number): Promise<any> => {
+    const response = await apiRequest(`/whatsapp/campaigns/${campaignId}/contacts/${contactId}/resend`, {
+      method: 'POST'
+    });
+    return response.data;
+  },
+
+  cloneCampaign: async (id: number): Promise<any> => {
+    const response = await apiRequest(`/whatsapp/campaigns/${id}/clone`, {
       method: 'POST'
     });
     return response.data;

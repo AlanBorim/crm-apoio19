@@ -9,7 +9,8 @@ import {
     User,
     ChevronRight,
     Search,
-    Download
+    Download,
+    RefreshCw
 } from 'lucide-react';
 import { whatsappService } from '../../services/whatsappService';
 import { toast } from 'sonner';
@@ -43,6 +44,7 @@ export function CampaignMessagesManager({
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [isExporting, setIsExporting] = useState(false);
+    const [resendingContactId, setResendingContactId] = useState<number | null>(null);
 
     // Stats (mantidos para visão geral)
     const [stats, setStats] = useState({
@@ -165,6 +167,23 @@ export function CampaignMessagesManager({
             toast.error('Erro ao exportar dados.');
         } finally {
             setIsExporting(false);
+        }
+    };
+
+    const handleResend = async (contactId: number, e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            setResendingContactId(contactId);
+            await whatsappService.resendCampaignMessage(campaignId, contactId);
+            toast.success('Mensagem reenviada com sucesso!');
+            // Recarregar os dados para atualizar o status
+            await loadData();
+        } catch (error: any) {
+            console.error('Erro ao reenviar:', error);
+            const errMsg = error.message || 'Erro ao reenviar mensagem';
+            toast.error(errMsg);
+        } finally {
+            setResendingContactId(null);
         }
     };
 
@@ -337,15 +356,29 @@ export function CampaignMessagesManager({
                                             )}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleOpenHistory(contact);
-                                                }}
-                                                className="text-orange-600 hover:text-orange-900 flex items-center justify-end gap-1 ml-auto dark:text-orange-400 dark:hover:text-orange-300"
-                                            >
-                                                Ver Histórico <ChevronRight size={16} />
-                                            </button>
+                                            <div className="flex items-center justify-end gap-3">
+                                                {contact.last_status === 'failed' && (
+                                                    <button
+                                                        onClick={(e) => handleResend(contact.id, e)}
+                                                        disabled={resendingContactId === contact.id}
+                                                        className={`text-indigo-600 hover:text-indigo-900 flex items-center gap-1 dark:text-indigo-400 dark:hover:text-indigo-300 ${resendingContactId === contact.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                        title="Reenviar Mensagem"
+                                                    >
+                                                        <RefreshCw size={16} className={resendingContactId === contact.id ? 'animate-spin' : ''} />
+                                                        <span className="hidden sm:inline">Reenviar</span>
+                                                    </button>
+                                                )}
+
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleOpenHistory(contact);
+                                                    }}
+                                                    className="text-orange-600 hover:text-orange-900 flex items-center justify-end gap-1 dark:text-orange-400 dark:hover:text-orange-300"
+                                                >
+                                                    <span className="hidden sm:inline">Ver Histórico</span> <ChevronRight size={16} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
