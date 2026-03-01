@@ -134,6 +134,12 @@ class ClientService {
             method: 'DELETE',
         });
     }
+
+    async deleteClient(id: number): Promise<void> {
+        await this.request(`/clients/${id}`, {
+            method: 'DELETE',
+        });
+    }
 }
 
 const clientService = new ClientService();

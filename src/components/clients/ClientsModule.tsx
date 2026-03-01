@@ -111,19 +111,40 @@ export function ClientsModule() {
 
     // Delete client
     const handleDelete = async (clientId: number) => {
-        // Need to implement delete in service and backend if verified
-        // For now, let's assume standard delete or soft delete
-        // But verify if endpoints exist. ClientController didn't show delete?
-        // Wait, ClientController has no destroy method in the refactored version?
-        // Let's check ClientController.php
         if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
-            // TODO: Implement delete in backend/service if needed
-            showToast({
-                type: 'info',
-                title: 'Info',
-                message: 'Funcionalidade de exclusão em desenvolvimento',
-                duration: 3000
-            });
+            try {
+                await clientService.deleteClient(clientId);
+
+                showToast({
+                    type: 'success',
+                    title: 'Sucesso!',
+                    message: 'Cliente excluído com sucesso.',
+                    duration: 4000
+                });
+
+                await addNotification({
+                    title: 'Cliente Excluído',
+                    message: `Um cliente foi movido para a lixeira`,
+                    type: 'info',
+                    user_id: userId
+                });
+
+                if (currentClientId === clientId) {
+                    handleBackToList();
+                } else {
+                    setRefreshList(prev => prev + 1);
+                }
+            } catch (error: any) {
+                console.error('Error deleting client:', error);
+                const errorMessage = error.response?.data?.message || error.message || 'Erro ao excluir cliente';
+
+                showToast({
+                    type: 'error',
+                    title: 'Erro!',
+                    message: errorMessage,
+                    duration: 6000
+                });
+            }
         }
     };
 
