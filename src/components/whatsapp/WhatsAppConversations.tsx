@@ -93,7 +93,13 @@ export function WhatsAppConversations() {
         try {
             const phoneNumberId = selectedPhone?.id;
             const data = await whatsappService.getMessages(contactId, phoneNumberId);
-            setMessages(data || []);
+            
+            // Garantir ordenação cronológica crescente (mais antigas primeiro)
+            const sortedMessages = (data || []).sort((a: Message, b: Message) => {
+                return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+            });
+            
+            setMessages(sortedMessages);
         } catch (error) {
             console.error('Erro ao carregar mensagens:', error);
             if (!silent) toast.error('Erro ao carregar mensagens');
