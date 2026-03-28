@@ -18,6 +18,7 @@ import { WhatsAppModule } from './components/whatsapp/WhatsAppModule';
 import { WhatsAppConversations } from './components/whatsapp/WhatsAppConversations';
 import { TasksModule } from './components/tarefas/TasksModule';
 import { ClientsModule } from './components/clients/ClientsModule';
+import { FinanceiroModule } from './components/financeiro/FinanceiroModule';
 import { setupActivityListeners } from './utils/activityTracker';
 import { isUserInactive } from './utils/activityTracker';
 import { isTokenExpired, refreshToken } from './utils/auth';
@@ -38,7 +39,7 @@ function RoleBasedRedirect() {
     case 'cliente':
       return <Navigate to="/clientes" replace />;
     case 'financeiro':
-      return <Navigate to="/propostas" replace />;
+      return <Navigate to="/financeiro" replace />;
     default:
       return <Navigate to="/dashboard" replace />;
   }
@@ -176,6 +177,13 @@ function App() {
                       <AuthGuard>
                         <ProtectedRoute resource="tasks" action="view">
                           <TasksModule />
+                        </ProtectedRoute>
+                      </AuthGuard>
+                    } />
+                    <Route path="/financeiro" element={
+                      <AuthGuard>
+                        <ProtectedRoute resource="financeiro" action="view">
+                          <FinanceiroModule />
                         </ProtectedRoute>
                       </AuthGuard>
                     } />

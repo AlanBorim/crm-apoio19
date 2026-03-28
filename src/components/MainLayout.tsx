@@ -12,7 +12,8 @@ import {
   PanelLeftClose,
   PanelLeft,
   CheckSquare,
-  Briefcase
+  Briefcase,
+  DollarSign
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
@@ -53,6 +54,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     { name: 'Kanban', icon: Grid, path: '/kanban' },
     { name: 'Tarefas', icon: CheckSquare, path: '/tarefas' },
     { name: 'Propostas', icon: FileText, path: '/propostas' },
+    { name: 'Financeiro', icon: DollarSign, path: '/financeiro' },
     { name: 'WhatsApp', icon: MessageSquare, path: '/whatsapp' },
     { name: 'Configurações', icon: Settings, path: '/configuracoes' },
   ];
@@ -79,6 +81,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       case '/kanban': return canAny('kanban');
       case '/tarefas': return canAny('tasks');
       case '/propostas': return canAny('proposals');
+      case '/financeiro': return can('financeiro', 'view');
       case '/whatsapp': return canAny('whatsapp');
       case '/configuracoes': return canAny('configuracoes');
       default: return true;
