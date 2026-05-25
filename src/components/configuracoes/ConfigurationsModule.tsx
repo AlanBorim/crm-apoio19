@@ -5,16 +5,18 @@ import {
   MessageSquare,
   Palette,
   Database,
-  Trash2
+  Trash2,
+  Key
 } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { WhatsAppSettings } from './WhatsAppSettings';
 import { LayoutSettings } from './LayoutSettings';
 import { SystemSettings } from './SystemSettings';
 import { TrashSettings } from './TrashSettings';
+import { SystemTokensSettings } from './SystemTokensSettings';
 import { useAuth } from '../../hooks/useAuth';
 
-type ConfigSection = 'users' | 'whatsapp' | 'layout' | 'system' | 'trash';
+type ConfigSection = 'users' | 'whatsapp' | 'layout' | 'system' | 'system-tokens' | 'trash';
 
 export function ConfigurationsModule() {
   const { user } = useAuth();
@@ -45,6 +47,12 @@ export function ConfigurationsModule() {
       icon: <Database size={20} />,
       description: 'Configurações gerais do sistema'
     },
+    ...(user?.role === 'admin' || user?.role === 'gerente' ? [{
+      id: 'system-tokens' as ConfigSection,
+      name: 'Integrações API (n8n)',
+      icon: <Key size={20} />,
+      description: 'Chaves de longa duração para automações'
+    }] : []),
     ...(user?.role === 'admin' ? [{
       id: 'trash' as ConfigSection,
       name: 'Lixeira',
@@ -78,6 +86,8 @@ export function ConfigurationsModule() {
         return <LayoutSettings />;
       case 'system':
         return <SystemSettings />;
+      case 'system-tokens':
+        return <SystemTokensSettings />;
       case 'trash':
         return <TrashSettings />;
 
